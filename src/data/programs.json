@@ -15,11 +15,23 @@
           "description": "Point de départ pour tous. Construis ta première base de force.",
           "icon": "🌱",
           "color": "#4CAF50",
-          "position": { "x": 2, "y": 0, "tier": 0 },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "tier": 0
+          },
           "prerequisites": [],
-          "unlocks": ["strict-pullups", "hanging-hollow"],
+          "unlocks": [
+            "strict-pullups",
+            "hanging-hollow"
+          ],
           "totalWeeks": 4,
           "xpReward": 200,
+          "statBonuses": {
+            "strength": 3,
+            "power": 2,
+            "endurance": 1
+          },
           "levels": [
             {
               "id": 1,
@@ -222,11 +234,26 @@
           "description": "Gainage dynamique suspendu. Base pour tous les skills de barre.",
           "icon": "🎯",
           "color": "#2196F3",
-          "position": { "x": 1, "y": 1, "tier": 1 },
-          "prerequisites": ["beginner-foundation"],
-          "unlocks": ["lsit-hold", "pullup-negatives", "hanging-leg-raises"],
+          "position": {
+            "x": 1,
+            "y": 1,
+            "tier": 1
+          },
+          "prerequisites": [
+            "beginner-foundation"
+          ],
+          "unlocks": [
+            "lsit-hold",
+            "pullup-negatives",
+            "hanging-leg-raises"
+          ],
           "totalWeeks": 3,
           "xpReward": 250,
+          "statBonuses": {
+            "strength": 4,
+            "power": 2,
+            "endurance": 2
+          },
           "levels": [
             {
               "id": 1,
@@ -381,9 +408,18 @@
           "description": "Fondation #1 du street workout. Maîtrise parfaitement les tractions.",
           "icon": "💪",
           "color": "#6C63FF",
-          "position": { "x": 3, "y": 1, "tier": 1 },
-          "prerequisites": ["beginner-foundation"],
-          "unlocks": ["chest-to-bar", "straight-bar-dips"],
+          "position": {
+            "x": 3,
+            "y": 1,
+            "tier": 1
+          },
+          "prerequisites": [
+            "beginner-foundation"
+          ],
+          "unlocks": [
+            "chest-to-bar",
+            "straight-bar-dips"
+          ],
           "totalWeeks": 6,
           "xpReward": 300,
           "levels": [
@@ -577,7 +613,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 5,
+            "power": 3,
+            "endurance": 2
+          }
         },
         {
           "id": "lsit-hold",
@@ -586,9 +627,18 @@
           "description": "Gainage statique intense. Prérequis pour les levers.",
           "icon": "📐",
           "color": "#FF9800",
-          "position": { "x": 0, "y": 2, "tier": 2 },
-          "prerequisites": ["hanging-hollow"],
-          "unlocks": ["lsit-pullups", "front-lever-beginner"],
+          "position": {
+            "x": 0,
+            "y": 2,
+            "tier": 2
+          },
+          "prerequisites": [
+            "hanging-hollow"
+          ],
+          "unlocks": [
+            "lsit-pullups",
+            "front-lever-beginner"
+          ],
           "totalWeeks": 5,
           "xpReward": 350,
           "levels": [
@@ -744,7 +794,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 4,
+            "power": 3,
+            "endurance": 2
+          }
         },
         {
           "id": "pullup-negatives",
@@ -753,9 +808,17 @@
           "description": "Contrôle de la phase excentrique. Développe la force pure.",
           "icon": "⬇️",
           "color": "#9C27B0",
-          "position": { "x": 2, "y": 2, "tier": 2 },
-          "prerequisites": ["hanging-hollow"],
-          "unlocks": ["chest-to-bar"],
+          "position": {
+            "x": 2,
+            "y": 2,
+            "tier": 2
+          },
+          "prerequisites": [
+            "hanging-hollow"
+          ],
+          "unlocks": [
+            "chest-to-bar"
+          ],
           "totalWeeks": 4,
           "xpReward": 250,
           "levels": [
@@ -873,7 +936,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 5,
+            "power": 3,
+            "endurance": 1
+          }
         },
         {
           "id": "chest-to-bar",
@@ -882,9 +950,19 @@
           "description": "Tractions haute amplitude. Transition vers les skills explosifs.",
           "icon": "🎯",
           "color": "#F44336",
-          "position": { "x": 2, "y": 3, "tier": 3 },
-          "prerequisites": ["strict-pullups", "pullup-negatives"],
-          "unlocks": ["explosive-pullups", "muscleup-strict"],
+          "position": {
+            "x": 2,
+            "y": 3,
+            "tier": 3
+          },
+          "prerequisites": [
+            "strict-pullups",
+            "pullup-negatives"
+          ],
+          "unlocks": [
+            "explosive-pullups",
+            "muscleup-strict"
+          ],
           "totalWeeks": 5,
           "xpReward": 400,
           "levels": [
@@ -928,7 +1006,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Augmentation", 
+              "name": "Semaine 3-4 : Augmentation",
               "subtitle": "Plus de volume",
               "xpReward": 150,
               "exercises": [
@@ -1040,7 +1118,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 6,
+            "power": 5,
+            "endurance": 3
+          }
         },
         {
           "id": "straight-bar-dips",
@@ -1049,9 +1132,18 @@
           "description": "Dips à la barre fixe. Prérequis direct pour le muscle-up.",
           "icon": "🔥",
           "color": "#FF5722",
-          "position": { "x": 4, "y": 3, "tier": 3 },
-          "prerequisites": ["strict-pullups"],
-          "unlocks": ["muscleup-strict", "highbar-muscleup"],
+          "position": {
+            "x": 4,
+            "y": 3,
+            "tier": 3
+          },
+          "prerequisites": [
+            "strict-pullups"
+          ],
+          "unlocks": [
+            "muscleup-strict",
+            "highbar-muscleup"
+          ],
           "totalWeeks": 6,
           "xpReward": 400,
           "levels": [
@@ -1207,7 +1299,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 7,
+            "power": 6,
+            "endurance": 2
+          }
         },
         {
           "id": "hanging-leg-raises",
@@ -1216,9 +1313,18 @@
           "description": "Core dynamique. Base pour les toes-to-bar et front lever.",
           "icon": "🦵",
           "color": "#00BCD4",
-          "position": { "x": 1, "y": 3, "tier": 3 },
-          "prerequisites": ["hanging-hollow"],
-          "unlocks": ["toes-to-bar", "lsit-pullups"],
+          "position": {
+            "x": 1,
+            "y": 3,
+            "tier": 3
+          },
+          "prerequisites": [
+            "hanging-hollow"
+          ],
+          "unlocks": [
+            "toes-to-bar",
+            "lsit-pullups"
+          ],
           "totalWeeks": 4,
           "xpReward": 350,
           "levels": [
@@ -1374,7 +1480,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 5,
+            "power": 4,
+            "endurance": 4
+          }
         },
         {
           "id": "muscleup-strict",
@@ -1383,9 +1494,20 @@
           "description": "LE mouvement iconique du street workout. Game changer.",
           "icon": "⚡",
           "color": "#FFD700",
-          "position": { "x": 3, "y": 4, "tier": 4 },
-          "prerequisites": ["chest-to-bar", "straight-bar-dips"],
-          "unlocks": ["explosive-pullups", "highbar-muscleup", "muscleup-advanced"],
+          "position": {
+            "x": 3,
+            "y": 4,
+            "tier": 4
+          },
+          "prerequisites": [
+            "chest-to-bar",
+            "straight-bar-dips"
+          ],
+          "unlocks": [
+            "explosive-pullups",
+            "highbar-muscleup",
+            "muscleup-advanced"
+          ],
           "totalWeeks": 8,
           "xpReward": 600,
           "levels": [
@@ -1529,7 +1651,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 8,
+            "power": 7,
+            "endurance": 3
+          }
         },
         {
           "id": "lsit-pullups",
@@ -1538,9 +1665,18 @@
           "description": "Tractions avec L-sit. Core + force combinés.",
           "icon": "🔱",
           "color": "#3F51B5",
-          "position": { "x": 0, "y": 4, "tier": 4 },
-          "prerequisites": ["lsit-hold", "hanging-leg-raises"],
-          "unlocks": ["front-lever-beginner"],
+          "position": {
+            "x": 0,
+            "y": 4,
+            "tier": 4
+          },
+          "prerequisites": [
+            "lsit-hold",
+            "hanging-leg-raises"
+          ],
+          "unlocks": [
+            "front-lever-beginner"
+          ],
           "totalWeeks": 6,
           "xpReward": 500,
           "levels": [
@@ -1696,7 +1832,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 7,
+            "power": 6,
+            "endurance": 4
+          }
         },
         {
           "id": "toes-to-bar",
@@ -1705,9 +1846,17 @@
           "description": "Core explosif. Prérequis pour front lever avancé.",
           "icon": "🎪",
           "color": "#E91E63",
-          "position": { "x": 1, "y": 4, "tier": 4 },
-          "prerequisites": ["hanging-leg-raises"],
-          "unlocks": ["front-lever-beginner"],
+          "position": {
+            "x": 1,
+            "y": 4,
+            "tier": 4
+          },
+          "prerequisites": [
+            "hanging-leg-raises"
+          ],
+          "unlocks": [
+            "front-lever-beginner"
+          ],
           "totalWeeks": 5,
           "xpReward": 450,
           "levels": [
@@ -1863,7 +2012,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 6,
+            "power": 5,
+            "endurance": 4
+          }
         },
         {
           "id": "front-lever-beginner",
@@ -1872,9 +2026,19 @@
           "description": "Premier skill statique majeur. Horizontal hold.",
           "icon": "🦾",
           "color": "#FF6B6B",
-          "position": { "x": 0, "y": 5, "tier": 5 },
-          "prerequisites": ["lsit-pullups", "toes-to-bar"],
-          "unlocks": ["front-lever-advanced", "back-lever"],
+          "position": {
+            "x": 0,
+            "y": 5,
+            "tier": 5
+          },
+          "prerequisites": [
+            "lsit-pullups",
+            "toes-to-bar"
+          ],
+          "unlocks": [
+            "front-lever-advanced",
+            "back-lever"
+          ],
           "totalWeeks": 10,
           "xpReward": 700,
           "levels": [
@@ -2098,7 +2262,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 10,
+            "power": 8,
+            "endurance": 5
+          }
         },
         {
           "id": "explosive-pullups",
@@ -2107,9 +2276,19 @@
           "description": "Tractions explosives. Base pour archer et typewriter.",
           "icon": "💥",
           "color": "#FF5722",
-          "position": { "x": 2, "y": 5, "tier": 5 },
-          "prerequisites": ["muscleup-strict", "chest-to-bar"],
-          "unlocks": ["archer-pullups", "muscleup-advanced"],
+          "position": {
+            "x": 2,
+            "y": 5,
+            "tier": 5
+          },
+          "prerequisites": [
+            "muscleup-strict",
+            "chest-to-bar"
+          ],
+          "unlocks": [
+            "archer-pullups",
+            "muscleup-advanced"
+          ],
           "totalWeeks": 6,
           "xpReward": 600,
           "levels": [
@@ -2265,7 +2444,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 8,
+            "power": 12,
+            "endurance": 3
+          }
         },
         {
           "id": "highbar-muscleup",
@@ -2274,9 +2458,18 @@
           "description": "Muscle-up avec transition haute. Plus technique.",
           "icon": "🚀",
           "color": "#9C27B0",
-          "position": { "x": 4, "y": 5, "tier": 5 },
-          "prerequisites": ["muscleup-strict", "straight-bar-dips"],
-          "unlocks": ["muscleup-advanced"],
+          "position": {
+            "x": 4,
+            "y": 5,
+            "tier": 5
+          },
+          "prerequisites": [
+            "muscleup-strict",
+            "straight-bar-dips"
+          ],
+          "unlocks": [
+            "muscleup-advanced"
+          ],
           "totalWeeks": 7,
           "xpReward": 650,
           "levels": [
@@ -2442,7 +2635,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 9,
+            "power": 10,
+            "endurance": 4
+          }
         },
         {
           "id": "muscleup-advanced",
@@ -2451,9 +2649,19 @@
           "description": "Séries de muscle-ups. Endurance + technique.",
           "icon": "⚡⚡",
           "color": "#FFD700",
-          "position": { "x": 3, "y": 6, "tier": 6 },
-          "prerequisites": ["explosive-pullups", "highbar-muscleup"],
-          "unlocks": ["archer-pullups", "typewriter-pullups"],
+          "position": {
+            "x": 3,
+            "y": 6,
+            "tier": 6
+          },
+          "prerequisites": [
+            "explosive-pullups",
+            "highbar-muscleup"
+          ],
+          "unlocks": [
+            "archer-pullups",
+            "typewriter-pullups"
+          ],
           "totalWeeks": 8,
           "xpReward": 800,
           "levels": [
@@ -2647,7 +2855,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 10,
+            "power": 12,
+            "endurance": 4
+          }
         },
         {
           "id": "front-lever-advanced",
@@ -2656,9 +2869,17 @@
           "description": "Full front lever. Skill statique ultime.",
           "icon": "🦾✨",
           "color": "#FF1744",
-          "position": { "x": 1, "y": 6, "tier": 6 },
-          "prerequisites": ["front-lever-beginner"],
-          "unlocks": ["hefesto"],
+          "position": {
+            "x": 1,
+            "y": 6,
+            "tier": 6
+          },
+          "prerequisites": [
+            "front-lever-beginner"
+          ],
+          "unlocks": [
+            "hefesto"
+          ],
           "totalWeeks": 12,
           "xpReward": 900,
           "levels": [
@@ -2940,7 +3161,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 12,
+            "power": 10,
+            "endurance": 6
+          }
         },
         {
           "id": "back-lever",
@@ -2949,9 +3175,17 @@
           "description": "Lever arrière. Moins connu mais tout aussi impressionnant.",
           "icon": "🔄",
           "color": "#00BCD4",
-          "position": { "x": 0, "y": 6, "tier": 6 },
-          "prerequisites": ["front-lever-beginner"],
-          "unlocks": ["hefesto"],
+          "position": {
+            "x": 0,
+            "y": 6,
+            "tier": 6
+          },
+          "prerequisites": [
+            "front-lever-beginner"
+          ],
+          "unlocks": [
+            "hefesto"
+          ],
           "totalWeeks": 10,
           "xpReward": 1600,
           "levels": [
@@ -3186,7 +3420,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 11,
+            "power": 9,
+            "endurance": 5
+          }
         },
         {
           "id": "archer-pullups",
@@ -3195,9 +3434,18 @@
           "description": "Tractions unilatérales. Transition vers OAP.",
           "icon": "🏹",
           "color": "#8E24AA",
-          "position": { "x": 2, "y": 7, "tier": 7 },
-          "prerequisites": ["explosive-pullups", "muscleup-advanced"],
-          "unlocks": ["one-arm-pullup"],
+          "position": {
+            "x": 2,
+            "y": 7,
+            "tier": 7
+          },
+          "prerequisites": [
+            "explosive-pullups",
+            "muscleup-advanced"
+          ],
+          "unlocks": [
+            "one-arm-pullup"
+          ],
           "totalWeeks": 9,
           "xpReward": 1600,
           "levels": [
@@ -3392,7 +3640,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 15,
+            "power": 18,
+            "endurance": 6
+          }
         },
         {
           "id": "typewriter-pullups",
@@ -3401,9 +3654,17 @@
           "description": "Mouvement latéral en haut. Contrôle unilatéral.",
           "icon": "⌨️",
           "color": "#673AB7",
-          "position": { "x": 4, "y": 7, "tier": 7 },
-          "prerequisites": ["muscleup-advanced"],
-          "unlocks": ["one-arm-pullup"],
+          "position": {
+            "x": 4,
+            "y": 7,
+            "tier": 7
+          },
+          "prerequisites": [
+            "muscleup-advanced"
+          ],
+          "unlocks": [
+            "one-arm-pullup"
+          ],
           "totalWeeks": 7,
           "xpReward": 1200,
           "levels": [
@@ -3570,7 +3831,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 14,
+            "power": 16,
+            "endurance": 7
+          }
         },
         {
           "id": "hefesto",
@@ -3579,9 +3845,18 @@
           "description": "De front lever à dip. Mouvement ultra-rare.",
           "icon": "🔱",
           "color": "#D32F2F",
-          "position": { "x": 0, "y": 7, "tier": 7 },
-          "prerequisites": ["front-lever-advanced", "back-lever"],
-          "unlocks": ["master-street"],
+          "position": {
+            "x": 0,
+            "y": 7,
+            "tier": 7
+          },
+          "prerequisites": [
+            "front-lever-advanced",
+            "back-lever"
+          ],
+          "unlocks": [
+            "master-street"
+          ],
           "totalWeeks": 16,
           "xpReward": 2700,
           "levels": [
@@ -3829,7 +4104,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 22,
+            "power": 25,
+            "endurance": 10
+          }
         },
         {
           "id": "one-arm-pullup",
@@ -3838,9 +4118,18 @@
           "description": "Le graal des tractions. Force unilatérale ultime.",
           "icon": "💎",
           "color": "#1976D2",
-          "position": { "x": 3, "y": 8, "tier": 8 },
-          "prerequisites": ["archer-pullups", "typewriter-pullups"],
-          "unlocks": ["master-street"],
+          "position": {
+            "x": 3,
+            "y": 8,
+            "tier": 8
+          },
+          "prerequisites": [
+            "archer-pullups",
+            "typewriter-pullups"
+          ],
+          "unlocks": [
+            "master-street"
+          ],
           "totalWeeks": 21,
           "xpReward": 3200,
           "levels": [
@@ -4085,7 +4374,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 25,
+            "power": 22,
+            "endurance": 8
+          }
         },
         {
           "id": "master-street",
@@ -4094,8 +4388,15 @@
           "description": "Tu as conquis l'arbre Street Workout. Tu es un athlète d'élite.",
           "icon": "👑",
           "color": "#FFD700",
-          "position": { "x": 2, "y": 9, "tier": 9 },
-          "prerequisites": ["one-arm-pullup", "hefesto"],
+          "position": {
+            "x": 2,
+            "y": 9,
+            "tier": 9
+          },
+          "prerequisites": [
+            "one-arm-pullup",
+            "hefesto"
+          ],
           "unlocks": [],
           "totalWeeks": 4,
           "xpReward": 3000,
@@ -4220,7 +4521,12 @@
                 }
               ]
             }
-          ]
+          ],
+          "statBonuses": {
+            "strength": 25,
+            "power": 25,
+            "endurance": 12
+          }
         }
       ]
     }

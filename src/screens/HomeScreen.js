@@ -1,355 +1,515 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
+  Animated,
   Alert,
-  TouchableOpacity,
-  Animated
+  RefreshControl
 } from 'react-native';
 import {
   Card,
   Text,
   Button,
-  ActivityIndicator
+  ActivityIndicator,
+  Chip,
+  Divider
 } from 'react-native-paper';
 import { collection, doc, getDocs, getDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { colors } from '../theme/colors';
-import SkillNode from '../components/SkillNode';
+import UserHeader from '../components/UserHeader';
+import UserStatsCard from '../components/UserStatsCard';
+import ProgramProgressCard from '../components/ProgramProgressCard';
+import LoadingProgramCard from '../components/LoadingProgramCard';
+import { useUserPrograms, useRecommendedPrograms } from '../hooks/useUserPrograms';
 import programs from '../data/programs.json';
 
-// Données statiques en dehors du composant pour éviter les re-calculs
-const streetCategory = programs.categories.find(cat => cat.id === 'street');
-const streetPrograms = streetCategory?.programs || [];
-
 const HomeScreen = ({ navigation }) => {
-  const [userProgress, setUserProgress] = useState({});
-  const [completedPrograms, setCompletedPrograms] = useState([]);
-  const [lastWorkoutSession, setLastWorkoutSession] = useState(null);
+  const [userStats, setUserStats] = useState(null);
+  const [inProgressSkills, setInProgressSkills] = useState([]);
+  const [upcomingSkills, setUpcomingSkills] = useState([]);
+  const [lastSession, setLastSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const { user } = useAuth();
-  const userId = user?.uid;
+  
+  // Hook pour les programmes utilisateur
+  const { 
+    userPrograms, 
+    loading: programsLoading, 
+    error: programsError,
+    refetch: refetchPrograms 
+  } = useUserPrograms();
+  
+  // Hook pour les programmes recommandés
+  const { recommendedPrograms } = useRecommendedPrograms(3);
 
   useEffect(() => {
-    if (userId && !dataLoaded) {
-      loadUserData();
+    if (user?.uid) {
+      loadAllData();
       startFadeAnimation();
     }
-  }, [userId]);
+  }, [user]);
 
   const startFadeAnimation = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
-      useNativeDriver: false  // Changé pour éviter l'erreur
+      useNativeDriver: false
     }).start();
   };
 
-  const loadUserData = useCallback(async () => {
-    if (!userId) return;
-
+  const loadAllData = async () => {
     try {
       setLoading(true);
-
-      // TEMPORAIRE: Données mock au lieu de Firebase
-      console.log('📱 MOCK: Chargement données utilisateur...');
       
-      // Mock user progress - utilisons les vrais IDs des compétences
-      const progressData = {
-        'beginner-foundation': { currentLevel: 2, unlockedLevels: [1, 2], xp: 150 },
-        'strict-pullups': { currentLevel: 1, unlockedLevels: [1], xp: 50 }
-      };
-      setUserProgress(progressData);
-
-      // Mock programmes complétés - aucun pour voir "en cours"
-      const completed = []; // Vidé pour tester l'affichage "en cours"
-      setCompletedPrograms(completed);
-
-      // Mock dernière séance avec Timestamp simulé
-      const lastSession = {
-        programId: 'beginner-foundation',
-        levelId: 2,
-        completedAt: {
-          toDate: () => new Date() // Simule un Firestore Timestamp
-        },
-        finalScore: 85
-      };
-      setLastWorkoutSession(lastSession);
-
+      // Charger les stats utilisateur depuis Firestore
+      const userStatsData = await loadUserStats();
+      setUserStats(userStatsData);
+      
+      // Charger les skills en cours et à débloquer
+      const { inProgress, upcoming } = await loadSkillsData(userStatsData);
+      setInProgressSkills(inProgress);
+      setUpcomingSkills(upcoming);
+      
+      // Charger la dernière session
+      const lastSessionData = await loadLastSession();
+      setLastSession(lastSessionData);
+      
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
-      Alert.alert('Erreur', 'Impossible de charger vos données');
+      console.error('Erreur chargement données:', error);
+      Alert.alert('Erreur', 'Impossible de charger les données');
     } finally {
       setLoading(false);
-      setDataLoaded(true);
     }
-  }, [userId]);
-
-  // Calcule les statistiques utilisateur
-  const calculateUserStats = () => {
-    const totalCompleted = completedPrograms.length;
-    const totalXP = completedPrograms.reduce((sum, programId) => {
-      const program = streetPrograms.find(p => p.id === programId);
-      return sum + (program?.xpReward || 0);
-    }, 0);
-
-    // Calcule le tier actuel (le plus haut tier débloqué)
-    let currentTier = 0;
-    streetPrograms.forEach(program => {
-      const isUnlocked = program.prerequisites.length === 0 || 
-        program.prerequisites.every(prereq => completedPrograms.includes(prereq));
-      if (isUnlocked && program.position.tier > currentTier) {
-        currentTier = program.position.tier;
-      }
-    });
-
-    return { totalCompleted, totalXP, currentTier };
   };
 
-  // Trouve les compétences en cours (commencées, pas terminées ET débloquées)
-  const getSkillsInProgress = () => {
-    const inProgress = streetPrograms.filter(skill => {
-      const isCompleted = completedPrograms.includes(skill.id);
-      const isUnlocked = skill.prerequisites.length === 0 || 
-        skill.prerequisites.every(prereq => completedPrograms.includes(prereq));
-      const progress = userProgress[skill.id];
-      const hasProgress = progress && (progress.currentLevel > 0 || progress.unlockedLevels?.length > 0);
+  const loadUserStats = async () => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
       
-      // Doit être: pas complétée, débloquée, ET avoir des progrès
-      return !isCompleted && isUnlocked && hasProgress;
-    }).slice(0, 3);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Structure pour utilisateur migré
+        if (userData.migrationVersion) {
+          return {
+            globalXP: userData.globalXP || 0,
+            globalLevel: userData.globalLevel || 0,
+            title: userData.title || 'Débutant',
+            stats: userData.stats || { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+            programs: userData.programs || { street: { xp: 0, level: 0, completedSkills: 0 } },
+            streakDays: userData.streak || 0,
+            displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur'
+          };
+        }
+        
+        // Structure pour utilisateur non-migré (legacy)
+        const totalXP = userData.totalXP || 0;
+        const globalLevel = Math.floor(Math.sqrt(totalXP / 100));
+        
+        return {
+          globalXP: totalXP,
+          globalLevel: globalLevel,
+          title: getTitleFromLevel(globalLevel),
+          stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+          programs: {
+            street: {
+              xp: totalXP,
+              level: globalLevel,
+              completedSkills: userData.completedPrograms?.length || 0
+            }
+          },
+          streakDays: 0,
+          displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur'
+        };
+      }
+      
+      // Nouvel utilisateur
+      return {
+        globalXP: 0,
+        globalLevel: 0,
+        title: 'Débutant',
+        stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+        programs: {},
+        streakDays: 0,
+        displayName: user.email?.split('@')[0] || 'Utilisateur'
+      };
+      
+    } catch (error) {
+      console.error('Erreur chargement stats utilisateur:', error);
+      return null;
+    }
+  };
+
+  const loadSkillsData = async (userStatsData) => {
+    try {
+      // Pour l'instant, on utilise les données statiques
+      // TODO: Implémenter le chargement depuis skillProgress
+      
+      const streetPrograms = programs.categories
+        .find(cat => cat.id === 'street')?.programs || [];
+      
+      const completedCount = userStatsData?.programs?.street?.completedSkills || 0;
+      
+      // Skills en cours (simulé)
+      const inProgress = streetPrograms.slice(0, Math.min(2, streetPrograms.length));
+      
+      // Skills à débloquer (les 2 suivants)
+      const upcoming = streetPrograms.slice(completedCount, completedCount + 2);
+      
+      return { inProgress, upcoming };
+      
+    } catch (error) {
+      console.error('Erreur chargement skills:', error);
+      return { inProgress: [], upcoming: [] };
+    }
+  };
+
+  const loadLastSession = async () => {
+    try {
+      const sessionsQuery = query(
+        collection(db, 'workoutSessions'),
+        where('userId', '==', user.uid),
+        orderBy('completedAt', 'desc'),
+        limit(1)
+      );
+      
+      const snapshot = await getDocs(sessionsQuery);
+      
+      if (!snapshot.empty) {
+        const sessionData = snapshot.docs[0].data();
+        return {
+          id: snapshot.docs[0].id,
+          ...sessionData,
+          completedAt: sessionData.completedAt?.toDate()
+        };
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.error('Erreur chargement dernière session:', error);
+      return null;
+    }
+  };
+
+  const getTitleFromLevel = (level) => {
+    if (level >= 20) return "Légende";
+    if (level >= 12) return "Maître";
+    if (level >= 7) return "Champion";
+    if (level >= 3) return "Guerrier";
+    return "Débutant";
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadAllData();
+    await refetchPrograms(); // Recharger aussi les programmes
+    setRefreshing(false);
+  };
+
+  const handleStartJourney = () => {
+    navigation.navigate('SkillTree');
+  };
+
+  const handleViewProgram = (programId) => {
+    navigation.navigate('SkillTree', { programId });
+  };
+
+  const handleViewSkill = (skillId) => {
+    navigation.navigate('SkillDetail', { skillId });
+  };
+
+  const handleContinueSession = () => {
+    // TODO: Reprendre la dernière session
+    navigation.navigate('Workout');
+  };
+
+  // Composants internes
+  const OnboardingView = () => (
+    <View style={styles.onboardingContainer}>
+      <Animated.View style={[styles.onboardingContent, { opacity: fadeAnim }]}>
+        <Text style={styles.onboardingTitle}>
+          Bienvenue dans HybridRPG ⚔️🔥
+        </Text>
+        
+        <View style={styles.onboardingFeatures}>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>💪</Text>
+            <Text style={styles.featureText}>
+              Entraîne-toi, gagne de l’XP et booste tes stats
+            </Text>
+          </View>
+          
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>📊</Text>
+            <Text style={styles.featureText}>
+              Débloque des skills et deviens un athlète hybride
+            </Text>
+          </View>
+        </View>
+
+        {/* Programmes recommandés pour les nouveaux utilisateurs */}
+        {!programsLoading && recommendedPrograms.length > 0 && (
+          <View style={styles.recommendedSection}>
+            <Text style={styles.recommendedTitle}>
+              Programmes populaires pour commencer 🚀
+            </Text>
+            {recommendedPrograms.slice(0, 2).map(({ program, progress }) => (
+              <ProgramProgressCard
+                key={program.id}
+                program={program}
+                progress={progress}
+                onPress={() => handleViewProgram(program.id)}
+              />
+            ))}
+          </View>
+        )}
+
+        <Button
+          mode="contained"
+          onPress={handleStartJourney}
+          style={styles.startButton}
+          contentStyle={styles.startButtonContent}
+          buttonColor={colors.primary}
+        >
+          Commencer mon aventure
+        </Button>
+      </Animated.View>
+    </View>
+  );
+
+
+
+  const StreakCard = ({ streak }) => {
+    if (streak === 0) return null;
     
-    return inProgress;
+    return (
+      <Card style={styles.streakCard}>
+        <Card.Content>
+          <View style={styles.streakContent}>
+            <Text style={styles.streakIcon}>🔥</Text>
+            <View style={styles.streakInfo}>
+              <Text style={styles.streakTitle}>Série active</Text>
+              <Text style={styles.streakDays}>{streak} jours consécutifs</Text>
+            </View>
+            <Chip mode="flat" style={styles.streakChip}>
+              En feu !
+            </Chip>
+          </View>
+        </Card.Content>
+      </Card>
+    );
   };
 
-  // Trouve les prochaines compétences débloquées
-  const getNextUnlockedSkills = () => {
-    const unlocked = streetPrograms.filter(program => {
-      const isCompleted = completedPrograms.includes(program.id);
-      const isUnlocked = program.prerequisites.length === 0 || 
-        program.prerequisites.every(prereq => completedPrograms.includes(prereq));
-      const progress = userProgress[program.id];
-      const hasProgress = progress && progress.currentLevel > 0;
-      return !isCompleted && isUnlocked && !hasProgress; // Exclut celles en cours
-    });
-
-    return unlocked
-      .sort((a, b) => a.position.tier - b.position.tier)
-      .slice(0, 3);
+  const InProgressSkillsSection = ({ skills }) => {
+    if (!skills || skills.length === 0) return null;
+    
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>⚡ En cours</Text>
+        
+        {skills.map((skill) => (
+          <Card 
+            key={skill.id} 
+            style={styles.skillCard}
+            onPress={() => handleViewSkill(skill.id)}
+          >
+            <Card.Content>
+              <View style={styles.skillHeader}>
+                <Text style={styles.skillIcon}>{skill.icon}</Text>
+                <View style={styles.skillInfo}>
+                  <Text style={styles.skillName}>{skill.name}</Text>
+                  <Text style={styles.skillDifficulty}>{skill.difficulty}</Text>
+                </View>
+                <Chip mode="outlined" compact>
+                  En cours
+                </Chip>
+              </View>
+            </Card.Content>
+          </Card>
+        ))}
+        
+        <Button
+          mode="outlined"
+          onPress={handleContinueSession}
+          style={styles.continueButton}
+          icon="play"
+        >
+          Continuer l'entraînement
+        </Button>
+      </View>
+    );
   };
 
-  // Détermine l'état d'une compétence
-  const getSkillState = (skill) => {
-    const isCompleted = completedPrograms.includes(skill.id);
-    const isUnlocked = skill.prerequisites.length === 0 || 
-      skill.prerequisites.every(prereq => completedPrograms.includes(prereq));
-    const progress = userProgress[skill.id];
-    const hasProgress = progress && progress.currentLevel > 0;
-
-    if (isCompleted) return 'COMPLETED';
-    if (hasProgress) return 'IN_PROGRESS';
-    if (isUnlocked) return 'UNLOCKED';
-    return 'LOCKED';
+  const UpcomingSkillsSection = ({ skills }) => {
+    if (!skills || skills.length === 0) return null;
+    
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>🎯 À débloquer</Text>
+        
+        {skills.map((skill) => (
+          <Card 
+            key={skill.id} 
+            style={styles.upcomingSkillCard}
+            onPress={() => handleViewSkill(skill.id)}
+          >
+            <Card.Content>
+              <View style={styles.skillHeader}>
+                <Text style={styles.skillIcon}>{skill.icon}</Text>
+                <View style={styles.skillInfo}>
+                  <Text style={styles.skillName}>{skill.name}</Text>
+                  <Text style={styles.skillDescription} numberOfLines={2}>
+                    {skill.description}
+                  </Text>
+                </View>
+                <Chip mode="flat" style={styles.upcomingChip}>
+                  Bientôt
+                </Chip>
+              </View>
+            </Card.Content>
+          </Card>
+        ))}
+      </View>
+    );
   };
 
-  // Navigation vers l'arbre de compétences
-  const navigateToSkillTree = () => {
-    navigation.navigate('SkillTree', { category: streetCategory });
+  const LastSessionCard = ({ session }) => {
+    if (!session) return null;
+    
+    const formatDate = (date) => {
+      const now = new Date();
+      const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+      
+      if (diff === 0) return "Aujourd'hui";
+      if (diff === 1) return "Hier";
+      return `Il y a ${diff} jours`;
+    };
+    
+    return (
+      <Card style={styles.lastSessionCard}>
+        <Card.Content>
+          <View style={styles.lastSessionHeader}>
+            <Text style={styles.lastSessionTitle}>📈 Dernière séance</Text>
+            <Text style={styles.lastSessionDate}>
+              {formatDate(session.completedAt)}
+            </Text>
+          </View>
+          
+          <View style={styles.lastSessionStats}>
+            <View style={styles.sessionStat}>
+              <Text style={styles.sessionStatValue}>{session.score}%</Text>
+              <Text style={styles.sessionStatLabel}>Score</Text>
+            </View>
+            
+            <View style={styles.sessionStat}>
+              <Text style={styles.sessionStatValue}>+{session.xpGained || 0}</Text>
+              <Text style={styles.sessionStatLabel}>XP</Text>
+            </View>
+            
+            <View style={styles.sessionStat}>
+              <Text style={styles.sessionStatValue}>
+                {Math.floor((session.duration || 0) / 60)}min
+              </Text>
+              <Text style={styles.sessionStatLabel}>Durée</Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+    );
   };
 
-  // Navigation vers une compétence spécifique
-  const navigateToSkill = (skill) => {
-    const progress = userProgress[skill.id];
-    navigation.navigate('ProgramDetail', {
-      program: skill,
-      category: streetCategory,
-      userProgress: progress
-    });
-  };
+  // Détection mode
+  const isNewUser = !userStats || (
+    userStats.globalXP === 0 && 
+    (!userStats.programs?.street || userStats.programs.street.completedSkills === 0)
+  );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement de votre progression...</Text>
+        <Text style={styles.loadingText}>Chargement de ton profil...</Text>
       </View>
     );
   }
 
-  const userStats = calculateUserStats();
-  const skillsInProgress = getSkillsInProgress();
-  const nextSkills = getNextUnlockedSkills();
-  const hasNoProgress = completedPrograms.length === 0 && Object.keys(userProgress).length === 0;
+  if (isNewUser) {
+    return <OnboardingView />;
+  }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-        <Text style={styles.title}>Les Programmes disponibles</Text>
-        {hasNoProgress && (
-          <Text style={styles.subtitle}>Commence ton aventure ! 🚀</Text>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      showsVerticalScrollIndicator={false}
+    >
+      <Animated.View style={{ opacity: fadeAnim }}>
+        {/* Header utilisateur */}
+        <UserHeader
+          username={userStats.displayName}
+          globalLevel={userStats.globalLevel}
+          globalXP={userStats.globalXP}
+          title={userStats.title}
+          streak={userStats.streakDays}
+        />
+
+        {/* Stats utilisateur */}
+        <UserStatsCard stats={userStats.stats} />
+
+        {/* Streak */}
+        <StreakCard streak={userStats.streakDays} />
+
+        {/* Programmes actifs */}
+        {programsLoading ? (
+          <LoadingProgramCard count={2} />
+        ) : programsError ? (
+          <Card style={styles.errorCard}>
+            <Card.Content>
+              <Text variant="bodyMedium" style={styles.errorText}>
+                Erreur lors du chargement des programmes
+              </Text>
+              <Button 
+                mode="outlined" 
+                onPress={refetchPrograms}
+                style={{ marginTop: 8 }}
+              >
+                Réessayer
+              </Button>
+            </Card.Content>
+          </Card>
+        ) : (
+          userPrograms
+            .filter(up => up.isStarted) // Seulement les programmes commencés
+            .map(({ program, progress }) => (
+              <ProgramProgressCard
+                key={program.id}
+                program={program}
+                progress={progress}
+                onPress={() => handleViewProgram(program.id)}
+              />
+            ))
         )}
+
+        {/* Section En cours */}
+        <InProgressSkillsSection skills={inProgressSkills} />
+
+        {/* Section À débloquer */}
+        <UpcomingSkillsSection skills={upcomingSkills} />
+
+        {/* Dernière séance */}
+        <LastSessionCard session={lastSession} />
+
+        {/* Espace en bas */}
+        <View style={styles.bottomSpacer} />
       </Animated.View>
-
-      {/* Card principale Street Workout */}
-      <Animated.View style={[styles.mainCardContainer, { opacity: fadeAnim }]}>
-        <TouchableOpacity onPress={navigateToSkillTree} activeOpacity={0.9}>
-          <View style={styles.gradientCard}>
-            <View style={styles.mainCardContent}>
-              <View style={styles.mainCardHeader}>
-                <Text style={styles.mainCardIcon}>🏋️</Text>
-                <View style={styles.mainCardInfo}>
-                  <Text style={styles.mainCardTitle}>Programme Street Workout</Text>
-                  <Text style={styles.mainCardDescription}>
-                    20 compétences à débloquer
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{userStats.totalCompleted}/20</Text>
-                  <Text style={styles.statLabel}>Débloquées</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>Tier {userStats.currentTier}</Text>
-                  <Text style={styles.statLabel}>Niveau</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{userStats.totalXP}</Text>
-                  <Text style={styles.statLabel}>Total XP</Text>
-                </View>
-              </View>
-
-              <Button
-                mode="contained"
-                onPress={navigateToSkillTree}
-                style={styles.skillTreeButton}
-                contentStyle={styles.skillTreeButtonContent}
-                labelStyle={styles.skillTreeButtonLabel}
-              >
-                Voir le programme
-              </Button>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Section Compétences en cours */}
-      {skillsInProgress.length > 0 && (
-        <Animated.View style={[styles.sectionContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionTitle}>⚡ Compétences en cours d'apprentissage</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.challengesScroll}>
-            {skillsInProgress.map((skill, index) => (
-              <View key={skill.id} style={styles.miniNodeContainer}>
-                <SkillNode
-                  program={skill}
-                  state={getSkillState(skill)}
-                  progress={userProgress[skill.id]}
-                  onPress={() => navigateToSkill(skill)}
-                  size={60}
-                />
-                <Text style={styles.miniNodeName} numberOfLines={2}>
-                  {skill.name}
-                </Text>
-                <Text style={styles.miniNodeProgress}>
-                  Niveau {userProgress[skill.id]?.currentLevel || 1}/{skill.levels?.length || 'N/A'}
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
-        </Animated.View>
-      )}
-
-      {/* Section Progression rapide */}
-      {nextSkills.length > 0 && (
-        <Animated.View style={[styles.sectionContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionTitle}>🎯 À débloquer bientôt</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.challengesScroll}>
-            {nextSkills.map((skill, index) => (
-              <View key={skill.id} style={styles.miniNodeContainer}>
-                <SkillNode
-                  program={skill}
-                  state={getSkillState(skill)}
-                  progress={userProgress[skill.id]}
-                  onPress={() => navigateToSkill(skill)}
-                  size={60}
-                />
-                <Text style={styles.miniNodeName} numberOfLines={2}>
-                  {skill.name}
-                </Text>
-              </View>
-            ))}
-          </ScrollView>
-        </Animated.View>
-      )}
-
-      {/* Highlight pour débutant */}
-      {hasNoProgress && (
-        <Animated.View style={[styles.sectionContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionTitle}>🌱 Commence ici</Text>
-          <Card style={styles.beginnerCard}>
-            <Card.Content style={styles.beginnerCardContent}>
-              <View style={styles.beginnerHeader}>
-                <Text style={styles.beginnerIcon}>🌱</Text>
-                <View style={styles.beginnerInfo}>
-                  <Text style={styles.beginnerTitle}>Fondations Débutant</Text>
-                  <Text style={styles.beginnerDescription}>
-                    Point de départ pour tous. Construis ta première base de force.
-                  </Text>
-                </View>
-              </View>
-              <Button
-                mode="contained"
-                onPress={() => {
-                  const beginnerSkill = streetPrograms.find(p => p.id === 'beginner-foundation');
-                  if (beginnerSkill) navigateToSkill(beginnerSkill);
-                }}
-                style={styles.beginnerButton}
-                contentStyle={styles.beginnerButtonContent}
-              >
-                Commencer maintenant
-              </Button>
-            </Card.Content>
-          </Card>
-        </Animated.View>
-      )}
-
-      {/* Section Dernière séance */}
-      {lastWorkoutSession && (
-        <Animated.View style={[styles.sectionContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionTitle}>📊 Dernière séance</Text>
-          <Card style={styles.lastSessionCard}>
-            <Card.Content style={styles.lastSessionContent}>
-              <View style={styles.sessionInfo}>
-                <Text style={styles.sessionProgram}>
-                  {streetPrograms.find(p => p.id === lastWorkoutSession.programId)?.name || 'Compétence'}
-                </Text>
-                <Text style={styles.sessionDate}>
-                  {new Date(lastWorkoutSession.completedAt?.toDate()).toLocaleDateString()}
-                </Text>
-                <Text style={styles.sessionScore}>
-                  Score: {Math.round(lastWorkoutSession.finalScore || 0)}%
-                </Text>
-              </View>
-              <Button
-                mode="outlined"
-                onPress={() => {
-                  const skill = streetPrograms.find(p => p.id === lastWorkoutSession.programId);
-                  if (skill) navigateToSkill(skill);
-                }}
-                style={styles.continueButton}
-              >
-                Continuer
-              </Button>
-            </Card.Content>
-          </Card>
-        </Animated.View>
-      )}
     </ScrollView>
   );
 };
@@ -367,203 +527,217 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
-    color: colors.textSecondary,
     fontSize: 16,
+    color: colors.textSecondary,
   },
-  header: {
-    padding: 20,
+  
+  // Onboarding
+  onboardingContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  onboardingContent: {
     alignItems: 'center',
   },
-  title: {
-    fontSize: 32,
+  onboardingTitle: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
+    marginBottom: 32,
+    lineHeight: 36,
   },
-  mainCardContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+  onboardingFeatures: {
+    width: '100%',
+    marginBottom: 40,
   },
-  gradientCard: {
-    borderRadius: 20,
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    backgroundColor: colors.primary,
-  },
-  mainCardContent: {
-    padding: 24,
-  },
-  mainCardHeader: {
+  featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 16,
   },
-  mainCardIcon: {
-    fontSize: 64,
+  featureIcon: {
+    fontSize: 32,
     marginRight: 16,
+    width: 40,
+    textAlign: 'center',
   },
-  mainCardInfo: {
+  featureText: {
     flex: 1,
-  },
-  mainCardTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-  },
-  mainCardDescription: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.text,
     lineHeight: 22,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 24,
-    paddingHorizontal: 12,
+  startButton: {
+    marginTop: 16,
+    paddingHorizontal: 32,
   },
-  statItem: {
-    alignItems: 'center',
+  startButtonContent: {
+    paddingVertical: 8,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  skillTreeButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  skillTreeButtonContent: {
-    paddingVertical: 12,
-  },
-  skillTreeButtonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  sectionContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+  
+  // Sections
+  section: {
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.textPrimary,
-    marginBottom: 16,
-  },
-  challengesScroll: {
-    paddingVertical: 8,
-  },
-  miniNodeContainer: {
-    alignItems: 'center',
-    marginRight: 16,
-    width: 80,
-  },
-  miniNodeName: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 16,
-  },
-  miniNodeProgress: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  beginnerCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    elevation: 4,
-  },
-  beginnerCardContent: {
-    padding: 20,
-  },
-  beginnerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  beginnerIcon: {
-    fontSize: 40,
-    marginRight: 12,
-    textAlign: 'center',
-    width: 50,
-  },
-  beginnerInfo: {
-    flex: 1,
-  },
-  beginnerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 4,
+    marginHorizontal: 16,
+    marginBottom: 12,
   },
-  beginnerDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  beginnerButton: {
-    backgroundColor: colors.success,
-    borderRadius: 12,
-  },
-  beginnerButtonContent: {
-    paddingVertical: 8,
-  },
-  lastSessionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
+  
+
+  
+  // Streak Card
+  streakCard: {
+    marginHorizontal: 16,
+    marginBottom: 12,
     elevation: 2,
+    backgroundColor: colors.warning + '10',
   },
-  lastSessionContent: {
-    padding: 16,
+  streakContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
-  sessionInfo: {
+  streakIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  streakInfo: {
     flex: 1,
   },
-  sessionProgram: {
+  streakTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginBottom: 4,
   },
-  sessionDate: {
+  streakDays: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  streakChip: {
+    backgroundColor: colors.warning + '20',
+  },
+  
+  // Skill Cards
+  skillCard: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    elevation: 2,
+  },
+  upcomingSkillCard: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    elevation: 1,
+    backgroundColor: colors.surface + 'DD',
+  },
+  skillHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  skillIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  skillInfo: {
+    flex: 1,
+  },
+  skillName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  skillDifficulty: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginBottom: 2,
+    marginTop: 2,
   },
-  sessionScore: {
+  skillDescription: {
     fontSize: 14,
-    color: colors.primary,
-    fontWeight: '600',
+    color: colors.textSecondary,
+    marginTop: 2,
   },
+  upcomingChip: {
+    backgroundColor: colors.primary + '20',
+  },
+  
+  // Continue Button
   continueButton: {
-    borderColor: colors.primary,
-    borderRadius: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+  },
+  
+  // Last Session Card
+  lastSessionCard: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    elevation: 2,
+  },
+  lastSessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  lastSessionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  lastSessionDate: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  lastSessionStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  sessionStat: {
+    alignItems: 'center',
+  },
+  sessionStatValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  sessionStatLabel: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  
+  // Recommended section
+  recommendedSection: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  recommendedTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+
+  // Error card
+  errorCard: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: '#FFEBEE',
+  },
+  errorText: {
+    color: '#C62828',
+    textAlign: 'center',
+  },
+
+  // Bottom spacer
+  bottomSpacer: {
+    height: 20,
   },
 });
 

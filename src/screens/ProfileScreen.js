@@ -16,6 +16,9 @@ import {
 } from 'react-native-paper';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
+import { migrateExistingUsers, previewMigration, testMigrationSingleUser } from '../utils/userMigration';
+import { migrateAllUsers, verifyMigration, previewMigration as previewNewMigration } from '../utils/migrateUsers';
+import UserStatsCard from '../components/UserStatsCard';
 
 const ProfileScreen = () => {
   const { user, logout, resetUserData } = useAuth();
@@ -56,6 +59,145 @@ const ProfileScreen = () => {
     } catch (error) {
       console.error('Erreur reset:', error);
       Alert.alert('❌ Erreur', 'Une erreur est survenue');
+    }
+  };
+
+  const handleMigration = async () => {
+    Alert.alert(
+      '🔄 Migration Base de Données',
+      'Ajouter les nouveaux champs (globalXP, stats, programs) à tous les utilisateurs ?',
+      [
+        { text: 'Preview', onPress: handlePreviewMigration },
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Migrer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              Alert.alert('⏳', 'Migration en cours...');
+              const result = await migrateExistingUsers();
+              
+              if (result.success) {
+                Alert.alert(
+                  '✅ Migration Réussie',
+                  `Migrés: ${result.migrated}\nIgnorés: ${result.skipped}\nErreurs: ${result.errors}`
+                );
+              } else {
+                Alert.alert('❌ Erreur Migration', result.error);
+              }
+            } catch (error) {
+              Alert.alert('❌ Erreur', error.message);
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handlePreviewMigration = async () => {
+    try {
+      Alert.alert('⏳', 'Analyse en cours...');
+      const preview = await previewMigration();
+      
+      if (preview) {
+        console.log('📊 Preview Migration:', preview);
+        Alert.alert(
+          '👀 Preview Migration',
+          `${preview.length} utilisateurs analysés.\nVoir les détails dans la console.`
+        );
+      }
+    } catch (error) {
+      Alert.alert('❌ Erreur Preview', error.message);
+    }
+  };
+
+  // NOUVELLES FONCTIONS DE MIGRATION MULTI-PROGRAMMES
+  const handleNewMigration = async () => {
+    try {
+      Alert.alert(
+        '🆕 Migration Multi-Programmes v1.0',
+        'Nouvelle migration avec structure complète :\n\n• Système multi-programmes\n• Stats individuelles\n• Titres et niveaux globaux\n\nChoisir une action :',
+        [
+          {
+            text: '👁️ Prévisualisation',
+            onPress: () => handleNewPreviewMigration()
+          },
+          {
+            text: '🔍 Vérification',
+            onPress: () => handleVerifyMigration()
+          },
+          {
+            text: '🚀 Migration Complète',
+            style: 'destructive',
+            onPress: () => handleNewFullMigration()
+          },
+          {
+            text: 'Annuler',
+            style: 'cancel'
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('❌ Erreur', error.message);
+    }
+  };
+
+  const handleNewPreviewMigration = async () => {
+    try {
+      const result = await previewNewMigration();
+      if (result) {
+        Alert.alert(
+          '👁️ Prévisualisation Migration v1.0',
+          `📊 Total utilisateurs: ${result.totalUsers}\n🔄 À migrer: ${result.toMigrate}\n✅ Déjà migrés: ${result.alreadyMigrated}\n\nVoir console pour détails complets.`
+        );
+      }
+    } catch (error) {
+      Alert.alert('❌ Erreur Prévisualisation', error.message);
+    }
+  };
+
+  const handleVerifyMigration = async () => {
+    try {
+      const result = await verifyMigration();
+      if (result) {
+        const successRate = result.totalUsers > 0 ? Math.round((result.migratedUsers / result.totalUsers) * 100) : 0;
+        Alert.alert(
+          '🔍 Vérification Migration v1.0',
+          `📊 Total: ${result.totalUsers}\n✅ Migrés: ${result.migratedUsers}\n❌ Non migrés: ${result.nonMigratedUsers}\n📈 Taux de succès: ${successRate}%`
+        );
+      }
+    } catch (error) {
+      Alert.alert('❌ Erreur Vérification', error.message);
+    }
+  };
+
+  const handleNewFullMigration = async () => {
+    try {
+      Alert.alert(
+        '⚠️ MIGRATION MULTI-PROGRAMMES v1.0',
+        'Cette migration va :\n\n✅ Ajouter globalXP et globalLevel\n✅ Créer le système de stats\n✅ Structurer programs.street\n✅ Ajouter les titres utilisateur\n✅ Préserver toutes les données\n\n⚠️ Action irréversible\n\nContinuer ?',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel'
+          },
+          {
+            text: '🚀 MIGRER MAINTENANT',
+            style: 'destructive',
+            onPress: async () => {
+              Alert.alert('⏳', 'Migration en cours...');
+              const success = await migrateAllUsers();
+              if (success) {
+                Alert.alert('✅ Migration Réussie !', 'Tous les utilisateurs ont été migrés vers la structure v1.0 avec succès !');
+              } else {
+                Alert.alert('❌ Échec Migration', 'La migration a échoué. Consulter les logs pour plus de détails.');
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('❌ Erreur Migration', error.message);
     }
   };
 
@@ -107,6 +249,17 @@ const ProfileScreen = () => {
           </Text>
         </Card.Content>
       </Card>
+
+      {/* Stats utilisateur (test) */}
+      <UserStatsCard 
+        stats={{
+          strength: user?.stats?.strength || 15,
+          endurance: user?.stats?.endurance || 8,
+          power: user?.stats?.power || 12,
+          speed: user?.stats?.speed || 5,
+          flexibility: user?.stats?.flexibility || 3
+        }}
+      />
 
       {/* Paramètres */}
       <Card style={styles.settingsCard}>
@@ -221,7 +374,7 @@ const ProfileScreen = () => {
         </Card.Content>
       </Card>
 
-      {/* Reset développeur */}
+      {/* Outils développeur */}
       {user?.email === 'robinallainmkg@gmail.com' && (
         <Card style={[styles.logoutCard, { backgroundColor: colors.warning + '20' }]}>
           <Card.Content style={styles.logoutContent}>
@@ -249,11 +402,33 @@ const ProfileScreen = () => {
                   ]
                 );
               }}
-              style={[styles.logoutButton, { borderColor: colors.warning }]}
+              style={[styles.logoutButton, { borderColor: colors.warning, marginBottom: 8 }]}
               contentStyle={styles.buttonContent}
               labelStyle={{ color: colors.warning }}
             >
               🔄 Reset Compte (Dev)
+            </Button>
+            
+            <Button
+              mode="outlined"
+              icon="database-sync"
+              onPress={handleMigration}
+              style={[styles.logoutButton, { borderColor: colors.primary, marginBottom: 8 }]}
+              contentStyle={styles.buttonContent}
+              labelStyle={{ color: colors.primary }}
+            >
+              🗄️ Migration DB (Legacy)
+            </Button>
+            
+            <Button
+              mode="outlined"
+              icon="database-plus"
+              onPress={handleNewMigration}
+              style={[styles.logoutButton, { borderColor: colors.success }]}
+              contentStyle={styles.buttonContent}
+              labelStyle={{ color: colors.success }}
+            >
+              🆕 Migration Multi-Programmes v1.0
             </Button>
           </Card.Content>
         </Card>

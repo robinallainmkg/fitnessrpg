@@ -12,23 +12,93 @@ import {
   Text,
   Button,
   Chip,
-  ActivityIndicator
+  ActivityIndicator,
+  Divider
 } from 'react-native-paper';
 import { useWorkout } from '../contexts/WorkoutContext';
+import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { calculateWorkoutScore, isLevelCompleted } from '../utils/scoring';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import programs from '../data/programs.json';
 
 const WorkoutSummaryScreen = ({ route, navigation }) => {
   const { program, level } = route.params;
   const { setsData, completeWorkout, resetWorkout } = useWorkout();
+  const { user } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [scaleAnim] = useState(new Animated.Value(0.8));
+  const [gainsAnim] = useState(new Animated.Value(0));
+  const [levelUpAnim] = useState(new Animated.Value(0));
+  const [statGains, setStatGains] = useState(null);
+  const [globalLevelUp, setGlobalLevelUp] = useState(null);
+  const [previousGlobalLevel, setPreviousGlobalLevel] = useState(0);
 
   useEffect(() => {
     finalizeWorkout();
   }, []);
+
+  const calculateStatGains = async (levelCompleted) => {
+    if (!levelCompleted || !user?.uid) return null;
+
+    try {
+      // Récupérer les données utilisateur actuelles
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      const currentStats = userData.stats || {};
+      const currentGlobalXP = userData.globalXP || 0;
+
+      // Trouver le programme actuel dans programs.json
+      const currentProgram = programs.categories
+        .flatMap(cat => cat.programs)
+        .find(p => p.id === program.id);
+
+      if (!currentProgram?.statBonuses) return null;
+
+      // Calculer le niveau global actuel
+      const currentGlobalLevel = Math.floor(currentGlobalXP / 1000) + 1;
+      setPreviousGlobalLevel(currentGlobalLevel);
+
+      // Calculer les gains de stats
+      const gains = {
+        strength: currentProgram.statBonuses.strength || 0,
+        endurance: currentProgram.statBonuses.endurance || 0,
+        power: currentProgram.statBonuses.power || 0,
+        speed: currentProgram.statBonuses.speed || 0,
+        flexibility: currentProgram.statBonuses.flexibility || 0
+      };
+
+      // Calculer le nouveau XP global et vérifier le level up
+      const xpFromSession = sessionData?.xpEarned || 0;
+      const newGlobalXP = currentGlobalXP + xpFromSession;
+      const newGlobalLevel = Math.floor(newGlobalXP / 1000) + 1;
+
+      let levelUpInfo = null;
+      if (newGlobalLevel > currentGlobalLevel) {
+        const getTitleForLevel = (level) => {
+          if (level >= 10) return "Légende";
+          if (level >= 7) return "Champion";
+          if (level >= 4) return "Guerrier";
+          if (level >= 2) return "Apprenti";
+          return "Débutant";
+        };
+
+        levelUpInfo = {
+          newLevel: newGlobalLevel,
+          previousLevel: currentGlobalLevel,
+          newTitle: getTitleForLevel(newGlobalLevel)
+        };
+      }
+
+      return { gains, levelUpInfo };
+    } catch (error) {
+      console.error('Erreur calcul gains:', error);
+      return null;
+    }
+  };
 
   const finalizeWorkout = async () => {
     try {
@@ -36,7 +106,17 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
       const result = await completeWorkout();
       setSessionData(result);
       
-      // Déclencher les animations si compétence maîtrisée
+      // Calculer les gains de stats si niveau complété
+      const levelValidated = result.levelCompleted || isLevelCompleted(result.score);
+      if (levelValidated) {
+        const gainsData = await calculateStatGains(true);
+        if (gainsData) {
+          setStatGains(gainsData.gains);
+          setGlobalLevelUp(gainsData.levelUpInfo);
+        }
+      }
+      
+      // Animations séquentielles
       if (result.programCompleted) {
         Animated.parallel([
           Animated.timing(fadeAnim, {
@@ -51,6 +131,29 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
             useNativeDriver: true,
           }),
         ]).start();
+      }
+
+      // Animation des gains après un délai
+      if (levelValidated) {
+        setTimeout(() => {
+          Animated.timing(gainsAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }).start();
+        }, 1000);
+
+        // Animation level up après les gains
+        if (globalLevelUp) {
+          setTimeout(() => {
+            Animated.spring(levelUpAnim, {
+              toValue: 1,
+              tension: 50,
+              friction: 4,
+              useNativeDriver: true,
+            }).start();
+          }, 1800);
+        }
       }
     } catch (error) {
       console.error('Erreur finalisation:', error);
@@ -253,6 +356,111 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
           </View>
         </Card.Content>
       </Card>
+
+      {/* Gains de stats - Affiché uniquement si niveau complété */}
+      {levelValidated && statGains && (
+        <Animated.View style={{ opacity: gainsAnim }}>
+          <Card style={styles.gainsCard}>
+            <Card.Content style={styles.gainsContent}>
+              <Text style={styles.gainsTitle}>🎁 Gains de Stats</Text>
+              <Text style={styles.gainsSubtitle}>
+                Compétence maîtrisée - Tes caractéristiques augmentent !
+              </Text>
+              
+              {/* XP Global gagné */}
+              <View style={styles.xpGlobalContainer}>
+                <View style={styles.xpGlobalRow}>
+                  <Text style={styles.xpGlobalIcon}>✨</Text>
+                  <Text style={styles.xpGlobalLabel}>XP Global</Text>
+                  <Chip 
+                    mode="flat" 
+                    style={styles.xpGlobalChip}
+                    textStyle={styles.xpGlobalChipText}
+                  >
+                    +{sessionData.xpEarned} XP
+                  </Chip>
+                </View>
+              </View>
+              
+              <View style={styles.statsContainer}>
+                {Object.entries(statGains)
+                  .filter(([stat, value]) => value > 0)
+                  .map(([stat, value]) => {
+                    const statIcons = {
+                      strength: '💪',
+                      endurance: '🔋',
+                      power: '⚡',
+                      speed: '💨',
+                      flexibility: '🤸'
+                    };
+                    const statLabels = {
+                      strength: 'Force',
+                      endurance: 'Endurance',
+                      power: 'Puissance',
+                      speed: 'Vitesse',
+                      flexibility: 'Flexibilité'
+                    };
+
+                    return (
+                      <View key={stat} style={styles.statGainRow}>
+                        <View style={styles.statIconContainer}>
+                          <Text style={styles.statIcon}>{statIcons[stat]}</Text>
+                        </View>
+                        <View style={styles.statInfo}>
+                          <Text style={styles.statName}>{statLabels[stat]}</Text>
+                          <Text style={styles.statGainValue}>+{value}</Text>
+                        </View>
+                        <Chip 
+                          mode="flat" 
+                          style={styles.statGainChip}
+                          textStyle={styles.statGainChipText}
+                        >
+                          +{value}
+                        </Chip>
+                      </View>
+                    );
+                  })
+                }
+              </View>
+            </Card.Content>
+          </Card>
+        </Animated.View>
+      )}
+
+      {/* Level Up Global */}
+      {globalLevelUp && (
+        <Animated.View 
+          style={[
+            { 
+              opacity: levelUpAnim, 
+              transform: [{ scale: levelUpAnim }] 
+            }
+          ]}
+        >
+          <Card style={styles.levelUpCard}>
+            <Card.Content style={styles.levelUpContent}>
+              <Text style={styles.levelUpIcon}>🎉</Text>
+              <Text style={styles.levelUpTitle}>NIVEAU GLOBAL UP !</Text>
+              <Text style={styles.levelUpMessage}>
+                Tu es maintenant niveau {globalLevelUp.newLevel} - {globalLevelUp.newTitle} !
+              </Text>
+              <View style={styles.levelUpDetails}>
+                <Text style={styles.levelUpFrom}>
+                  Niveau {globalLevelUp.previousLevel} → Niveau {globalLevelUp.newLevel}
+                </Text>
+                <Chip 
+                  mode="flat" 
+                  style={styles.titleChip}
+                  textStyle={styles.titleChipText}
+                  icon={() => <Text style={styles.titleChipIcon}>👑</Text>}
+                >
+                  {globalLevelUp.newTitle}
+                </Chip>
+              </View>
+            </Card.Content>
+          </Card>
+        </Animated.View>
+      )}
 
       {/* Message de validation */}
       {levelValidated && (
@@ -716,6 +924,172 @@ const styles = StyleSheet.create({
   },
   discoverButtonContent: {
     paddingVertical: 8,
+  },
+
+  // Styles pour les gains de stats
+  gainsCard: {
+    elevation: 8,
+    borderRadius: 16,
+    marginBottom: 20,
+    backgroundColor: '#F8F9FF',
+    borderWidth: 2,
+    borderColor: colors.primary + '30',
+  },
+  gainsContent: {
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  gainsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  gainsSubtitle: {
+    fontSize: 14,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 16,
+    opacity: 0.8,
+  },
+  
+  // XP Global section
+  xpGlobalContainer: {
+    marginBottom: 20,
+  },
+  xpGlobalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#FFB74D',
+  },
+  xpGlobalIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  xpGlobalLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#F57C00',
+  },
+  xpGlobalChip: {
+    backgroundColor: '#FF9800',
+    borderRadius: 20,
+  },
+  xpGlobalChipText: {
+    color: colors.background,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  
+  statsContainer: {
+    gap: 12,
+  },
+  statGainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+  },
+  statIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.primary + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  statIcon: {
+    fontSize: 24,
+  },
+  statInfo: {
+    flex: 1,
+  },
+  statName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  statGainValue: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: 'bold',
+  },
+  statGainChip: {
+    backgroundColor: colors.success + '20',
+    borderRadius: 20,
+  },
+  statGainChipText: {
+    color: colors.success,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
+  // Styles pour le level up global
+  levelUpCard: {
+    elevation: 12,
+    borderRadius: 20,
+    marginBottom: 20,
+    backgroundColor: '#FFF3E0',
+    borderWidth: 3,
+    borderColor: '#FF9800',
+  },
+  levelUpContent: {
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  levelUpIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  levelUpTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FF6F00',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  levelUpMessage: {
+    fontSize: 16,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  levelUpDetails: {
+    alignItems: 'center',
+    gap: 12,
+  },
+  levelUpFrom: {
+    fontSize: 14,
+    color: colors.text,
+    opacity: 0.8,
+    marginBottom: 8,
+  },
+  titleChip: {
+    backgroundColor: '#FF9800',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  titleChipText: {
+    color: colors.background,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  titleChipIcon: {
+    fontSize: 16,
+    marginRight: 4,
   },
 });
 
