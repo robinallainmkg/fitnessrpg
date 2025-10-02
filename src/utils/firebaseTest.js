@@ -1,10 +1,8 @@
-// Utilitaire de test Firebase
-import { auth, db } from '../services/firebase';
-
+// Utilitaire de test Firebase - Version Mock
 export const testFirebaseConnection = () => {
-  console.log('=== Test Firebase ===');
-  console.log('Auth instance:', auth ? '✅ OK' : '❌ Non disponible');
-  console.log('Firestore instance:', db ? '✅ OK' : '❌ Non disponible');
-  console.log('Current user:', auth?.currentUser ? auth.currentUser.email : 'Pas connecté');
-  console.log('====================');
+  console.log('=== Test Firebase MOCK ===');
+  console.log('Auth instance: ✅ MOCK OK');
+  console.log('Firestore instance: ✅ MOCK OK');
+  console.log('Current user: MOCK actif');
+  console.log('========================');
 };

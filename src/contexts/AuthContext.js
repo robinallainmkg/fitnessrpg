@@ -1,129 +1,205 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Alert } from 'react-native';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
-import { testFirebaseConnection } from '../utils/firebaseTest';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const AuthContext = createContext({});
+console.log('🔥 AUTHCONTEXT: Mode Développement avec Persistence AsyncStorage');
+
+const AuthContext = createContext();
+
+// Clés de stockage
+const STORAGE_KEY = '@user_session';
+const USER_DATA_KEY = '@user_data';
+
+// Simulateur Firebase avec vraie persistence
+const DevAuthService = {
+  // Sauvegarder la session
+  saveSession: async (user) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      console.log('💾 Session sauvegardée dans AsyncStorage');
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde session:', error);
+    }
+  },
+
+  // Charger la session
+  loadSession: async () => {
+    try {
+      const savedUser = await AsyncStorage.getItem(STORAGE_KEY);
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        console.log('✅ Session restaurée:', user.email);
+        return user;
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Erreur chargement session:', error);
+      return null;
+    }
+  },
+
+  // Supprimer la session
+  clearSession: async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      await AsyncStorage.removeItem(USER_DATA_KEY);
+      console.log('🗑️ Session supprimée');
+    } catch (error) {
+      console.error('❌ Erreur suppression session:', error);
+    }
+  },
+
+  // Sauvegarder données utilisateur
+  saveUserData: async (userData) => {
+    try {
+      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+      console.log('💾 Données utilisateur sauvegardées');
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde données:', error);
+    }
+  },
+
+  // Login simulé
+  login: async (email, password) => {
+    console.log('🔄 Login développement:', email);
+    
+    // Simuler délai réseau
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const user = {
+      uid: 'dev-user-' + Date.now(),
+      email: email,
+      emailVerified: true,
+      createdAt: new Date().toISOString()
+    };
+
+    await DevAuthService.saveSession(user);
+    
+    // Créer données utilisateur par défaut
+    const userData = {
+      email: user.email,
+      totalXP: 0,
+      level: 1,
+      completedPrograms: [],
+      userProgress: {},
+      streak: 0,
+      lastWorkoutDate: null,
+      createdAt: new Date().toISOString(),
+    };
+    
+    await DevAuthService.saveUserData(userData);
+    
+    return user;
+  },
+
+  // Signup simulé
+  signup: async (email, password) => {
+    console.log('🔄 Signup développement:', email);
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return await DevAuthService.login(email, password);
+  }
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Charger la session au démarrage
   useEffect(() => {
-    console.log('🚀 AuthProvider: Setting up auth listener');
-    
-    // Test Firebase connection
-    testFirebaseConnection();
-    
-    // Vérification visuelle
-    if (!auth) {
-      console.error('❌ AUTH NOT AVAILABLE');
-      Alert.alert('Erreur Firebase', 'Auth service non disponible');
-      setLoading(false);
-      return;
-    }
-    
-    if (!db) {
-      console.error('❌ FIRESTORE NOT AVAILABLE');
-      Alert.alert('Erreur Firebase', 'Firestore service non disponible');
-    }
-    
-    console.log('✅ Firebase services OK, setting up listener...');
-    
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('🔄 Auth state changed:', user ? `Logged in: ${user.email}` : 'Logged out');
-      setUser(user);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      console.log('🔄 Initialisation Auth avec persistence...');
+      
+      try {
+        const savedUser = await DevAuthService.loadSession();
+        if (savedUser) {
+          setUser(savedUser);
+          console.log('✅ Utilisateur connecté automatiquement:', savedUser.email);
+        } else {
+          console.log('ℹ️ Aucune session sauvegardée');
+        }
+      } catch (error) {
+        console.error('❌ Erreur initialisation:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    return unsubscribe;
+    initializeAuth();
   }, []);
 
-  /**
-   * Inscription avec email et mot de passe
-   */
   const signup = async (email, password) => {
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      setLoading(true);
+      console.log('🔄 Inscription:', email);
       
-      // Créer le document utilisateur dans Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        totalXP: 0,
-        createdAt: serverTimestamp()
-      });
-
-      return { success: true };
+      const newUser = await DevAuthService.signup(email, password);
+      setUser(newUser);
+      
+      return { success: true, user: newUser };
     } catch (error) {
-      console.error('Erreur signup:', error);
-      return { success: false, error: translateFirebaseError(error.code) };
+      console.error('❌ Erreur inscription:', error);
+      return { success: false, error: 'Erreur lors de l\'inscription' };
+    } finally {
+      setLoading(false);
     }
   };
 
-  /**
-   * Connexion avec email et mot de passe
-   */
   const login = async (email, password) => {
     try {
-      console.log('Tentative de connexion avec:', email);
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('Connexion réussie');
-      return { success: true };
+      setLoading(true);
+      console.log('🔄 Connexion:', email);
+      
+      const loggedUser = await DevAuthService.login(email, password);
+      setUser(loggedUser);
+      
+      return { success: true, user: loggedUser };
     } catch (error) {
-      console.error('Erreur login:', error);
-      console.error('Code erreur:', error.code);
-      console.error('Message:', error.message);
-      return { success: false, error: translateFirebaseError(error.code) };
+      console.error('❌ Erreur connexion:', error);
+      return { success: false, error: 'Erreur lors de la connexion' };
+    } finally {
+      setLoading(false);
     }
   };
 
-  /**
-   * Déconnexion
-   */
   const logout = async () => {
     try {
-      await signOut(auth);
+      console.log('🔄 Déconnexion');
+      await DevAuthService.clearSession();
+      setUser(null);
       return { success: true };
     } catch (error) {
-      console.error('Erreur logout:', error);
+      console.error('❌ Erreur déconnexion:', error);
       return { success: false, error: 'Erreur lors de la déconnexion' };
     }
   };
 
-  /**
-   * Traduit les codes d'erreur Firebase en français
-   */
-  const translateFirebaseError = (errorCode) => {
-    switch (errorCode) {
-      case 'auth/email-already-in-use':
-        return 'Cette adresse email est déjà utilisée';
-      case 'auth/invalid-email':
-        return 'Adresse email invalide';
-      case 'auth/operation-not-allowed':
-        return 'Opération non autorisée';
-      case 'auth/weak-password':
-        return 'Le mot de passe doit contenir au moins 6 caractères';
-      case 'auth/user-disabled':
-        return 'Ce compte a été désactivé';
-      case 'auth/user-not-found':
-        return 'Aucun compte trouvé avec cette adresse email';
-      case 'auth/wrong-password':
-        return 'Mot de passe incorrect';
-      case 'auth/invalid-credential':
-        return 'Email ou mot de passe incorrect';
-      case 'auth/too-many-requests':
-        return 'Trop de tentatives. Réessayez plus tard';
-      case 'auth/network-request-failed':
-        return 'Erreur de connexion. Vérifiez votre connexion internet';
-      default:
-        return 'Une erreur est survenue. Veuillez réessayer';
+  const resetUserData = async () => {
+    try {
+      if (!user) {
+        return { success: false, error: 'Aucun utilisateur connecté' };
+      }
+      
+      console.log('🔄 RESET: Réinitialisation des données utilisateur');
+      
+      const resetData = {
+        totalXP: 0,
+        email: user.email,
+        createdAt: new Date().toISOString(),
+        level: 1,
+        completedPrograms: [],
+        userProgress: {},
+        streak: 0,
+        lastWorkoutDate: null
+      };
+      
+      await DevAuthService.saveUserData(resetData);
+      console.log('✅ RESET: Données utilisateur réinitialisées');
+      
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erreur reset:', error);
+      return { success: false, error: 'Erreur lors de la réinitialisation' };
     }
   };
 
@@ -132,7 +208,8 @@ export const AuthProvider = ({ children }) => {
     loading,
     signup,
     login,
-    logout
+    logout,
+    resetUserData
   };
 
   return (
@@ -142,9 +219,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-/**
- * Hook personnalisé pour accéder au contexte d'authentification
- */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

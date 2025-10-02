@@ -95,7 +95,9 @@ const AuthScreen = () => {
                   colors: {
                     primary: colors.primary,
                     outline: colors.border,
-                    background: colors.surface
+                    background: colors.surface,
+                    onSurface: colors.text,
+                    onSurfaceVariant: colors.textSecondary
                   }
                 }}
               />
@@ -111,7 +113,9 @@ const AuthScreen = () => {
                   colors: {
                     primary: colors.primary,
                     outline: colors.border,
-                    background: colors.surface
+                    background: colors.surface,
+                    onSurface: colors.text,
+                    onSurfaceVariant: colors.textSecondary
                   }
                 }}
               />

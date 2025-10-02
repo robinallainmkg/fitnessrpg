@@ -16,11 +16,9 @@ import {
 } from 'react-native-paper';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
-import { auth } from '../services/firebase';
-import { signOut } from 'firebase/auth';
 
 const ProfileScreen = () => {
-  const { user } = useAuth();
+  const { user, logout, resetUserData } = useAuth();
 
   const handleLogout = async () => {
     Alert.alert(
@@ -36,7 +34,7 @@ const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await signOut(auth);
+              await logout();
             } catch (error) {
               console.error('Erreur déconnexion:', error);
               Alert.alert('Erreur', 'Impossible de vous déconnecter');
@@ -45,6 +43,20 @@ const ProfileScreen = () => {
         },
       ]
     );
+  };
+
+  const handleReset = async () => {
+    try {
+      const result = await resetUserData();
+      if (result.success) {
+        Alert.alert('✅ Reset réussi', 'Toutes tes données ont été réinitialisées !');
+      } else {
+        Alert.alert('❌ Erreur', result.error || 'Impossible de réinitialiser');
+      }
+    } catch (error) {
+      console.error('Erreur reset:', error);
+      Alert.alert('❌ Erreur', 'Une erreur est survenue');
+    }
   };
 
   const handleSendFeedback = () => {
@@ -105,7 +117,9 @@ const ProfileScreen = () => {
             <List.Item
               title="Notifications"
               description="Recevoir des rappels d'entraînement"
-              left={() => <List.Icon icon="bell-outline" />}
+              titleStyle={{ color: colors.text }}
+              descriptionStyle={{ color: colors.textSecondary }}
+              left={() => <List.Icon icon="bell-outline" color={colors.textSecondary} />}
               right={() => (
                 <Switch
                   value={true}
@@ -122,7 +136,9 @@ const ProfileScreen = () => {
             <List.Item
               title="Rappels quotidiens"
               description="Notification pour s'entraîner"
-              left={() => <List.Icon icon="calendar-clock" />}
+              titleStyle={{ color: colors.text }}
+              descriptionStyle={{ color: colors.textSecondary }}
+              left={() => <List.Icon icon="calendar-clock" color={colors.textSecondary} />}
               right={() => (
                 <Switch
                   value={false}
@@ -138,7 +154,9 @@ const ProfileScreen = () => {
             <List.Item
               title="Mode sombre"
               description="Utiliser le thème sombre"
-              left={() => <List.Icon icon="theme-light-dark" />}
+              titleStyle={{ color: colors.text }}
+              descriptionStyle={{ color: colors.textSecondary }}
+              left={() => <List.Icon icon="theme-light-dark" color={colors.textSecondary} />}
               right={() => (
                 <Switch
                   value={false}
@@ -202,6 +220,44 @@ const ProfileScreen = () => {
           </View>
         </Card.Content>
       </Card>
+
+      {/* Reset développeur */}
+      {user?.email === 'robinallainmkg@gmail.com' && (
+        <Card style={[styles.logoutCard, { backgroundColor: colors.warning + '20' }]}>
+          <Card.Content style={styles.logoutContent}>
+            <Button
+              mode="outlined"
+              icon="restart"
+              onPress={() => {
+                Alert.alert(
+                  'Reset compte',
+                  'Réinitialiser toutes tes données ? (XP, progression, etc.)',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    {
+                      text: 'Reset',
+                      style: 'destructive',
+                      onPress: async () => {
+                        const result = await resetUserData();
+                        if (result.success) {
+                          Alert.alert('✅', 'Compte réinitialisé !');
+                        } else {
+                          Alert.alert('❌', result.error);
+                        }
+                      }
+                    }
+                  ]
+                );
+              }}
+              style={[styles.logoutButton, { borderColor: colors.warning }]}
+              contentStyle={styles.buttonContent}
+              labelStyle={{ color: colors.warning }}
+            >
+              🔄 Reset Compte (Dev)
+            </Button>
+          </Card.Content>
+        </Card>
+      )}
 
       {/* Déconnexion */}
       <Card style={styles.logoutCard}>

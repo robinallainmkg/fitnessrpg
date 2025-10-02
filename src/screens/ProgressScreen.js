@@ -11,9 +11,7 @@ import {
   ActivityIndicator
 } from 'react-native-paper';
 import { LineChart } from 'react-native-chart-kit';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
 import { colors } from '../theme/colors';
 
 const ProgressScreen = () => {
@@ -32,21 +30,40 @@ const ProgressScreen = () => {
 
     setLoading(true);
     try {
-      const sessionsQuery = query(
-        collection(db, 'workoutSessions'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc'),
-        limit(10)
-      );
+      console.log('📊 MOCK: Chargement sessions workout...');
+      
+      // Mock workout sessions
+      const sessions = [
+        {
+          id: 'session1',
+          userId: user.uid,
+          programId: 'pull-up-basics',
+          levelId: 'level-1',
+          score: 75,
+          xp: 100,
+          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Il y a 7 jours
+        },
+        {
+          id: 'session2',
+          userId: user.uid,
+          programId: 'pull-up-basics',
+          levelId: 'level-1',
+          score: 85,
+          xp: 120,
+          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // Il y a 3 jours
+        },
+        {
+          id: 'session3',
+          userId: user.uid,
+          programId: 'muscle-up-prep',
+          levelId: 'level-1',
+          score: 70,
+          xp: 90,
+          createdAt: new Date() // Aujourd'hui
+        }
+      ];
 
-      const snapshot = await getDocs(sessionsQuery);
-      const sessions = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date()
-      }));
-
-      setWorkoutSessions(sessions.reverse()); // Inverser pour avoir les plus anciennes en premier
+      setWorkoutSessions(sessions);
     } catch (error) {
       console.error('Erreur chargement sessions:', error);
     } finally {

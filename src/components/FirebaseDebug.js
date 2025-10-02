@@ -1,42 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { auth, db } from '../services/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 const FirebaseDebug = () => {
+  const { user } = useAuth();
+  
   const [debugInfo, setDebugInfo] = useState({
-    authReady: false,
-    dbReady: false,
-    currentUser: null,
+    authReady: true, // Mock toujours OK
+    dbReady: true,   // Mock toujours OK
+    currentUser: user,
     error: null
   });
 
-  const [showDebug, setShowDebug] = useState(__DEV__); // Seulement en dev
+  const [showDebug, setShowDebug] = useState(false); // Désactivé visuellement
 
   useEffect(() => {
     try {
-      const authReady = !!auth;
-      const dbReady = !!db;
-      const currentUser = auth?.currentUser;
-      
+      // Utiliser le mock AuthContext au lieu du vrai Firebase
       setDebugInfo({
-        authReady,
-        dbReady,
-        currentUser: currentUser ? currentUser.email : 'Pas connecté',
+        authReady: true,
+        dbReady: true,
+        currentUser: user ? user.email : 'Pas connecté',
         error: null
       });
 
-      console.log('🔥 Firebase Debug:', {
-        authReady,
-        dbReady,
-        currentUser: currentUser?.email || 'Pas connecté'
+      console.log('🔥 Firebase Debug MOCK:', {
+        authReady: true,
+        dbReady: true,
+        currentUser: user?.email || 'Pas connecté'
       });
     } catch (error) {
-      console.error('❌ Firebase Error:', error);
+      console.error('❌ Firebase Mock Error:', error);
       setDebugInfo(prev => ({ ...prev, error: error.message }));
     }
-  }, []);
+  }, [user]);
 
-  if (!showDebug) return null;
+  // Firebase Debug désactivé
+  return null;
 
   return (
     <View style={styles.debugContainer}>

@@ -63,6 +63,14 @@ const Timer = ({ duration, onComplete, onSkip }) => {
         style={styles.progressBar}
       />
 
+      {timeRemaining <= 5 && timeRemaining > 0 && (
+        <View style={styles.urgentContainer}>
+          <Text style={styles.urgentText}>
+            Préparez-vous ! ⚡
+          </Text>
+        </View>
+      )}
+
       <View style={styles.controls}>
         {onSkip && timeRemaining > 0 && (
           <Button
@@ -78,14 +86,6 @@ const Timer = ({ duration, onComplete, onSkip }) => {
           </Button>
         )}
       </View>
-
-      {timeRemaining <= 5 && timeRemaining > 0 && (
-        <View style={styles.urgentContainer}>
-          <Text style={styles.urgentText}>
-            Préparez-vous ! ⚡
-          </Text>
-        </View>
-      )}
     </View>
   );
 };
@@ -119,10 +119,11 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: colors.border,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   controls: {
     alignItems: 'center',
+    marginTop: 8,
   },
   skipButton: {
     borderColor: colors.border,

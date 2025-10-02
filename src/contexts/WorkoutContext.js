@@ -123,6 +123,8 @@ export const WorkoutProvider = ({ children }) => {
     if (!workoutData || !user?.uid) return;
 
     try {
+      console.log('📱 MOCK: Début finalisation workout...');
+
       // Calculer le score
       const exercisesCompleted = workoutData.exercises.map((exercise, index) => {
         const setsResults = finalSetsData[index] || [];
@@ -153,96 +155,55 @@ export const WorkoutProvider = ({ children }) => {
         xpEarned,
         startTime: workoutStartTime,
         endTime: new Date(),
-        createdAt: serverTimestamp()
+        createdAt: new Date() // Mock timestamp
       };
 
-      // Sauvegarder en Firestore
-      const sessionRef = await addDoc(collection(db, 'workoutSessions'), workoutSession);
+      // MOCK: Simuler la sauvegarde en Firestore
+      console.log('📱 MOCK: Sauvegarde session workout...', workoutSession);
+      const sessionRef = { id: `session_${Date.now()}` };
 
       let levelCompleted = false;
       let programCompleted = false;
       let unlockedPrograms = [];
 
-      // Mettre à jour la progression utilisateur si le niveau est validé
+      // MOCK: Simuler la mise à jour de la progression
       if (score >= 800) {
         levelCompleted = true;
+        console.log('📱 MOCK: Niveau validé ! Score:', score);
         
-        // Vérifier si c'est le dernier niveau du programme (niveau 6) ET score validé
-        if (workoutData.level.id === 6) {
+        // Vérifier si c'est le dernier niveau du programme 
+        if (workoutData.level.id === workoutData.program.levels?.length) {
           programCompleted = true;
+          console.log('📱 MOCK: Programme complété !', workoutData.program.name);
           
-          // 1. Marquer le programme comme terminé dans userProgress
-          const progressRef = doc(db, 'userProgress', `${user.uid}_${workoutData.program.id}`);
-          await updateDoc(progressRef, {
-            currentLevel: 7, // Indique que le programme est terminé
-            completedAt: serverTimestamp()
-          });
-
-          // 2. Mettre à jour le profil utilisateur
-          const userRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userRef);
-          const currentTotalXP = userDoc.data()?.totalXP || 0;
-          const currentCompletedPrograms = userDoc.data()?.totalCompletedPrograms || 0;
-          const bonusXP = 500; // XP bonus pour complétion de programme
-
-          await updateDoc(userRef, {
-            completedPrograms: arrayUnion(workoutData.program.id),
-            totalCompletedPrograms: currentCompletedPrograms + 1,
-            totalXP: currentTotalXP + xpEarned + bonusXP,
-            lastXPUpdate: serverTimestamp()
-          });
-
-          // 3. Débloquer les programmes suivants
+          // Simuler le déblocage des programmes suivants
           if (workoutData.program.unlocks && workoutData.program.unlocks.length > 0) {
-            for (const unlockedProgramId of workoutData.program.unlocks) {
-              try {
-                // Créer un nouveau document de progression pour le programme débloqué
-                const unlockedProgressRef = doc(db, 'userProgress', `${user.uid}_${unlockedProgramId}`);
-                
-                // Vérifier si le document existe déjà
-                const existingProgress = await getDoc(unlockedProgressRef);
-                
-                if (!existingProgress.exists()) {
-                  await setDoc(unlockedProgressRef, {
-                    userId: user.uid,
-                    programId: unlockedProgramId,
-                    currentLevel: 1,
-                    unlockedLevels: [1],
-                    completedLevels: [],
-                    totalSessions: 0,
-                    unlockedAt: serverTimestamp(),
-                    createdAt: serverTimestamp()
-                  });
-
-                  // Trouver le nom du programme débloqué
-                  const unlockedProgram = programsData.programs.find(p => p.id === unlockedProgramId);
-                  if (unlockedProgram) {
-                    unlockedPrograms.push(unlockedProgram.name);
-                  }
-                }
-              } catch (unlockError) {
-                console.error(`Erreur déverrouillage programme ${unlockedProgramId}:`, unlockError);
-              }
-            }
+            unlockedPrograms = workoutData.program.unlocks.map(programId => {
+              const program = programsData.categories[0]?.programs?.find(p => p.id === programId);
+              return program ? { id: programId, name: program.name } : null;
+            }).filter(Boolean);
+            console.log('📱 MOCK: Programmes débloqués:', unlockedPrograms);
           }
-        } else {
-          // Juste un niveau validé parmi d'autres
-          await updateUserProgress(workoutData.program.id, workoutData.level.id);
-          // Mettre à jour les XP utilisateur
-          await updateUserXP(xpEarned);
         }
-      } else {
-        // Niveau non validé, juste mettre à jour les XP
-        await updateUserXP(xpEarned);
       }
+
+      console.log('📱 MOCK: Finalisation réussie !');
 
       return {
         sessionId: sessionRef.id,
         score,
+        percentage,
         levelCompleted,
         programCompleted,
         unlockedPrograms,
-        ...workoutSession
+        exercises: exercisesCompleted,
+        xpEarned,
+        startTime: workoutStartTime,
+        endTime: new Date(),
+        userProgress: {
+          currentLevel: levelCompleted ? workoutData.level.id + 1 : workoutData.level.id,
+          unlockedLevels: levelCompleted ? [1, 2, 3, workoutData.level.id + 1].slice(0, workoutData.level.id + 1) : [1, 2, 3].slice(0, workoutData.level.id)
+        }
       };
 
     } catch (error) {

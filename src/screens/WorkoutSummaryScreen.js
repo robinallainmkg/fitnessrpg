@@ -36,7 +36,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
       const result = await completeWorkout();
       setSessionData(result);
       
-      // Déclencher les animations si programme complété
+      // Déclencher les animations si compétence maîtrisée
       if (result.programCompleted) {
         Animated.parallel([
           Animated.timing(fadeAnim, {
@@ -69,8 +69,8 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
 
   const navigateToNextLevel = () => {
     resetWorkout();
-    // Retourner vers le détail du programme - l'utilisateur pourra voir le niveau suivant débloqué
-    navigation.navigate('ProgramDetail', { 
+    // Retourner vers le détail de la compétence - l'utilisateur pourra voir le niveau suivant débloqué
+    navigation.navigate('SkillDetail', { 
       program,
       userProgress: sessionData?.userProgress || null
     });
@@ -95,7 +95,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
   const shareSuccess = async () => {
     try {
       await Share.share({
-        message: `Je viens de compléter le programme ${program.name} sur Fitness Game ! 💪`,
+        message: `Je viens de maîtriser la compétence ${program.name} sur Fitness Game ! 💪`,
         title: 'Ma réussite Fitness Game'
       });
     } catch (error) {
@@ -153,7 +153,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
           {programCompleted ? '🎉' : levelValidated ? '🎉' : '💪'}
         </Text>
         <Text style={styles.title}>
-          {programCompleted ? 'PROGRAMME COMPLÉTÉ !' : levelValidated ? 'Félicitations !' : 'Séance terminée !'}
+          {programCompleted ? 'COMPÉTENCE MAÎTRISÉE !' : levelValidated ? 'Félicitations !' : 'Séance terminée !'}
         </Text>
         <Text style={styles.subtitle}>
           {level.name} - {program.name}
@@ -170,9 +170,9 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
           <Card style={[styles.completionCard, styles.successGradient]}>
             <Card.Content style={styles.completionContent}>
               <Text style={styles.completionIcon}>🎉</Text>
-              <Text style={styles.completionTitle}>PROGRAMME COMPLÉTÉ !</Text>
+              <Text style={styles.completionTitle}>COMPÉTENCE MAÎTRISÉE !</Text>
               <Text style={styles.completionMessage}>
-                Félicitations ! Tu as terminé le programme {program.name}
+                Félicitations ! Tu as maîtrisé la compétence {program.name}
               </Text>
               <View style={styles.bonusXPContainer}>
                 <Text style={styles.bonusXPLabel}>XP Bonus</Text>
@@ -200,7 +200,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
           <Card style={styles.unlockedCard}>
             <Card.Content>
               <Text style={styles.unlockedTitle}>
-                🔓 Nouveaux programmes débloqués :
+                🔓 Nouvelles compétences débloquées :
               </Text>
               
               <ScrollView 
@@ -349,7 +349,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
 
         {programCompleted ? (
           <>
-            {/* Boutons pour programme complété */}
+            {/* Boutons pour compétence maîtrisée */}
             <Button
               mode="contained"
               onPress={navigateToHome}
@@ -366,7 +366,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
                 style={styles.actionButton}
                 labelStyle={{ color: colors.warning }}
               >
-                Voir les nouveaux programmes
+                Voir les nouvelles compétences
               </Button>
             )}
           </>

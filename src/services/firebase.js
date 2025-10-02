@@ -1,52 +1,44 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
+import { initializeAuth, getReactNativePersistence, getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 
-// Configuration Firebase
+// Configuration Firebase depuis .env
 const firebaseConfig = {
-  apiKey: "AIzaSyAokpSG0MrYQVWYWXDQCOtVjM10ilYZRBA",
-  authDomain: "hybridrpg-53f62.firebaseapp.com",
-  projectId: "hybridrpg-53f62",
-  storageBucket: "hybridrpg-53f62.appspot.com",
-  messagingSenderId: "195554523219",
-  appId: "1:195554523219:web:04e0abb1ecbdd38c926ea6"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialiser Firebase une seule fois
-let app;
-let auth;
-let db;
+console.log('🔥 Firebase Config:', {
+  apiKey: firebaseConfig.apiKey ? '✅ Défini' : '❌ Manquant',
+  projectId: firebaseConfig.projectId ? '✅ Défini' : '❌ Manquant',
+  authDomain: firebaseConfig.authDomain ? '✅ Défini' : '❌ Manquant',
+});
 
-if (getApps().length === 0) {
-  // Première initialisation
-  app = initializeApp(firebaseConfig);
-  
-  // Initialiser Auth avec persistance pour React Native
-  if (Platform.OS !== 'web') {
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage)
-    });
-  } else {
-    auth = getAuth(app);
-  }
-  
-  // Initialiser Firestore
-  db = getFirestore(app);
-  
-  console.log('🔥 Firebase initialisé avec succès');
-  console.log('📱 Platform:', Platform.OS);
-  console.log('🔐 Auth:', auth ? 'OK' : 'KO');
-  console.log('🗄️ Firestore:', db ? 'OK' : 'KO');
-} else {
-  // Firebase déjà initialisé
-  app = getApps()[0];
+// Initialiser l'app Firebase
+const app = initializeApp(firebaseConfig);
+
+// CRITIQUE : Initialiser Auth avec persistence AsyncStorage
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+  console.log('✅ Firebase Auth initialisé avec persistence AsyncStorage');
+} catch (error) {
+  console.error('❌ Erreur initialisation Firebase Auth:', error);
+  // Fallback si déjà initialisé
   auth = getAuth(app);
-  db = getFirestore(app);
-  console.log('🔥 Firebase déjà initialisé');
 }
 
-// Exporter les services
+// Initialiser Firestore
+const db = getFirestore(app);
+
+console.log('🔥 Firebase Services initialisés');
+
 export { auth, db };
 export default app;

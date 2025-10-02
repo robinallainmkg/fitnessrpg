@@ -12,8 +12,6 @@ import {
   Animated
 } from 'react-native';
 import { Modal, Portal, Button, Divider, Badge, IconButton } from 'react-native-paper';
-import { collection, doc, getDocs, getDoc, query, where } from 'firebase/firestore';
-import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import SkillNode from '../components/SkillNode';
 import programs from '../data/programs.json';
@@ -26,10 +24,10 @@ const NODE_SIZE = 80;
 const PADDING = 20;
 // Calcul responsive : largeur disponible / 5 colonnes
 const COLUMN_WIDTH = Math.max(120, (screenWidth - PADDING * 2) / 5);
-// Hauteur adaptée pour 10 tiers
+// Hauteur adaptée pour 15 tiers (augmenté pour avoir plus d'espace)
 const ROW_HEIGHT = Math.max(140, COLUMN_WIDTH * 1.2);
 const TREE_WIDTH = 5 * COLUMN_WIDTH;
-const TREE_HEIGHT = 10 * ROW_HEIGHT;
+const TREE_HEIGHT = 15 * ROW_HEIGHT; // Augmenté de 10 à 15
 
 const SkillTreeScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -51,33 +49,49 @@ const SkillTreeScreen = ({ navigation }) => {
     currentTier: 0
   });
 
-  // Récupère la catégorie Street Workout
+  // Récupère le programme Street Workout
   const streetCategory = programs.categories.find(cat => cat.id === 'street');
   const streetPrograms = streetCategory?.programs || [];
+  
+  console.log('📱 DEBUG ARBRE:', {
+    streetCategory: !!streetCategory,
+    streetProgramsCount: streetPrograms.length,
+    firstProgram: streetPrograms[0]?.name,
+    loading,
+    dataLoaded
+  });
 
-  // Charge les données utilisateur
+  // Charge les données utilisateur - VERSION MOCK
   const loadUserData = useCallback(async () => {
     if (!userId) return;
 
     try {
       setLoading(true);
 
-      // Charge les progrès utilisateur
-      const progressQuery = query(
-        collection(db, 'userProgress'),
-        where('userId', '==', userId)
-      );
-      const progressSnapshot = await getDocs(progressQuery);
-      const progressData = {};
-      progressSnapshot.forEach(doc => {
-        const data = doc.data();
-        progressData[data.programId] = data;
-      });
+      console.log('📱 MOCK: Chargement données SkillTree...');
+
+      // Mock user progress
+      const progressData = {
+        'pull-up-basics': { 
+          currentLevel: 2, 
+          xp: 150, 
+          programId: 'pull-up-basics',
+          userId: userId 
+        },
+        'muscle-up-prep': { 
+          currentLevel: 1, 
+          xp: 50, 
+          programId: 'muscle-up-prep',
+          userId: userId 
+        }
+      };
       setUserProgress(progressData);
 
-      // Charge les programmes complétés
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const userData = userDoc.data();
+      // Mock user data
+      const userData = {
+        totalXP: 200,
+        completedPrograms: ['pull-up-basics']
+      };
       const completed = userData?.completedPrograms || [];
       setCompletedPrograms(completed);
 
@@ -175,7 +189,7 @@ const SkillTreeScreen = ({ navigation }) => {
     setModalVisible(true);
   }, []);
 
-  // Obtient les programmes prérequis avec leurs statuts
+  // Obtient les compétences prérequises avec leurs statuts
   const getPrerequisitesWithStatus = useCallback((program) => {
     return program.prerequisites.map(prereqId => {
       const prereqProgram = streetPrograms.find(p => p.id === prereqId);
@@ -188,7 +202,7 @@ const SkillTreeScreen = ({ navigation }) => {
     });
   }, [streetPrograms, completedPrograms]);
 
-  // Obtient les programmes que ce programme débloque
+  // Obtient les compétences que cette compétence débloque
   const getUnlockedPrograms = useCallback((program) => {
     return program.unlocks?.map(unlockedId => {
       const unlockedProgram = streetPrograms.find(p => p.id === unlockedId);
@@ -225,7 +239,7 @@ const SkillTreeScreen = ({ navigation }) => {
     }).start();
   }, []);
 
-  // Détecte les changements d'état des programmes pour animer les lignes
+  // Détecte les changements d'état des compétences pour animer les lignes
   useEffect(() => {
     streetPrograms.forEach((program) => {
       if (program.unlocks && program.unlocks.length > 0) {
@@ -311,9 +325,9 @@ const SkillTreeScreen = ({ navigation }) => {
               height = 3;
               shadowColor = program.color || colors.primary;
             } else {
-              // Lignes vers nœuds LOCKED
-              lineColor = '#333333';
-              opacity = 0.15;
+              // Lignes vers nœuds LOCKED - Plus visibles
+              lineColor = '#666666';
+              opacity = 0.4; // Augmenté de 0.15 à 0.4
               height = 2;
               shadowColor = 'transparent';
             }
@@ -460,7 +474,7 @@ const SkillTreeScreen = ({ navigation }) => {
             </View>
           )}
 
-          {/* Programmes débloqués */}
+          {/* Compétences débloquées */}
           {unlockedPrograms.length > 0 && (
             <View style={styles.modalSection}>
               <Text style={styles.modalSectionTitle}>🔓 Débloque</Text>
@@ -507,7 +521,10 @@ const SkillTreeScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>🏋️ Street Workout</Text>
         <View style={styles.statsContainer}>
           <Text style={styles.statsText}>
-            {userStats.totalCompleted}/{streetPrograms.length} • {userStats.totalXP} XP • Tier {userStats.currentTier}
+            {userStats.totalCompleted}/{streetPrograms.length} compétences débloquées
+          </Text>
+          <Text style={styles.xpText}>
+            {userStats.totalXP} XP • Tier {userStats.currentTier}
           </Text>
         </View>
       </View>
@@ -515,7 +532,7 @@ const SkillTreeScreen = ({ navigation }) => {
       {/* Badge Admin */}
       {isAdmin && (
         <View style={styles.adminBadge}>
-          <Text style={styles.adminText}>👑 MODE ADMIN - Tous les programmes débloqués</Text>
+          <Text style={styles.adminText}>👑 MODE ADMIN - Toutes les compétences débloquées</Text>
         </View>
       )}
 
@@ -523,15 +540,20 @@ const SkillTreeScreen = ({ navigation }) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ minWidth: TREE_WIDTH + PADDING * 2 }}
         style={styles.horizontalScroll}
       >
         <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ minHeight: TREE_HEIGHT + PADDING * 2, paddingHorizontal: PADDING, paddingVertical: PADDING }}
+          showsVerticalScrollIndicator={true}
+          scrollEnabled={true}
+          contentContainerStyle={{ 
+            height: TREE_HEIGHT + PADDING * 2, 
+            paddingHorizontal: PADDING, 
+            paddingVertical: PADDING 
+          }}
           style={styles.verticalScroll}
         >
           <View style={styles.treeContainer}>
+
             {/* Connexions */}
             {renderConnections()}
 
@@ -621,14 +643,22 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   statsText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4
+  },
+  xpText: {
     fontSize: 14,
     color: colors.textSecondary
   },
   horizontalScroll: {
-    flex: 1
+    flex: 1,
+    backgroundColor: colors.background
   },
   verticalScroll: {
-    flex: 1
+    flex: 1,
+    backgroundColor: colors.background
   },
   treeContainer: {
     width: TREE_WIDTH,

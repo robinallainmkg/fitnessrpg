@@ -18,7 +18,7 @@ import { WorkoutProvider } from './src/contexts/WorkoutContext';
 import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import SkillTreeScreen from './src/screens/SkillTreeScreen';
-import ProgramDetailScreen from './src/screens/ProgramDetailScreen';
+import SkillDetailScreen from './src/screens/SkillDetailScreen';
 import WorkoutScreen from './src/screens/WorkoutScreen';
 import WorkoutSummaryScreen from './src/screens/WorkoutSummaryScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
@@ -132,7 +132,7 @@ const AppNavigator = () => {
             />
             <Stack.Screen
               name="ProgramDetail"
-              component={ProgramDetailScreen}
+              component={SkillDetailScreen}
               options={{ title: 'Programme' }}
             />
             <Stack.Screen

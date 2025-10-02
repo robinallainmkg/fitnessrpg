@@ -55,41 +55,30 @@ const HomeScreen = ({ navigation }) => {
     try {
       setLoading(true);
 
-      // Charge les progrès utilisateur
-      const progressQuery = query(
-        collection(db, 'userProgress'),
-        where('userId', '==', userId)
-      );
-      const progressSnapshot = await getDocs(progressQuery);
-      const progressData = {};
-      progressSnapshot.forEach(doc => {
-        const data = doc.data();
-        progressData[data.programId] = data;
-      });
+      // TEMPORAIRE: Données mock au lieu de Firebase
+      console.log('📱 MOCK: Chargement données utilisateur...');
+      
+      // Mock user progress - utilisons les vrais IDs des compétences
+      const progressData = {
+        'beginner-foundation': { currentLevel: 2, unlockedLevels: [1, 2], xp: 150 },
+        'strict-pullups': { currentLevel: 1, unlockedLevels: [1], xp: 50 }
+      };
       setUserProgress(progressData);
 
-      // Charge les programmes complétés
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const userData = userDoc.exists() ? userDoc.data() : {};
-      const completed = userData.completedPrograms || [];
+      // Mock programmes complétés - aucun pour voir "en cours"
+      const completed = []; // Vidé pour tester l'affichage "en cours"
       setCompletedPrograms(completed);
 
-      // Charge la dernière séance d'entraînement
-      try {
-        const workoutQuery = query(
-          collection(db, 'workoutSessions'),
-          where('userId', '==', userId),
-          orderBy('completedAt', 'desc'),
-          limit(1)
-        );
-        const workoutSnapshot = await getDocs(workoutQuery);
-        if (!workoutSnapshot.empty) {
-          const lastSession = workoutSnapshot.docs[0].data();
-          setLastWorkoutSession(lastSession);
-        }
-      } catch (error) {
-        // Aucune séance trouvée
-      }
+      // Mock dernière séance avec Timestamp simulé
+      const lastSession = {
+        programId: 'beginner-foundation',
+        levelId: 2,
+        completedAt: {
+          toDate: () => new Date() // Simule un Firestore Timestamp
+        },
+        finalScore: 85
+      };
+      setLastWorkoutSession(lastSession);
 
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
@@ -121,13 +110,31 @@ const HomeScreen = ({ navigation }) => {
     return { totalCompleted, totalXP, currentTier };
   };
 
-  // Trouve les prochains challenges débloqués
-  const getNextUnlockedChallenges = () => {
+  // Trouve les compétences en cours (commencées, pas terminées ET débloquées)
+  const getSkillsInProgress = () => {
+    const inProgress = streetPrograms.filter(skill => {
+      const isCompleted = completedPrograms.includes(skill.id);
+      const isUnlocked = skill.prerequisites.length === 0 || 
+        skill.prerequisites.every(prereq => completedPrograms.includes(prereq));
+      const progress = userProgress[skill.id];
+      const hasProgress = progress && (progress.currentLevel > 0 || progress.unlockedLevels?.length > 0);
+      
+      // Doit être: pas complétée, débloquée, ET avoir des progrès
+      return !isCompleted && isUnlocked && hasProgress;
+    }).slice(0, 3);
+    
+    return inProgress;
+  };
+
+  // Trouve les prochaines compétences débloquées
+  const getNextUnlockedSkills = () => {
     const unlocked = streetPrograms.filter(program => {
       const isCompleted = completedPrograms.includes(program.id);
       const isUnlocked = program.prerequisites.length === 0 || 
         program.prerequisites.every(prereq => completedPrograms.includes(prereq));
-      return !isCompleted && isUnlocked;
+      const progress = userProgress[program.id];
+      const hasProgress = progress && progress.currentLevel > 0;
+      return !isCompleted && isUnlocked && !hasProgress; // Exclut celles en cours
     });
 
     return unlocked
@@ -135,12 +142,12 @@ const HomeScreen = ({ navigation }) => {
       .slice(0, 3);
   };
 
-  // Détermine l'état d'un programme
-  const getProgramState = (program) => {
-    const isCompleted = completedPrograms.includes(program.id);
-    const isUnlocked = program.prerequisites.length === 0 || 
-      program.prerequisites.every(prereq => completedPrograms.includes(prereq));
-    const progress = userProgress[program.id];
+  // Détermine l'état d'une compétence
+  const getSkillState = (skill) => {
+    const isCompleted = completedPrograms.includes(skill.id);
+    const isUnlocked = skill.prerequisites.length === 0 || 
+      skill.prerequisites.every(prereq => completedPrograms.includes(prereq));
+    const progress = userProgress[skill.id];
     const hasProgress = progress && progress.currentLevel > 0;
 
     if (isCompleted) return 'COMPLETED';
@@ -154,11 +161,11 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('SkillTree', { category: streetCategory });
   };
 
-  // Navigation vers un programme spécifique
-  const navigateToProgram = (program) => {
-    const progress = userProgress[program.id];
+  // Navigation vers une compétence spécifique
+  const navigateToSkill = (skill) => {
+    const progress = userProgress[skill.id];
     navigation.navigate('ProgramDetail', {
-      program,
+      program: skill,
       category: streetCategory,
       userProgress: progress
     });
@@ -174,20 +181,18 @@ const HomeScreen = ({ navigation }) => {
   }
 
   const userStats = calculateUserStats();
-  const nextChallenges = getNextUnlockedChallenges();
+  const skillsInProgress = getSkillsInProgress();
+  const nextSkills = getNextUnlockedSkills();
   const hasNoProgress = completedPrograms.length === 0 && Object.keys(userProgress).length === 0;
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-        <Text style={styles.title}>Mes Programmes</Text>
-        <Text style={styles.subtitle}>
-          {hasNoProgress 
-            ? "Commence ton aventure ! 🚀" 
-            : `Bienvenue dans votre progression Street Workout`
-          }
-        </Text>
+        <Text style={styles.title}>Les Programmes disponibles</Text>
+        {hasNoProgress && (
+          <Text style={styles.subtitle}>Commence ton aventure ! 🚀</Text>
+        )}
       </Animated.View>
 
       {/* Card principale Street Workout */}
@@ -198,9 +203,9 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.mainCardHeader}>
                 <Text style={styles.mainCardIcon}>🏋️</Text>
                 <View style={styles.mainCardInfo}>
-                  <Text style={styles.mainCardTitle}>Street Workout</Text>
+                  <Text style={styles.mainCardTitle}>Programme Street Workout</Text>
                   <Text style={styles.mainCardDescription}>
-                    Arbre de 20 compétences à débloquer
+                    20 compétences à débloquer
                   </Text>
                 </View>
               </View>
@@ -208,7 +213,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>{userStats.totalCompleted}/20</Text>
-                  <Text style={styles.statLabel}>Challenges</Text>
+                  <Text style={styles.statLabel}>Débloquées</Text>
                 </View>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>Tier {userStats.currentTier}</Text>
@@ -227,29 +232,55 @@ const HomeScreen = ({ navigation }) => {
                 contentStyle={styles.skillTreeButtonContent}
                 labelStyle={styles.skillTreeButtonLabel}
               >
-                Voir l'arbre
+                Voir le programme
               </Button>
             </View>
           </View>
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Section Progression rapide */}
-      {nextChallenges.length > 0 && (
+      {/* Section Compétences en cours */}
+      {skillsInProgress.length > 0 && (
         <Animated.View style={[styles.sectionContainer, { opacity: fadeAnim }]}>
-          <Text style={styles.sectionTitle}>🎯 Prochains défis</Text>
+          <Text style={styles.sectionTitle}>⚡ Compétences en cours d'apprentissage</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.challengesScroll}>
-            {nextChallenges.map((program, index) => (
-              <View key={program.id} style={styles.miniNodeContainer}>
+            {skillsInProgress.map((skill, index) => (
+              <View key={skill.id} style={styles.miniNodeContainer}>
                 <SkillNode
-                  program={program}
-                  state={getProgramState(program)}
-                  progress={userProgress[program.id]}
-                  onPress={() => navigateToProgram(program)}
+                  program={skill}
+                  state={getSkillState(skill)}
+                  progress={userProgress[skill.id]}
+                  onPress={() => navigateToSkill(skill)}
                   size={60}
                 />
                 <Text style={styles.miniNodeName} numberOfLines={2}>
-                  {program.name}
+                  {skill.name}
+                </Text>
+                <Text style={styles.miniNodeProgress}>
+                  Niveau {userProgress[skill.id]?.currentLevel || 1}/{skill.levels?.length || 'N/A'}
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </Animated.View>
+      )}
+
+      {/* Section Progression rapide */}
+      {nextSkills.length > 0 && (
+        <Animated.View style={[styles.sectionContainer, { opacity: fadeAnim }]}>
+          <Text style={styles.sectionTitle}>🎯 À débloquer bientôt</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.challengesScroll}>
+            {nextSkills.map((skill, index) => (
+              <View key={skill.id} style={styles.miniNodeContainer}>
+                <SkillNode
+                  program={skill}
+                  state={getSkillState(skill)}
+                  progress={userProgress[skill.id]}
+                  onPress={() => navigateToSkill(skill)}
+                  size={60}
+                />
+                <Text style={styles.miniNodeName} numberOfLines={2}>
+                  {skill.name}
                 </Text>
               </View>
             ))}
@@ -275,8 +306,8 @@ const HomeScreen = ({ navigation }) => {
               <Button
                 mode="contained"
                 onPress={() => {
-                  const beginnerProgram = streetPrograms.find(p => p.id === 'beginner-foundation');
-                  if (beginnerProgram) navigateToProgram(beginnerProgram);
+                  const beginnerSkill = streetPrograms.find(p => p.id === 'beginner-foundation');
+                  if (beginnerSkill) navigateToSkill(beginnerSkill);
                 }}
                 style={styles.beginnerButton}
                 contentStyle={styles.beginnerButtonContent}
@@ -296,7 +327,7 @@ const HomeScreen = ({ navigation }) => {
             <Card.Content style={styles.lastSessionContent}>
               <View style={styles.sessionInfo}>
                 <Text style={styles.sessionProgram}>
-                  {streetPrograms.find(p => p.id === lastWorkoutSession.programId)?.name || 'Programme'}
+                  {streetPrograms.find(p => p.id === lastWorkoutSession.programId)?.name || 'Compétence'}
                 </Text>
                 <Text style={styles.sessionDate}>
                   {new Date(lastWorkoutSession.completedAt?.toDate()).toLocaleDateString()}
@@ -308,8 +339,8 @@ const HomeScreen = ({ navigation }) => {
               <Button
                 mode="outlined"
                 onPress={() => {
-                  const program = streetPrograms.find(p => p.id === lastWorkoutSession.programId);
-                  if (program) navigateToProgram(program);
+                  const skill = streetPrograms.find(p => p.id === lastWorkoutSession.programId);
+                  if (skill) navigateToSkill(skill);
                 }}
                 style={styles.continueButton}
               >
@@ -454,6 +485,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 16,
   },
+  miniNodeProgress: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 4,
+  },
   beginnerCard: {
     backgroundColor: colors.surface,
     borderRadius: 16,
@@ -468,8 +505,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   beginnerIcon: {
-    fontSize: 48,
-    marginRight: 16,
+    fontSize: 40,
+    marginRight: 12,
+    textAlign: 'center',
+    width: 50,
   },
   beginnerInfo: {
     flex: 1,
