@@ -5,7 +5,8 @@ import {
   ScrollView,
   Animated,
   Alert,
-  RefreshControl
+  RefreshControl,
+  ImageBackground
 } from 'react-native';
 import {
   Card,
@@ -213,7 +214,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const handleStartJourney = () => {
-    navigation.navigate('SkillTree');
+    navigation.navigate('ProgramSelection');
   };
 
   const handleViewProgram = (programId) => {
@@ -231,7 +232,12 @@ const HomeScreen = ({ navigation }) => {
 
   // Composants internes
   const OnboardingView = () => (
-    <View style={styles.onboardingContainer}>
+    <ImageBackground 
+      source={require('../../assets/Home-BG-2.jpg')} 
+      style={styles.onboardingContainer}
+      resizeMode="cover"
+    >
+      <View style={styles.backgroundOverlay}>
       <Animated.View style={[styles.onboardingContent, { opacity: fadeAnim }]}>
         <Text style={styles.onboardingTitle}>
           Bienvenue dans HybridRPG ⚔️🔥
@@ -280,7 +286,8 @@ const HomeScreen = ({ navigation }) => {
           Commencer mon aventure
         </Button>
       </Animated.View>
-    </View>
+      </View>
+    </ImageBackground>
   );
 
 
@@ -444,13 +451,19 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView 
+    <ImageBackground 
+      source={require('../../assets/Home-BG-1.jpg')} 
       style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}
+      resizeMode="cover"
     >
+      <View style={styles.backgroundOverlay} />
+      <ScrollView 
+        style={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
       <Animated.View style={{ opacity: fadeAnim }}>
         {/* Header utilisateur */}
         <UserHeader
@@ -510,14 +523,21 @@ const HomeScreen = ({ navigation }) => {
         {/* Espace en bas */}
         <View style={styles.bottomSpacer} />
       </Animated.View>
-    </ScrollView>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
   },
   loadingContainer: {
     flex: 1,
@@ -534,7 +554,6 @@ const styles = StyleSheet.create({
   // Onboarding
   onboardingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
@@ -548,6 +567,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 36,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   onboardingFeatures: {
     width: '100%',
@@ -570,6 +592,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     lineHeight: 22,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   startButton: {
     marginTop: 16,

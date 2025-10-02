@@ -20,7 +20,7 @@ import { migrateExistingUsers, previewMigration, testMigrationSingleUser } from 
 import { migrateAllUsers, verifyMigration, previewMigration as previewNewMigration } from '../utils/migrateUsers';
 import UserStatsCard from '../components/UserStatsCard';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const { user, logout, resetUserData } = useAuth();
 
   const handleLogout = async () => {
@@ -323,6 +323,30 @@ const ProfileScreen = () => {
         </Card.Content>
       </Card>
 
+      {/* Gestion des programmes */}
+      <Card style={styles.programsCard}>
+        <Card.Content style={styles.programsContent}>
+          <Text style={styles.sectionTitle}>Mes Programmes</Text>
+          
+          <View style={styles.buttonContainer}>
+            <Button
+              mode="contained"
+              icon="dumbbell"
+              onPress={() => navigation.navigate('ProgramSelection')}
+              style={styles.manageProgramsButton}
+              contentStyle={styles.buttonContent}
+              buttonColor={colors.primary}
+            >
+              Gérer mes programmes
+            </Button>
+          </View>
+          
+          <Text style={styles.programsDescription}>
+            Ajoute, retire ou modifie tes programmes d'entraînement
+          </Text>
+        </Card.Content>
+      </Card>
+
       {/* Support et feedback */}
       <Card style={styles.supportCard}>
         <Card.Content style={styles.supportContent}>
@@ -525,6 +549,23 @@ const styles = StyleSheet.create({
   settingsList: {
     margin: 0,
     padding: 0,
+  },
+  programsCard: {
+    backgroundColor: colors.surface,
+    marginBottom: 16,
+    elevation: 4,
+  },
+  programsContent: {
+    padding: 20,
+  },
+  manageProgramsButton: {
+    marginBottom: 8,
+  },
+  programsDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
   },
   supportCard: {
     backgroundColor: colors.surface,

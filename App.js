@@ -17,6 +17,7 @@ import { WorkoutProvider } from './src/contexts/WorkoutContext';
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import ProgramSelectionScreen from './src/screens/ProgramSelectionScreen';
 import SkillTreeScreen from './src/screens/SkillTreeScreen';
 import SkillDetailScreen from './src/screens/SkillDetailScreen';
 import WorkoutScreen from './src/screens/WorkoutScreen';
@@ -118,6 +119,17 @@ const AppNavigator = () => {
               name="Main"
               component={TabNavigator}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="ProgramSelection" 
+              component={ProgramSelectionScreen}
+              options={{ 
+                title: "Choisis tes programmes",
+                headerStyle: {
+                  backgroundColor: colors.primary,
+                },
+                headerTintColor: '#fff',
+              }}
             />
             <Stack.Screen 
               name="SkillTree" 
