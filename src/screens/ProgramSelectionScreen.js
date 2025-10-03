@@ -74,11 +74,12 @@ const ProgramSelectionScreen = ({ navigation }) => {
       selectedPrograms.forEach(programId => {
         const category = programs.categories.find(c => c.id === programId);
         if (category) {
-          // Garder les données existantes ou créer nouvelles
+          // Garder les données existantes ou créer nouvelles avec la structure correcte
           programsData[programId] = existingPrograms[programId] || {
             xp: 0,
-            level: 0,
-            completedSkills: 0,
+            level: 1,
+            completedSkills: [], // Array des IDs de compétences 100% complétées
+            skillProgress: {}, // Object: { skillId: { completedLevels: [1,2,3], currentLevel: 4 } }
             totalSkills: category.programs.length,
             lastSession: null
           };
@@ -86,9 +87,18 @@ const ProgramSelectionScreen = ({ navigation }) => {
       });
 
       // Préparer les données à sauvegarder
+      const activeProgramsList = selectedPrograms.slice(0, 2);
       const updateData = {
-        programs: programsData
+        programs: programsData,
+        selectedPrograms: selectedPrograms, // Sauvegarder les programmes sélectionnés
+        activePrograms: activeProgramsList, // Activer automatiquement les 2 premiers (ou moins)
       };
+      
+      console.log('💾 Saving to Firestore:', {
+        selectedPrograms,
+        activePrograms: activeProgramsList,
+        programsData
+      });
       
       // Marquer l'onboarding comme terminé seulement si c'est un nouvel utilisateur
       if (Object.keys(existingPrograms).length === 0) {
@@ -125,8 +135,14 @@ const ProgramSelectionScreen = ({ navigation }) => {
           });
         }, 500);
       } else {
-        console.log('🚀 Navigation vers Home pour utilisateur existant');
-        navigation.navigate('Home');
+        console.log('🚀 Navigation vers Home pour utilisateur existant avec refresh');
+        // Forcer le rechargement des données en passant un timestamp
+        navigation.navigate('Main', {
+          screen: 'Home',
+          params: {
+            refresh: Date.now() // Force un refresh des données
+          }
+        });
       }
       
     } catch (error) {
@@ -146,10 +162,32 @@ const ProgramSelectionScreen = ({ navigation }) => {
       case 'power': return '⚡ Puissance';
       case 'endurance': return '🔋 Endurance';
       case 'speed': return '🚀 Vitesse';
+      case 'flexibility': return '🤸 Flexibilité';
       case 'mobility': return '🤸 Mobilité';
       case 'coordination': return '🎯 Coordination';
       default: return stat;
     }
+  };
+
+  // Calculer les stats principales d'une catégorie
+  const getPrimaryStats = (category) => {
+    const statTotals = {};
+    
+    // Parcourir toutes les compétences de la catégorie
+    category.programs?.forEach(program => {
+      const bonuses = program.statBonuses || {};
+      Object.entries(bonuses).forEach(([stat, value]) => {
+        statTotals[stat] = (statTotals[stat] || 0) + value;
+      });
+    });
+    
+    // Trier par total décroissant et garder les 3 premières
+    const sortedStats = Object.entries(statTotals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([stat]) => stat);
+    
+    return sortedStats;
   };
 
   if (initialLoading) {
@@ -249,43 +287,29 @@ const ProgramSelectionScreen = ({ navigation }) => {
               
               {/* Infos du programme */}
               <View style={styles.programInfo}>
+                {/* Capacités développées */}
+                {getPrimaryStats(category).map(stat => (
+                  <Chip 
+                    key={stat}
+                    mode="outlined" 
+                    compact 
+                    style={styles.infoChip}
+                    textStyle={{ color: colors.primary, fontSize: 12, fontWeight: '500' }}
+                  >
+                    {getStatIcon(stat)}
+                  </Chip>
+                ))}
+                
+                {/* Nombre de compétences */}
                 <Chip 
                   mode="outlined" 
                   compact 
                   style={styles.infoChip}
                   textStyle={{ color: colors.primary, fontSize: 12, fontWeight: '500' }}
                 >
-                  📚 {category.programs.length} programmes
-                </Chip>
-                <Chip 
-                  mode="outlined" 
-                  compact 
-                  style={styles.infoChip}
-                  textStyle={{ color: colors.primary, fontSize: 12, fontWeight: '500' }}
-                >
-                  {category.type === 'skill-tree' ? '🌳 Arbre de compétences' : '📋 Programmes'}
+                  🎯 {category.programs.length} compétences
                 </Chip>
               </View>
-              
-              {/* Stats primaires du programme */}
-              {category.primaryStats && category.primaryStats.length > 0 && (
-                <View style={styles.statsContainer}>
-                  <Text style={styles.statsLabel}>Développe :</Text>
-                  <View style={styles.statsChips}>
-                    {category.primaryStats.map(stat => (
-                      <Chip 
-                        key={stat} 
-                        mode="outlined" 
-                        compact 
-                        style={styles.statChip}
-                        textStyle={{ color: colors.secondary, fontSize: 11, fontWeight: '600' }}
-                      >
-                        {getStatIcon(stat)}
-                      </Chip>
-                    ))}
-                  </View>
-                </View>
-              )}
             </Card.Content>
           </Card>
         );

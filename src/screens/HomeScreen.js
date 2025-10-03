@@ -22,11 +22,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { colors } from '../theme/colors';
 import UserHeader from '../components/UserHeader';
-import UserStatsCard from '../components/UserStatsCard';
 import ProgramProgressCard from '../components/ProgramProgressCard';
 import LoadingProgramCard from '../components/LoadingProgramCard';
 import TreeTooltipOverlay from '../components/onboarding/TreeTooltipOverlay';
+import ActiveProgramCard from '../components/ActiveProgramCard';
+import SessionQueueCard from '../components/SessionQueueCard';
 import { useUserPrograms, useRecommendedPrograms } from '../hooks/useUserPrograms';
+import { getUserSessionQueue } from '../services/sessionQueueService';
 import programs from '../data/programs.json';
 
 const HomeScreen = ({ navigation, route }) => {
@@ -38,6 +40,12 @@ const HomeScreen = ({ navigation, route }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [cardLayout, setCardLayout] = useState(null);
   const firstCardRef = useRef(null);
+  
+  // Nouveaux états pour les programmes actifs et la queue de séances
+  const [activePrograms, setActivePrograms] = useState([]);
+  const [sessionQueue, setSessionQueue] = useState([]);
+  const [loadingQueue, setLoadingQueue] = useState(false);
+  const [hasSelectedPrograms, setHasSelectedPrograms] = useState(null); // null = pas encore chargé, true/false = défini
   const refetchTriggered = useRef(false);
   const { user } = useAuth();
   
@@ -70,12 +78,19 @@ const HomeScreen = ({ navigation, route }) => {
     refetchTriggered.current = false;
   }, [user]);
 
-  // UseEffect pour détecter le trigger tooltip
+  // UseEffect pour détecter le trigger tooltip ou refresh
   useEffect(() => {
     const checkTooltip = async () => {
       try {
         const shown = await AsyncStorage.getItem('@fitnessrpg:tree_tooltip_shown');
         const trigger = route.params?.triggerTreeTooltip;
+        const refresh = route.params?.refresh;
+        
+        // Si c'est un refresh depuis ProgramSelectionScreen, recharger les données
+        if (refresh) {
+          console.log('🔄 Refresh triggered from ProgramSelection');
+          await loadActiveProgramsAndQueue();
+        }
         
         // Si c'est un trigger depuis ProgramSelectionScreen, refetch les programmes (une seule fois)
         if (trigger && !refetchTriggered.current) {
@@ -105,6 +120,18 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [cardLayout]);
 
+  // UseEffect pour recharger les programmes actifs quand on revient de la gestion
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // Recharger les programmes actifs et la queue quand l'écran reçoit le focus
+      if (user?.uid) {
+        loadActiveProgramsAndQueue();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, user]);
+
   const startFadeAnimation = () => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -125,6 +152,9 @@ const HomeScreen = ({ navigation, route }) => {
       const lastSessionData = await loadLastSession();
       setLastSession(lastSessionData);
       
+      // Charger les programmes actifs et la queue de séances
+      await loadActiveProgramsAndQueue();
+      
     } catch (error) {
       console.error('Erreur chargement données:', error);
       Alert.alert('Erreur', 'Impossible de charger les données');
@@ -139,6 +169,12 @@ const HomeScreen = ({ navigation, route }) => {
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        
+        // Vérifier si l'utilisateur a sélectionné des programmes
+        const selectedPrograms = userData.selectedPrograms || [];
+        const activePrograms = userData.activePrograms || [];
+        const hasPrograms = selectedPrograms.length > 0 || activePrograms.length > 0;
+        setHasSelectedPrograms(hasPrograms);
         
         // Structure pour utilisateur migré
         if (userData.migrationVersion) {
@@ -175,6 +211,7 @@ const HomeScreen = ({ navigation, route }) => {
       }
       
       // Nouvel utilisateur
+      setHasSelectedPrograms(false);
       return {
         globalXP: 0,
         globalLevel: 0,
@@ -229,15 +266,105 @@ const HomeScreen = ({ navigation, route }) => {
     return "Débutant";
   };
 
+  // Nouvelle fonction : Charger les programmes actifs et la queue de séances
+  const loadActiveProgramsAndQueue = async () => {
+    if (!user?.uid) return;
+    
+    try {
+      setLoadingQueue(true);
+      
+      // Récupérer les données utilisateur
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        setActivePrograms([]);
+        setSessionQueue([]);
+        return;
+      }
+      
+      const userData = userDoc.data();
+      const activeProgramIds = userData.activePrograms || [];
+      
+      console.log('🔍 Active program IDs from Firestore:', activeProgramIds);
+      
+      // Charger les détails des programmes actifs (categories, pas skills)
+      const activeProgramsData = activeProgramIds.map(categoryId => {
+        // Trouver la catégorie (programme) dans programs.json
+        const category = programs.categories.find(cat => cat.id === categoryId);
+        
+        if (!category) {
+          console.warn(`❌ Category not found for id: ${categoryId}`);
+          return null;
+        }
+        
+        console.log(`✅ Found category: ${category.name}`);
+        
+        const programProgress = userData.programs?.[categoryId] || {
+          level: 1,
+          xp: 0,
+          completedSkills: [], // Array
+          skillProgress: {}
+        };
+        
+        // Calculer le nombre total de skills/compétences dans cette catégorie
+        const totalSkills = category.programs?.length || 0;
+        
+        // completedSkills est maintenant un array d'IDs de compétences complétées
+        const completedCount = Array.isArray(programProgress.completedSkills) 
+          ? programProgress.completedSkills.length 
+          : 0;
+        
+        return {
+          id: category.id,
+          name: category.name,
+          icon: category.icon,
+          color: category.color,
+          completedSkills: completedCount,
+          totalSkills: totalSkills,
+          status: 'active'
+        };
+      }).filter(Boolean);
+      
+      console.log('📊 Active programs data:', activeProgramsData);
+      setActivePrograms(activeProgramsData);
+      
+      // Charger la queue de séances
+      const queue = await getUserSessionQueue(user.uid);
+      console.log('📋 Session queue:', queue);
+      setSessionQueue(queue);
+      
+    } catch (error) {
+      console.error('Erreur chargement programmes actifs:', error);
+    } finally {
+      setLoadingQueue(false);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await loadAllData();
+    await loadActiveProgramsAndQueue(); // Recharger programmes actifs et queue
     await refetchPrograms(); // Recharger aussi les programmes
     setRefreshing(false);
   };
 
   const handleStartJourney = () => {
     navigation.navigate('ProgramSelection');
+  };
+
+  const handleStartSession = (session) => {
+    // Naviguer vers l'écran de workout avec les données de la séance
+    navigation.navigate('Workout', {
+      programId: session.programId,
+      levelId: session.level,
+      programName: session.programName,
+    });
+  };
+
+  const handleViewActiveProgram = (programId) => {
+    // Naviguer vers la vue détaillée du programme (arbre de compétences)
+    navigation.navigate('SkillTree', { programId });
   };
 
   const handleResetForTesting = async () => {
@@ -381,21 +508,39 @@ const HomeScreen = ({ navigation, route }) => {
       <View style={styles.backgroundOverlay}>
       <Animated.View style={[styles.onboardingContent, { opacity: fadeAnim }]}>
         <Text style={styles.onboardingTitle}>
-          Bienvenue dans HybridRPG ⚔️🔥
+          🚀 Bienvenue dans HybridRPG
+        </Text>
+        
+        <Text style={styles.onboardingSubtitle}>
+          Ton corps est ton avatar. Chaque entraînement est une mission. Chaque niveau franchi révèle ton potentiel.
+        </Text>
+
+        <Text style={styles.onboardingQuote}>
+          🔥 Entraîne-toi. Gagne de l'XP. Évolue.
         </Text>
 
         <View style={styles.onboardingFeatures}>
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>💪</Text>
+            <Text style={styles.featureIcon}>🏋️</Text>
             <Text style={styles.featureText}>
-              Entraîne-toi, gagne de l’XP et booste tes stats
+              <Text style={styles.featureTextBold}>Progression & XP</Text>
+              {"\n"}Chaque séance réussie te rapporte de l'XP et t'aide à passer au niveau suivant.
             </Text>
           </View>
           
           <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>📊</Text>
+            <Text style={styles.featureIcon}>🌳</Text>
             <Text style={styles.featureText}>
-              Débloque des skills et deviens un athlète hybride
+              <Text style={styles.featureTextBold}>Arbre de Compétences</Text>
+              {"\n"}Choisis tes disciplines, débloque des skills et deviens un athlète hybride complet.
+            </Text>
+          </View>
+          
+          <View style={styles.featureItem}>
+            <Text style={styles.featureIcon}>🏆</Text>
+            <Text style={styles.featureText}>
+              <Text style={styles.featureTextBold}>Quêtes & Maîtrise</Text>
+              {"\n"}Avance à travers des programmes uniques et atteins la forme ultime.
             </Text>
           </View>
         </View>
@@ -511,11 +656,11 @@ const HomeScreen = ({ navigation, route }) => {
     );
   };
 
-  // Détection mode - utiliser userPrograms du hook au lieu de l'ancienne logique
+  // Détection mode - vérifier si l'utilisateur a sélectionné des programmes dans Firestore
   const forceShowDashboard = route.params?.forceShowDashboard;
-  const isNewUser = !forceShowDashboard && !programsLoading && userPrograms.length === 0;
+  const isNewUser = !forceShowDashboard && hasSelectedPrograms === false; // Nouvel utilisateur = pas de programmes sélectionnés
 
-  if (loading) {
+  if (loading || hasSelectedPrograms === null) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -552,11 +697,75 @@ const HomeScreen = ({ navigation, route }) => {
           streak={userStats.streakDays}
         />
 
-        {/* Stats utilisateur */}
-        <UserStatsCard stats={userStats.stats} />
-
         {/* Streak */}
         <StreakCard streak={userStats.streakDays} />
+
+        {/* ===== NOUVELLE SECTION : Programmes Actifs ===== */}
+        {loadingQueue ? (
+          <Card style={styles.sectionCard}>
+            <Card.Content>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </Card.Content>
+          </Card>
+        ) : activePrograms.length > 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Programmes Actifs ⚡
+              </Text>
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate('ManageActivePrograms')}
+                compact
+                labelStyle={{ fontSize: 12 }}
+              >
+                Gérer
+              </Button>
+            </View>
+            {activePrograms.map(program => (
+              <ActiveProgramCard
+                key={program.id}
+                program={program}
+                onPress={() => handleViewActiveProgram(program.id)}
+              />
+            ))}
+          </View>
+        ) : (
+          <Card style={styles.sectionCard}>
+            <Card.Content>
+              <Text style={styles.emptyStateText}>
+                🎯 Aucun programme actif
+              </Text>
+              <Text style={styles.emptyStateSubtext}>
+                Active un programme pour voir tes séances
+              </Text>
+              <Button
+                mode="contained"
+                onPress={() => navigation.navigate('ManageActivePrograms')}
+                style={{ marginTop: 12 }}
+              >
+                Activer un programme
+              </Button>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* ===== NOUVELLE SECTION : Queue de Séances ===== */}
+        {sessionQueue.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Prochaines séances disponibles 🎯
+            </Text>
+            {sessionQueue.slice(0, 5).map(session => (
+              <SessionQueueCard
+                key={session.id}
+                session={session}
+                onStart={() => handleStartSession(session)}
+                disabled={session.status === 'completed'}
+              />
+            ))}
+          </View>
+        )}
 
         {/* Programmes actifs */}
         {programsLoading ? (
@@ -650,22 +859,43 @@ const styles = StyleSheet.create({
   // Onboarding
   onboardingContainer: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 24,
+    paddingTop: 120,
   },
   onboardingContent: {
     alignItems: 'center',
   },
+  onboardingQuote: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: 36,
+    marginTop: 8,
+    paddingHorizontal: 20,
+    lineHeight: 24,
+    letterSpacing: 0.5,
+  },
   onboardingTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
     textAlign: 'center',
-    marginBottom: 32,
-    lineHeight: 36,
+    marginBottom: 16,
+    lineHeight: 40,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  onboardingSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 16,
+    lineHeight: 24,
+    fontStyle: 'italic',
   },
   onboardingFeatures: {
     width: '100%',
@@ -673,24 +903,29 @@ const styles = StyleSheet.create({
   },
   featureItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
+    alignItems: 'flex-start',
+    marginBottom: 24,
     paddingHorizontal: 16,
   },
   featureIcon: {
-    fontSize: 32,
+    fontSize: 28,
     marginRight: 16,
-    width: 40,
+    marginTop: 2,
+    width: 36,
     textAlign: 'center',
   },
   featureText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.text,
     lineHeight: 22,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+  },
+  featureTextBold: {
+    fontWeight: 'bold',
+    color: colors.primary,
   },
   startButton: {
     marginTop: 16,
@@ -897,6 +1132,42 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#C62828',
+    textAlign: 'center',
+  },
+
+  // Nouvelles sections
+  section: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.text,
+    letterSpacing: 0.3,
+  },
+  sectionCard: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: colors.surface,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 

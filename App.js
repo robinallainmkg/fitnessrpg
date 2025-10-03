@@ -25,6 +25,7 @@ import WorkoutSummaryScreen from './src/screens/WorkoutSummaryScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import DebugOnboardingScreen from './src/screens/DebugOnboardingScreen';
+import ManageActiveProgramsScreen from './src/screens/ManageActiveProgramsScreen';
 
 // Components
 import FirebaseDebug from './src/components/FirebaseDebug';
@@ -163,6 +164,17 @@ const AppNavigator = () => {
               options={{ 
                 title: 'Résumé',
                 gestureEnabled: false
+              }}
+            />
+            <Stack.Screen
+              name="ManageActivePrograms"
+              component={ManageActiveProgramsScreen}
+              options={{ 
+                title: 'Gérer mes programmes',
+                headerStyle: {
+                  backgroundColor: colors.primary,
+                },
+                headerTintColor: '#fff',
               }}
             />
             <Stack.Screen

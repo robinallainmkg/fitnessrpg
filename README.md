@@ -1,186 +1,179 @@
-# 🏋️ Fitness Gamification App
+# 🏋️ Fitness RPG
 
-Une application iOS native développée en SwiftUI pour gamifier l'entraînement sportif avec un système de progression par niveaux.
+Une application mobile gamifiée pour transformer l'entraînement sportif en aventure épique avec un système de progression RPG.
 
-## 📱 Fonctionnalités
+## 📱 À Propos
 
-### ✅ Implémentées
-- **Authentification Firebase** - Connexion/inscription avec email/mot de passe
-- **Programmes d'entraînement** - Programmes structurés avec 6 niveaux progressifs
-- **Séances guidées** - Interface pas-à-pas avec timer de repos
-- **Système de scoring** - Calcul automatique des scores et XP
-- **Suivi des progrès** - Graphiques et historique des performances
-- **Profil utilisateur** - Statistiques et gestion du compte
+Fitness RPG gamifie votre entraînement avec :
+- **Programmes multiples actifs** - Activez jusqu'à 2 programmes simultanément
+- **Système de compétences** - Débloquez des compétences par progression
+- **File d'attente intelligente** - Sessions générées automatiquement selon votre progression
+- **XP et Niveaux** - Montez en niveau avec chaque séance complétée
+- **Stats en temps réel** - Suivez vos progrès et améliorations
 
-### 🔄 Séance d'entraînement
-1. Sélection du programme et niveau
-2. Exercices guidés série par série
-3. Timer de repos automatique entre les séries
-4. Saisie des répétitions réalisées
-5. Calcul du score final et XP gagnés
-6. Déverrouillage automatique du niveau suivant (score ≥ 80%)
+## 🚀 Démarrage Rapide
+
+```bash
+# Installation des dépendances
+npm install
+
+# Lancer l'application en développement
+npm start
+```
+
+**📚 [Documentation Complète →](./docs/README.md)**
 
 ## 🛠 Stack Technique
 
-- **Frontend**: SwiftUI (iOS 16+)
+- **Framework**: React Native + Expo
 - **Backend**: Firebase (Firestore + Authentication)
-- **Architecture**: MVVM
-- **Charts**: Swift Charts (natif iOS)
-- **Gestion d'état**: Combine + ObservableObject
+- **Navigation**: React Navigation
+- **UI**: React Native Paper
+- **État**: Context API (AuthContext, WorkoutContext)
 
 ## 📁 Structure du Projet
 
 ```
-FitnessGameApp/
-├── Models/
-│   ├── UserModels.swift      # User, UserProgress, WorkoutSession
-│   └── WorkoutModels.swift   # WorkoutProgram, Exercise, Level
-├── Views/
-│   ├── AuthView.swift        # Authentification
-│   ├── MainTabView.swift     # Navigation principale
-│   ├── ProgramsListView.swift # Liste des programmes
-│   ├── ProgramDetailView.swift # Détail programme + niveaux
-│   ├── WorkoutSessionView.swift # Séance guidée
-│   ├── ProgressView.swift    # Graphiques et stats
-│   └── ProfileView.swift     # Profil utilisateur
-├── ViewModels/
-│   ├── AuthViewModel.swift   # Gestion authentification
-│   └── WorkoutViewModel.swift # Gestion séances et progrès
-├── Services/
-│   ├── AuthService.swift     # Service Firebase Auth
-│   ├── FirestoreService.swift # Service Firestore
-│   └── WorkoutProgramService.swift # Données programmes
-└── Resources/
-    └── Assets.xcassets       # Ressources graphiques
+fitnessrpg/
+├── src/
+│   ├── components/       # Composants réutilisables (cards, timer, etc.)
+│   ├── contexts/         # AuthContext, WorkoutContext
+│   ├── data/            # programmes.json
+│   ├── hooks/           # Custom hooks
+│   ├── screens/         # Écrans de l'app
+│   ├── services/        # Firebase, sessionQueue, activePrograms
+│   ├── theme/           # Thème et styles
+│   └── utils/           # Fonctions utilitaires
+├── assets/              # Images et ressources
+├── docs/                # 📚 Documentation complète
+│   ├── setup/          # Guides d'installation (Android, Firebase)
+│   ├── architecture/   # Architecture multi-programmes
+│   ├── guides/         # UX, migration, tests
+│   └── components/     # Documentation des composants
+└── FitnessGameApp/      # Prototype iOS SwiftUI (legacy)
 ```
+
+## 📖 Documentation
+
+La documentation complète est organisée dans le dossier **[`/docs`](./docs/README.md)** :
+
+- **🔧 [Setup](./docs/setup/)** - Installation Android et Firebase
+- **🏗️ [Architecture](./docs/architecture/)** - Structure multi-programmes
+- **📘 [Guides](./docs/guides/)** - UX, workflow, tests
+- **🧩 [Composants](./docs/components/)** - Documentation des composants
+- **🔗 [Ressources](./docs/GITHUB_URLS.md)** - Liens utiles
+
+### Documents Clés
+- [Architecture Multi-Programmes](./docs/architecture/MULTI_PROGRAMS.md) - Structure Programme → Compétence → Niveau → Séance
+- [Améliorations UX](./docs/guides/UX_IMPROVEMENTS.md) - Refonte de l'interface utilisateur
+- [Guide Firebase](./docs/setup/FIREBASE_FIX.md) - Configuration Firebase pour React Native
+- [Tests Système](./docs/guides/TESTING.md) - Guide de test complet
 
 ## 🔥 Configuration Firebase
 
-### 1. Créer un projet Firebase
-1. Aller sur [Firebase Console](https://console.firebase.google.com/)
-2. Créer un nouveau projet
-3. Ajouter une application iOS avec le bundle ID: `com.example.FitnessGameApp`
+**📋 [Guide Complet Firebase →](./docs/setup/FIREBASE_FIX.md)**
 
-### 2. Configurer Authentication
-1. Dans Firebase Console → Authentication → Sign-in method
-2. Activer "Email/Password"
+### Résumé
+1. Créer un projet Firebase
+2. Activer Authentication (Email/Password)
+3. Créer une base Firestore
+4. Configurer les règles de sécurité
+5. Ajouter les credentials dans votre environnement
 
-### 3. Configurer Firestore
-1. Dans Firebase Console → Firestore Database
-2. Créer une base de données
-3. Utiliser les règles de sécurité suivantes :
-
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users peuvent lire/écrire leurs propres données
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // UserProgress - utilisateur peut gérer ses progrès
-    match /userProgress/{document} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-    
-    // WorkoutSessions - utilisateur peut gérer ses séances
-    match /workoutSessions/{document} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-    }
-  }
-}
-```
-
-### 4. Télécharger GoogleService-Info.plist
-1. Dans Firebase Console → Project Settings → iOS apps
-2. Télécharger `GoogleService-Info.plist`
-3. Ajouter le fichier au projet Xcode dans le dossier principal
-
-## 🚀 Installation et Lancement
-
-### Prérequis
-- Xcode 15.0+
-- iOS 16.0+
-- Compte développeur Apple (pour les tests sur appareil)
-
-### Étapes
-1. Cloner le repository
-2. Ouvrir `FitnessGameApp.xcodeproj` dans Xcode
-3. Ajouter `GoogleService-Info.plist` au projet
-4. Sélectionner votre équipe de développement dans les paramètres du projet
-5. Lancer sur simulateur ou appareil
+Voir le [guide détaillé](./docs/setup/FIREBASE_FIX.md) pour les instructions complètes.
 
 ## 📊 Modèle de Données
+
+### Structure Hiérarchique
+```
+Programme
+  └─ Compétence (ex: "Pré-requis Pull-ups")
+      └─ Niveau (ex: 1, 2, 3...)
+          └─ Séance (liste d'exercices)
+```
 
 ### Collections Firestore
 
 #### `users`
-```json
+```javascript
 {
-  "email": "user@example.com",
-  "totalXP": 1500,
-  "createdAt": "2024-01-15T10:30:00Z"
+  email: "user@example.com",
+  username: "athlete123",
+  totalXP: 1500,
+  level: 5,
+  activePrograms: ["muscleup", "handstand"], // Max 2
+  selectedPrograms: ["muscleup", "handstand", "planche"],
+  createdAt: timestamp
 }
 ```
 
-#### `userProgress`
-```json
+#### `userProgress/{userId}/programs/{programId}`
+```javascript
 {
-  "userId": "abc123",
-  "programId": "muscleup",
-  "currentLevel": 3,
-  "unlockedLevels": [1, 2, 3],
-  "totalSessions": 12
+  programId: "muscleup",
+  skills: {
+    "pre-requis-pullups": {
+      currentLevel: 3,
+      unlockedLevels: [1, 2, 3],
+      completedSessions: 5
+    }
+  },
+  startedAt: timestamp,
+  lastActivity: timestamp
 }
 ```
 
 #### `workoutSessions`
-```json
+```javascript
 {
-  "userId": "abc123",
-  "programId": "muscleup",
-  "levelId": 2,
-  "date": "2024-01-15T10:30:00Z",
-  "exercises": [
-    {
-      "exerciseName": "Tractions",
-      "sets": [5, 5, 4, 5, 5],
-      "target": 5
-    }
-  ],
-  "score": 920,
-  "xpEarned": 250,
-  "completed": true
+  userId: "abc123",
+  programId: "muscleup",
+  skillId: "pre-requis-pullups",
+  levelNumber: 2,
+  sessionId: "session1",
+  date: timestamp,
+  exercises: [...],
+  score: 920,
+  xpEarned: 250,
+  completed: true
 }
 ```
 
-## 🎮 Programme Exemple : Muscle-Up Mastery
+## � Fonctionnalités
 
-### Niveaux disponibles :
-1. **Le Soldat** - Bases avec assistance
-2. **Le Guerrier de Fer** - Force pure
-3. **Le Titan d'Acier** - Maîtrise de la transition
-4. **Le Conquérant du Ciel** - Technique avancée
-5. **Le Maître de l'Apesanteur** - Vers la perfection
-6. **Le Légendaire Muscle-Up** - Maîtrise absolue
+### ✅ Implémentées
+- **Authentification Firebase** - Login/signup avec persistence
+- **Multi-programmes actifs** - Jusqu'à 2 programmes actifs simultanément
+- **File d'attente de séances** - Sessions générées automatiquement
+- **Séances guidées** - Timer de repos, suivi des reps
+- **Système de scoring** - Score et XP calculés automatiquement
+- **Progression par compétences** - Déverrouillage niveau par niveau
+- **Statistiques** - Graphiques et historique
 
-Chaque niveau contient 4-5 exercices avec 5 séries chacun, des temps de repos adaptés et des instructions détaillées.
+### 🔄 Workflow Utilisateur
+1. **Onboarding** - Sélection des programmes souhaités
+2. **Activation auto** - Les 2 premiers programmes sont activés automatiquement
+3. **File d'attente** - Sessions disponibles générées selon progression
+4. **Séance** - Exercices guidés avec timer et saisie des reps
+5. **Résultats** - Score, XP, déverrouillage de niveaux
 
-## 🔮 Fonctionnalités Futures
+## 🔮 Roadmap
 
-- [ ] Ajout de nouveaux programmes d'entraînement
 - [ ] Mode hors-ligne avec synchronisation
-- [ ] Partage social des performances
-- [ ] Notifications de rappel d'entraînement
+- [ ] Leaderboards et défis entre amis
+- [ ] Notifications de rappel
 - [ ] Analyse IA des performances
-- [ ] Intégration Apple Health
-- [ ] Mode coach avec recommandations personnalisées
+- [ ] Nouveaux programmes (Handstand, Planche, etc.)
+- [ ] Intégration Apple Health / Google Fit
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir des issues ou proposer des pull requests.
+Les contributions sont bienvenues ! Consultez les [guides](./docs/guides/) pour comprendre l'architecture avant de contribuer.
 
 ## 📄 License
 
-Ce projet est sous license MIT. Voir le fichier `LICENSE` pour plus de détails.
+MIT License - Voir le fichier `LICENSE` pour plus de détails.
+
+---
+
+**📚 Pour plus d'informations, consultez la [documentation complète](./docs/README.md)**

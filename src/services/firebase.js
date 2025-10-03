@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence, getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,20 +19,40 @@ console.log('🔥 Firebase Config:', {
   authDomain: firebaseConfig.authDomain ? '✅ Défini' : '❌ Manquant',
 });
 
-// Initialiser l'app Firebase
-const app = initializeApp(firebaseConfig);
+// Initialiser l'app Firebase (singleton pattern)
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+  console.log('✅ Firebase App initialisé');
+} else {
+  app = getApp();
+  console.log('ℹ️ Firebase App déjà initialisé, réutilisation');
+}
 
-// CRITIQUE : Initialiser Auth avec persistence AsyncStorage
+// CRITIQUE : Initialiser Auth avec persistence AsyncStorage (singleton pattern)
 let auth;
 try {
+  // Essayer d'initialiser avec persistence en premier
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
   console.log('✅ Firebase Auth initialisé avec persistence AsyncStorage');
 } catch (error) {
-  console.error('❌ Erreur initialisation Firebase Auth:', error);
-  // Fallback si déjà initialisé
-  auth = getAuth(app);
+  // Si erreur (déjà initialisé), récupérer l'instance existante
+  if (error.code === 'auth/already-initialized') {
+    auth = getAuth(app);
+    console.log('ℹ️ Firebase Auth déjà initialisé, réutilisation de l\'instance existante');
+  } else {
+    console.error('❌ Erreur critique initialisation Firebase Auth:', error);
+    // Dernier recours : essayer getAuth sans persistence
+    try {
+      auth = getAuth(app);
+      console.warn('⚠️ Firebase Auth initialisé en mode fallback (sans persistence)');
+    } catch (fallbackError) {
+      console.error('❌ Impossible d\'initialiser Firebase Auth:', fallbackError);
+      throw fallbackError;
+    }
+  }
 }
 
 // Initialiser Firestore

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Linking,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import {
   Card,
@@ -16,12 +17,78 @@ import {
 } from 'react-native-paper';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { migrateExistingUsers, previewMigration, testMigrationSingleUser } from '../utils/userMigration';
 import { migrateAllUsers, verifyMigration, previewMigration as previewNewMigration } from '../utils/migrateUsers';
 import UserStatsCard from '../components/UserStatsCard';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, resetUserData } = useAuth();
+  const [userStats, setUserStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.uid) {
+      loadUserStats();
+    }
+  }, [user]);
+
+  const loadUserStats = async () => {
+    try {
+      setLoading(true);
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Structure pour utilisateur migré
+        if (userData.migrationVersion) {
+          setUserStats({
+            stats: userData.stats || { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+            globalXP: userData.globalXP || 0,
+            globalLevel: userData.globalLevel || 0,
+            title: userData.title || 'Débutant',
+            programs: userData.programs || {},
+          });
+        } else {
+          // Legacy structure
+          const totalXP = userData.totalXP || 0;
+          const globalLevel = Math.floor(Math.sqrt(totalXP / 100));
+          
+          setUserStats({
+            stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+            globalXP: totalXP,
+            globalLevel: globalLevel,
+            title: getTitleFromLevel(globalLevel),
+            programs: {},
+          });
+        }
+      } else {
+        // Nouvel utilisateur
+        setUserStats({
+          stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+          globalXP: 0,
+          globalLevel: 0,
+          title: 'Débutant',
+          programs: {},
+        });
+      }
+    } catch (error) {
+      console.error('Erreur chargement stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTitleFromLevel = (level) => {
+    if (level >= 20) return "Légende";
+    if (level >= 12) return "Maître";
+    if (level >= 7) return "Champion";
+    if (level >= 4) return "Expert";
+    if (level >= 2) return "Apprenti";
+    return "Débutant";
+  };
 
   const handleLogout = async () => {
     Alert.alert(
@@ -213,6 +280,14 @@ const ProfileScreen = ({ navigation }) => {
     });
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Profil utilisateur */}
@@ -238,16 +313,10 @@ const ProfileScreen = ({ navigation }) => {
         </Card.Content>
       </Card>
 
-      {/* Stats utilisateur (test) */}
-      <UserStatsCard 
-        stats={{
-          strength: user?.stats?.strength || 15,
-          endurance: user?.stats?.endurance || 8,
-          power: user?.stats?.power || 12,
-          speed: user?.stats?.speed || 5,
-          flexibility: user?.stats?.flexibility || 3
-        }}
-      />
+      {/* Stats utilisateur */}
+      {userStats && (
+        <UserStatsCard stats={userStats.stats} />
+      )}
 
       {/* Paramètres */}
       <Card style={styles.settingsCard}>
@@ -477,6 +546,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     padding: 16,
