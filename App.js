@@ -24,6 +24,7 @@ import WorkoutScreen from './src/screens/WorkoutScreen';
 import WorkoutSummaryScreen from './src/screens/WorkoutSummaryScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
+import DebugOnboardingScreen from './src/screens/DebugOnboardingScreen';
 
 // Components
 import FirebaseDebug from './src/components/FirebaseDebug';
@@ -162,6 +163,17 @@ const AppNavigator = () => {
               options={{ 
                 title: 'Résumé',
                 gestureEnabled: false
+              }}
+            />
+            <Stack.Screen
+              name="DebugOnboarding"
+              component={DebugOnboardingScreen}
+              options={{ 
+                title: '🔧 Debug Onboarding',
+                headerStyle: {
+                  backgroundColor: colors.secondary,
+                },
+                headerTintColor: '#fff',
               }}
             />
           </>

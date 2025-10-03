@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, ImageBackground } from 'react-native';
 import { Card, Button, Text, Chip, ActivityIndicator } from 'react-native-paper';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import programs from '../data/programs.json';
@@ -84,7 +85,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
         }
       });
 
-      // Mettre à jour Firestore
+      // Préparer les données à sauvegarder
       const updateData = {
         programs: programsData
       };
@@ -92,12 +93,41 @@ const ProgramSelectionScreen = ({ navigation }) => {
       // Marquer l'onboarding comme terminé seulement si c'est un nouvel utilisateur
       if (Object.keys(existingPrograms).length === 0) {
         updateData.onboardingCompleted = true;
+        // Pour un nouvel utilisateur, créer le document avec les champs de base
+        updateData.createdAt = new Date().toISOString();
+        updateData.totalXP = 0;
+        updateData.globalLevel = 1;
+        updateData.email = user.email;
+        
+        await setDoc(userRef, updateData, { merge: true });
+        console.log('✅ Nouveau document utilisateur créé avec programmes');
+      } else {
+        // Pour un utilisateur existant, mettre à jour le document
+        await updateDoc(userRef, updateData);
+        console.log('✅ Document utilisateur mis à jour');
       }
-      
-      await updateDoc(userRef, updateData);
 
-      // Navigation vers HomeScreen
-      navigation.navigate('Home');
+      // Navigation vers HomeScreen avec trigger tooltip pour nouveaux utilisateurs
+      if (Object.keys(existingPrograms).length === 0) {
+        console.log('🚀 Navigation vers Home avec tooltip trigger pour nouvel utilisateur');
+        // Réinitialiser le flag tooltip pour permettre l'affichage
+        await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
+        
+        // Petit délai pour permettre à Firestore de se synchroniser
+        setTimeout(() => {
+          navigation.navigate('Main', { 
+            screen: 'Home',
+            params: { 
+              triggerTreeTooltip: true,
+              forceShowDashboard: true,  // Force l'affichage du dashboard même si hook pas encore à jour
+              newUserPrograms: selectedPrograms  // Passe les programmes sélectionnés
+            }
+          });
+        }, 500);
+      } else {
+        console.log('🚀 Navigation vers Home pour utilisateur existant');
+        navigation.navigate('Home');
+      }
       
     } catch (error) {
       console.error("Erreur sélection programmes:", error);
@@ -269,7 +299,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
         style={styles.validateButton}
         buttonColor={selectedPrograms.length > 0 ? colors.primary : colors.border}
         loading={loading}
-        icon={loading ? undefined : isExistingUser ? "content-save" : "rocket-launch"}
+        icon={loading ? undefined : isExistingUser ? "content-save" : "check-circle"}
         contentStyle={{ paddingVertical: 8 }}
         labelStyle={{ 
           fontSize: 16, 
@@ -281,9 +311,16 @@ const ProgramSelectionScreen = ({ navigation }) => {
           ? "Sauvegarde..." 
           : isExistingUser 
           ? "Sauvegarder les modifications"
-          : "Commencer mon aventure !"
+          : "Confirmer la sélection"
         }
       </Button>
+      
+      {/* Message pour nouveaux utilisateurs */}
+      {!isExistingUser && (
+        <Text style={styles.helpText}>
+          Tu pourras changer tes programmes plus tard dans ton profil
+        </Text>
+      )}
       
       {/* Espace en bas pour le scroll */}
       <View style={styles.bottomSpace} />
@@ -465,6 +502,15 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+  helpText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: -20,
+    marginBottom: 16,
+    fontStyle: 'italic',
+    opacity: 0.8
   },
   bottomSpace: {
     height: 32

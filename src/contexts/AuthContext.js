@@ -180,26 +180,26 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: 'Aucun utilisateur connecté' };
       }
       
-      console.log('🔄 RESET: Réinitialisation des données utilisateur');
+      console.log('🔄 RESET: Réinitialisation complète du compte utilisateur');
       
-      const resetData = {
-        totalXP: 0,
-        email: user.email,
-        createdAt: new Date().toISOString(),
-        level: 1,
-        completedPrograms: [],
-        userProgress: {},
-        streak: 0,
-        lastWorkoutDate: null
-      };
+      // Supprimer complètement le document utilisateur dans Firestore
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../services/firebase');
       
-      await DevAuthService.saveUserData(resetData);
-      console.log('✅ RESET: Données utilisateur réinitialisées');
+      const userRef = doc(db, 'users', user.uid);
+      await deleteDoc(userRef);
+      
+      // Supprimer aussi le flag tooltip pour permettre l'onboarding
+      const AsyncStorage = await import('@react-native-async-storage/async-storage');
+      await AsyncStorage.default.removeItem('@fitnessrpg:tree_tooltip_shown');
+      
+      console.log('✅ RESET: Document utilisateur supprimé de Firestore');
+      console.log('✅ RESET: Flag tooltip supprimé');
       
       return { success: true };
     } catch (error) {
       console.error('❌ Erreur reset:', error);
-      return { success: false, error: 'Erreur lors de la réinitialisation' };
+      return { success: false, error: 'Erreur lors de la réinitialisation: ' + error.message };
     }
   };
 

@@ -48,19 +48,7 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
-  const handleReset = async () => {
-    try {
-      const result = await resetUserData();
-      if (result.success) {
-        Alert.alert('✅ Reset réussi', 'Toutes tes données ont été réinitialisées !');
-      } else {
-        Alert.alert('❌ Erreur', result.error || 'Impossible de réinitialiser');
-      }
-    } catch (error) {
-      console.error('Erreur reset:', error);
-      Alert.alert('❌ Erreur', 'Une erreur est survenue');
-    }
-  };
+
 
   const handleMigration = async () => {
     Alert.alert(

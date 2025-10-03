@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ImageBackground
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Card,
   Text,
@@ -24,17 +25,20 @@ import UserHeader from '../components/UserHeader';
 import UserStatsCard from '../components/UserStatsCard';
 import ProgramProgressCard from '../components/ProgramProgressCard';
 import LoadingProgramCard from '../components/LoadingProgramCard';
+import TreeTooltipOverlay from '../components/onboarding/TreeTooltipOverlay';
 import { useUserPrograms, useRecommendedPrograms } from '../hooks/useUserPrograms';
 import programs from '../data/programs.json';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, route }) => {
   const [userStats, setUserStats] = useState(null);
-  const [inProgressSkills, setInProgressSkills] = useState([]);
-  const [upcomingSkills, setUpcomingSkills] = useState([]);
   const [lastSession, setLastSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [cardLayout, setCardLayout] = useState(null);
+  const firstCardRef = useRef(null);
+  const refetchTriggered = useRef(false);
   const { user } = useAuth();
   
   // Hook pour les programmes utilisateur
@@ -48,12 +52,58 @@ const HomeScreen = ({ navigation }) => {
   // Hook pour les programmes recommandés
   const { recommendedPrograms } = useRecommendedPrograms(3);
 
+  // Fonction pour mesurer la première carte
+  const measureFirstCard = () => {
+    if (firstCardRef.current) {
+      firstCardRef.current.measure((x, y, width, height, pageX, pageY) => {
+        setCardLayout({ x: pageX, y: pageY, width, height });
+      });
+    }
+  };
+
   useEffect(() => {
     if (user?.uid) {
       loadAllData();
       startFadeAnimation();
     }
+    // Réinitialiser le flag refetch à chaque changement d'utilisateur
+    refetchTriggered.current = false;
   }, [user]);
+
+  // UseEffect pour détecter le trigger tooltip
+  useEffect(() => {
+    const checkTooltip = async () => {
+      try {
+        const shown = await AsyncStorage.getItem('@fitnessrpg:tree_tooltip_shown');
+        const trigger = route.params?.triggerTreeTooltip;
+        
+        // Si c'est un trigger depuis ProgramSelectionScreen, refetch les programmes (une seule fois)
+        if (trigger && !refetchTriggered.current) {
+          refetchTriggered.current = true;
+          refetchPrograms();
+        }
+        
+        if (trigger && shown !== 'true' && userPrograms.length > 0) {
+          setTimeout(() => {
+            measureFirstCard();
+          }, 600);
+        }
+      } catch (error) {
+        console.error('Erreur vérification tooltip:', error);
+      }
+    };
+    
+    if (!programsLoading) {
+      checkTooltip();
+    }
+  }, [route.params, programsLoading, userPrograms, refetchPrograms]);
+
+  // UseEffect pour afficher le tooltip quand le layout est prêt
+  useEffect(() => {
+    if (cardLayout) {
+      setShowTooltip(true);
+    }
+  }, [cardLayout]);
 
   const startFadeAnimation = () => {
     Animated.timing(fadeAnim, {
@@ -70,11 +120,6 @@ const HomeScreen = ({ navigation }) => {
       // Charger les stats utilisateur depuis Firestore
       const userStatsData = await loadUserStats();
       setUserStats(userStatsData);
-      
-      // Charger les skills en cours et à débloquer
-      const { inProgress, upcoming } = await loadSkillsData(userStatsData);
-      setInProgressSkills(inProgress);
-      setUpcomingSkills(upcoming);
       
       // Charger la dernière session
       const lastSessionData = await loadLastSession();
@@ -146,29 +191,7 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const loadSkillsData = async (userStatsData) => {
-    try {
-      // Pour l'instant, on utilise les données statiques
-      // TODO: Implémenter le chargement depuis skillProgress
-      
-      const streetPrograms = programs.categories
-        .find(cat => cat.id === 'street')?.programs || [];
-      
-      const completedCount = userStatsData?.programs?.street?.completedSkills || 0;
-      
-      // Skills en cours (simulé)
-      const inProgress = streetPrograms.slice(0, Math.min(2, streetPrograms.length));
-      
-      // Skills à débloquer (les 2 suivants)
-      const upcoming = streetPrograms.slice(completedCount, completedCount + 2);
-      
-      return { inProgress, upcoming };
-      
-    } catch (error) {
-      console.error('Erreur chargement skills:', error);
-      return { inProgress: [], upcoming: [] };
-    }
-  };
+
 
   const loadLastSession = async () => {
     try {
@@ -217,17 +240,135 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('ProgramSelection');
   };
 
+  const handleResetForTesting = async () => {
+    try {
+      // Supprimer document utilisateur de Firestore
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../services/firebase');
+      
+      const userRef = doc(db, 'users', user.uid);
+      await deleteDoc(userRef);
+      
+      // Supprimer flag tooltip
+      await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
+      
+      // Forcer le rechargement de l'écran
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main', params: { screen: 'Home' } }],
+      });
+      
+    } catch (error) {
+      console.error('Erreur reset:', error);
+      Alert.alert('Erreur', 'Impossible de reset: ' + error.message);
+    }
+  };
+
   const handleViewProgram = (programId) => {
     navigation.navigate('SkillTree', { programId });
   };
 
-  const handleViewSkill = (skillId) => {
-    navigation.navigate('SkillDetail', { skillId });
+
+
+  const handleTooltipDismiss = async () => {
+    try {
+      await AsyncStorage.setItem('@fitnessrpg:tree_tooltip_shown', 'true');
+      setShowTooltip(false);
+      
+      const firstProgram = userPrograms.find(up => up.isStarted);
+      if (firstProgram) {
+        navigation.navigate('SkillTree', { programId: firstProgram.program.id });
+      }
+    } catch (error) {
+      console.error('Erreur sauvegarde tooltip:', error);
+    }
   };
 
-  const handleContinueSession = () => {
-    // TODO: Reprendre la dernière session
-    navigation.navigate('Workout');
+  // Handlers pour les programmes
+  const handleViewTree = (programId) => {
+    navigation.navigate('SkillTree', { programId });
+  };
+
+  const handleContinueProgram = (programId, currentLevel) => {
+    navigation.navigate('SkillTree', { 
+      programId, 
+      highlightLevel: currentLevel 
+    });
+  };
+
+  // Composant Mes Programmes
+  const MyProgramsSection = ({ programs, onViewTree, onContinue }) => {
+    if (!programs || programs.length === 0) return null;
+    
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>📚 Mes Programmes</Text>
+        
+        {programs.map(({ program, progress }) => {
+          const hasStarted = progress && progress.level > 0;
+          const completionPercentage = progress ? Math.round((progress.completedSkills / progress.totalSkills) * 100) : 0;
+          
+          return (
+            <Card 
+              key={program.id} 
+              style={styles.programCard}
+              ref={program.id === programs[0]?.program?.id ? firstCardRef : null}
+            >
+              <Card.Content>
+                <View style={styles.programHeader}>
+                  <Text style={styles.programIcon}>{program.icon}</Text>
+                  <View style={styles.programInfo}>
+                    <Text style={styles.programName}>{program.name}</Text>
+                    {hasStarted ? (
+                      <Text style={styles.programProgress}>
+                        Niveau {progress.level} • {completionPercentage}% complété
+                      </Text>
+                    ) : (
+                      <Text style={styles.programProgress}>
+                        Non commencé • {progress.totalSkills} compétences disponibles
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                
+                <View style={styles.programActions}>
+                  <Button
+                    mode="outlined"
+                    onPress={() => onViewTree(program.id)}
+                    style={styles.actionButton}
+                    icon="file-tree"
+                    compact
+                  >
+                    Voir l'arbre
+                  </Button>
+                  
+                  {hasStarted && (
+                    <Button
+                      mode="contained"
+                      onPress={() => onContinue(program.id, progress.level)}
+                      style={styles.actionButton}
+                      icon="play"
+                      compact
+                    >
+                      Continuer niveau {progress.level}
+                    </Button>
+                  )}
+                </View>
+              </Card.Content>
+            </Card>
+          );
+        })}
+        
+        <Button
+          mode="text"
+          onPress={() => navigation.navigate('ProgramSelection')}
+          style={styles.addProgramButton}
+          icon="plus"
+        >
+          Ajouter un programme
+        </Button>
+      </View>
+    );
   };
 
   // Composants internes
@@ -242,7 +383,7 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.onboardingTitle}>
           Bienvenue dans HybridRPG ⚔️🔥
         </Text>
-        
+
         <View style={styles.onboardingFeatures}>
           <View style={styles.featureItem}>
             <Text style={styles.featureIcon}>💪</Text>
@@ -285,6 +426,16 @@ const HomeScreen = ({ navigation }) => {
         >
           Commencer mon aventure
         </Button>
+        
+        {/* Bouton Reset pour les tests - À SUPPRIMER en production */}
+        <Button
+          mode="text"
+          onPress={handleResetForTesting}
+          style={styles.resetButton}
+          labelStyle={{ color: colors.warning, fontSize: 12 }}
+        >
+          🔄 Reset (test)
+        </Button>
       </Animated.View>
       </View>
     </ImageBackground>
@@ -313,78 +464,7 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  const InProgressSkillsSection = ({ skills }) => {
-    if (!skills || skills.length === 0) return null;
-    
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>⚡ En cours</Text>
-        
-        {skills.map((skill) => (
-          <Card 
-            key={skill.id} 
-            style={styles.skillCard}
-            onPress={() => handleViewSkill(skill.id)}
-          >
-            <Card.Content>
-              <View style={styles.skillHeader}>
-                <Text style={styles.skillIcon}>{skill.icon}</Text>
-                <View style={styles.skillInfo}>
-                  <Text style={styles.skillName}>{skill.name}</Text>
-                  <Text style={styles.skillDifficulty}>{skill.difficulty}</Text>
-                </View>
-                <Chip mode="outlined" compact>
-                  En cours
-                </Chip>
-              </View>
-            </Card.Content>
-          </Card>
-        ))}
-        
-        <Button
-          mode="outlined"
-          onPress={handleContinueSession}
-          style={styles.continueButton}
-          icon="play"
-        >
-          Continuer l'entraînement
-        </Button>
-      </View>
-    );
-  };
 
-  const UpcomingSkillsSection = ({ skills }) => {
-    if (!skills || skills.length === 0) return null;
-    
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>🎯 À débloquer</Text>
-        
-        {skills.map((skill) => (
-          <Card 
-            key={skill.id} 
-            style={styles.upcomingSkillCard}
-            onPress={() => handleViewSkill(skill.id)}
-          >
-            <Card.Content>
-              <View style={styles.skillHeader}>
-                <Text style={styles.skillIcon}>{skill.icon}</Text>
-                <View style={styles.skillInfo}>
-                  <Text style={styles.skillName}>{skill.name}</Text>
-                  <Text style={styles.skillDescription} numberOfLines={2}>
-                    {skill.description}
-                  </Text>
-                </View>
-                <Chip mode="flat" style={styles.upcomingChip}>
-                  Bientôt
-                </Chip>
-              </View>
-            </Card.Content>
-          </Card>
-        ))}
-      </View>
-    );
-  };
 
   const LastSessionCard = ({ session }) => {
     if (!session) return null;
@@ -431,11 +511,9 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  // Détection mode
-  const isNewUser = !userStats || (
-    userStats.globalXP === 0 && 
-    (!userStats.programs?.street || userStats.programs.street.completedSkills === 0)
-  );
+  // Détection mode - utiliser userPrograms du hook au lieu de l'ancienne logique
+  const forceShowDashboard = route.params?.forceShowDashboard;
+  const isNewUser = !forceShowDashboard && !programsLoading && userPrograms.length === 0;
 
   if (loading) {
     return (
@@ -501,21 +579,32 @@ const HomeScreen = ({ navigation }) => {
         ) : (
           userPrograms
             .filter(up => up.isStarted) // Seulement les programmes commencés
-            .map(({ program, progress }) => (
-              <ProgramProgressCard
-                key={program.id}
-                program={program}
-                progress={progress}
-                onPress={() => handleViewProgram(program.id)}
-              />
+            .map(({ program, progress }, index) => (
+              index === 0 ? (
+                <View key={program.id} ref={firstCardRef} collapsable={false}>
+                  <ProgramProgressCard
+                    program={program}
+                    progress={progress}
+                    onPress={() => handleViewProgram(program.id)}
+                  />
+                </View>
+              ) : (
+                <ProgramProgressCard
+                  key={program.id}
+                  program={program}
+                  progress={progress}
+                  onPress={() => handleViewProgram(program.id)}
+                />
+              )
             ))
         )}
 
-        {/* Section En cours */}
-        <InProgressSkillsSection skills={inProgressSkills} />
-
-        {/* Section À débloquer */}
-        <UpcomingSkillsSection skills={upcomingSkills} />
+        {/* Mes Programmes */}
+        <MyProgramsSection 
+          programs={userPrograms}
+          onViewTree={handleViewTree}
+          onContinue={handleContinueProgram}
+        />
 
         {/* Dernière séance */}
         <LastSessionCard session={lastSession} />
@@ -524,6 +613,13 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.bottomSpacer} />
       </Animated.View>
       </ScrollView>
+      
+      {showTooltip && cardLayout && (
+        <TreeTooltipOverlay 
+          cardLayout={cardLayout}
+          onDismiss={handleTooltipDismiss}
+        />
+      )}
     </ImageBackground>
   );
 };
@@ -602,6 +698,10 @@ const styles = StyleSheet.create({
   },
   startButtonContent: {
     paddingVertical: 8,
+  },
+  resetButton: {
+    marginTop: 20,
+    opacity: 0.7,
   },
   
   // Sections
@@ -747,6 +847,46 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 12,
     textAlign: 'center',
+  },
+
+  // Program section styles
+  programCard: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    elevation: 2,
+  },
+  programHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  programIcon: {
+    fontSize: 40,
+    marginRight: 12,
+  },
+  programInfo: {
+    flex: 1,
+  },
+  programName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  programProgress: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  programActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    flex: 1,
+  },
+  addProgramButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
   },
 
   // Error card
