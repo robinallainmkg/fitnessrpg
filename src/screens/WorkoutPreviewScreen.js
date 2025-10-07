@@ -56,7 +56,7 @@ const WorkoutPreviewScreen = ({ navigation, route }) => {
 
   return (
     <ImageBackground
-      source={require('../assets/Home-BG-0.jpg')}
+      source={require('../../assets/Home-BG-0.jpg')}
       style={styles.background}
       resizeMode="cover"
     >
