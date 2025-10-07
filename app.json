@@ -3,42 +3,8 @@
     "name": "Fitness RPG",
     "slug": "fitness-rpg",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "backgroundColor": "#1a1a2e"
-    },
     "assetBundlePatterns": [
       "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.fitnessrpg.app"
-    },
-    "android": {
-      "package": "com.fitnessrpg.app",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "backgroundColor": "#6C63FF"
-      },
-      "googleServicesFile": "./google-services.json",
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
-    },
-    "plugins": [
-      "expo-font",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "compileSdkVersion": 36,
-            "targetSdkVersion": 36,
-            "buildToolsVersion": "36.0.0"
-          }
-        }
-      ]
     ],
     "extra": {
       "eas": {
