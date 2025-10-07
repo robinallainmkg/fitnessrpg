@@ -1,5 +1,4 @@
-import { collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
 
 /**
  * 🔄 MIGRATION USERS - Ajouter support multi-programmes et stats
@@ -13,8 +12,8 @@ export const migrateExistingUsers = async () => {
   
   try {
     // 1. Récupérer tous les utilisateurs existants
-    const usersRef = collection(db, 'users');
-    const usersSnapshot = await getDocs(usersRef);
+    const usersRef = firestore().collection('users');
+    const usersSnapshot = await usersRef.get();
     
     let migratedCount = 0;
     let skippedCount = 0;
@@ -73,8 +72,8 @@ export const migrateExistingUsers = async () => {
         };
         
         // 6. Mettre à jour SANS écraser (merge)
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, newFields);
+        const userRef = firestore().doc(`users/${userId}`);
+        await userRef.update(newFields);
         
         console.log(`✅ Utilisateur ${userData.email} migré avec succès`);
         migratedCount++;

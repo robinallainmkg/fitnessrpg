@@ -14,9 +14,8 @@ import {
   Chip,
   Divider
 } from 'react-native-paper';
-import { collection, doc, getDocs, getDoc, query, where, orderBy, limit } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
 import { colors } from '../theme/colors';
 import UserHeader from '../components/UserHeader';
 import UserStatsCard from '../components/UserStatsCard';
@@ -62,8 +61,9 @@ const HomeScreen = ({ navigation }) => {
       setLoading(true);
       
       // 1. Charger les données utilisateur complètes
-      const userDoc = await getDoc(doc(db, 'users', userId));
-      const userDataFromDB = userDoc.exists() ? userDoc.data() : null;
+      const userDocRef = firestore().doc(`users/${userId}`);
+      const userDoc = await userDocRef.get();
+      const userDataFromDB = userDoc.exists ? userDoc.data() : null;
       
       if (userDataFromDB) {
         setUserData(userDataFromDB);
@@ -88,13 +88,12 @@ const HomeScreen = ({ navigation }) => {
   const loadInProgressSkills = async (userDataFromDB) => {
     try {
       // Récupérer les progressions de skills depuis Firestore
-      const progressQuery = query(
-        collection(db, 'skillProgress'),
-        where('userId', '==', userId),
-        where('status', '==', 'in_progress')
-      );
+      const progressQuery = firestore()
+        .collection('skillProgress')
+        .where('userId', '==', userId)
+        .where('status', '==', 'in_progress');
       
-      const progressSnapshot = await getDocs(progressQuery);
+      const progressSnapshot = await progressQuery.get();
       const inProgress = [];
       
       progressSnapshot.forEach(doc => {
@@ -146,14 +145,13 @@ const HomeScreen = ({ navigation }) => {
 
   const loadLastSession = async () => {
     try {
-      const sessionsQuery = query(
-        collection(db, 'workoutSessions'),
-        where('userId', '==', userId),
-        orderBy('createdAt', 'desc'),
-        limit(1)
-      );
+      const sessionsQuery = firestore()
+        .collection('workoutSessions')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .limit(1);
       
-      const sessionsSnapshot = await getDocs(sessionsQuery);
+      const sessionsSnapshot = await sessionsQuery.get();
       if (!sessionsSnapshot.empty) {
         const sessionData = sessionsSnapshot.docs[0].data();
         setLastSession(sessionData);

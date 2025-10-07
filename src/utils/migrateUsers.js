@@ -7,15 +7,7 @@
  * ATTENTION : Ce script ne doit être exécuté qu'UNE SEULE FOIS
  */
 
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  updateDoc, 
-  query, 
-  where 
-} from 'firebase/firestore';
-import { db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
 
 /**
  * Obtient le titre basé sur le niveau global
@@ -93,8 +85,8 @@ async function migrateUser(userId, userData) {
     };
     
     // Mettre à jour le document (garde les champs existants)
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, migrationData);
+    const userRef = firestore().doc(`users/${userId}`);
+    await userRef.update(migrationData);
     
     console.log(`✅ Utilisateur migré: ${userData.email || userId}`);
     console.log(`   - XP Global: ${totalXP} (Level ${globalLevel})`);
@@ -123,8 +115,8 @@ export async function migrateAllUsers() {
   
   try {
     // Récupérer tous les utilisateurs
-    const usersRef = collection(db, 'users');
-    const snapshot = await getDocs(usersRef);
+    const usersRef = firestore().collection('users');
+    const snapshot = await usersRef.get();
     
     totalUsers = snapshot.size;
     console.log(`📊 Total utilisateurs trouvés: ${totalUsers}`);
@@ -188,8 +180,8 @@ export async function verifyMigration() {
   console.log('===============================');
   
   try {
-    const usersRef = collection(db, 'users');
-    const snapshot = await getDocs(usersRef);
+    const usersRef = firestore().collection('users');
+    const snapshot = await usersRef.get();
     
     let totalUsers = snapshot.size;
     let migratedUsers = 0;
@@ -241,8 +233,8 @@ export async function previewMigration() {
   console.log('====================================');
   
   try {
-    const usersRef = collection(db, 'users');
-    const snapshot = await getDocs(usersRef);
+    const usersRef = firestore().collection('users');
+    const snapshot = await usersRef.get();
     
     let totalUsers = snapshot.size;
     let toMigrate = 0;

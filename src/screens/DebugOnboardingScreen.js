@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Card, Button, Text, Chip } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
 import { colors } from '../theme/colors';
 import { useUserPrograms } from '../hooks/useUserPrograms';
 
@@ -20,10 +19,10 @@ const DebugOnboardingScreen = ({ navigation }) => {
       const info = {};
       
       // 1. Vérifier document utilisateur
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
-      info.userDocExists = userDoc.exists();
-      info.userData = userDoc.exists() ? userDoc.data() : null;
+      const userRef = firestore().doc(`users/${user.uid}`);
+      const userDoc = await userRef.get();
+      info.userDocExists = userDoc.exists;
+      info.userData = userDoc.exists ? userDoc.data() : null;
       
       // 2. Vérifier AsyncStorage tooltip
       const tooltipShown = await AsyncStorage.getItem('@fitnessrpg:tree_tooltip_shown');
@@ -52,8 +51,8 @@ const DebugOnboardingScreen = ({ navigation }) => {
       setLoading(true);
       
       // Supprimer document utilisateur
-      const userRef = doc(db, 'users', user.uid);
-      await deleteDoc(userRef);
+      const userRef = firestore().doc(`users/${user.uid}`);
+      await userRef.delete();
       
       // Supprimer flag tooltip
       await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
@@ -74,7 +73,7 @@ const DebugOnboardingScreen = ({ navigation }) => {
     try {
       setLoading(true);
       
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = firestore().doc(`users/${user.uid}`);
       const testData = {
         programs: {
           'street-workout': {
@@ -92,7 +91,7 @@ const DebugOnboardingScreen = ({ navigation }) => {
         email: user.email
       };
       
-      await setDoc(userRef, testData, { merge: true });
+      await userRef.set(testData, { merge: true });
       await refetch();
       
       alert('✅ Programmes test créés');

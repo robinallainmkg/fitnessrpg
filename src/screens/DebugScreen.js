@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
 
 const DebugScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -23,10 +22,10 @@ const DebugScreen = ({ navigation }) => {
       info.onboardingCompletedBoolean = onboardingCompleted === 'true';
       
       // 2. Vérifier document utilisateur
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
-      info.userDocExists = userDoc.exists();
-      if (userDoc.exists()) {
+      const userRef = firestore().doc(`users/${user.uid}`);
+      const userDoc = await userRef.get();
+      info.userDocExists = userDoc.exists;
+      if (userDoc.exists) {
         const data = userDoc.data();
         info.hasPrograms = data.programs ? Object.keys(data.programs).length : 0;
         info.programs = data.programs;

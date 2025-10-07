@@ -2,8 +2,20 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  ScrollView,
+       // Créer nouvel utilisateur
+      const userCredential = await auth().createUserWithEmailAndPassword(
+        newUserData.email, 
+        newUserData.password
+      );
+      
+      setTestUser(userCredential.user);
+      addLog(`✅ Compte créé: ${userCredential.user.email}`, 'success');
+
+      // Étape 2: Vérifier initialisation stats à 0
+      addLog('Étape 2: Vérification initialisation stats...', 'info');
+      
+      const userDocRef = firestore().doc(`users/${userCredential.user.uid}`);
+      const userDoc = await userDocRef.get(); ScrollView,
   Alert,
   Modal
 } from 'react-native';
@@ -17,9 +29,8 @@ import {
   Switch,
   ProgressBar
 } from 'react-native-paper';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { auth, db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 import { colors } from '../theme/colors';
 import programs from '../data/programs.json';
 
@@ -74,8 +85,8 @@ const SystemTestScreen = ({ navigation }) => {
 
       // Supprimer l'utilisateur test s'il existe
       try {
-        const testDocRef = doc(db, 'users', 'test-user-uid');
-        await deleteDoc(testDocRef);
+        const testDocRef = firestore().doc('users/test-user-uid');
+        await testDocRef.delete();
         addLog('Ancien utilisateur test supprimé', 'info');
       } catch (e) {
         addLog('Pas d\'ancien utilisateur à supprimer', 'info');
@@ -116,7 +127,7 @@ const SystemTestScreen = ({ navigation }) => {
           streakDays: 0
         };
         
-        await setDoc(userDocRef, initialUserData);
+        await userDocRef.set(initialUserData);
         addLog('✅ Stats initialisées à 0', 'success');
         
         // Vérifier les valeurs
@@ -147,7 +158,7 @@ const SystemTestScreen = ({ navigation }) => {
 
       // Étape 5: Vérifier mise à jour XP et stats
       addLog('Étape 5: Vérification mise à jour post-séance...', 'info');
-      const updatedUserDoc = await getDoc(userDocRef);
+      const updatedUserDoc = await userDocRef.get();
       const updatedData = updatedUserDoc.data();
       
       if (updatedData.globalXP === 150 && 
@@ -194,10 +205,10 @@ const SystemTestScreen = ({ navigation }) => {
 
       // Étape 1: Compléter une nouvelle compétence
       addLog('Étape 1: Complétion nouvelle compétence...', 'info');
-      const userDocRef = doc(db, 'users', testUser.uid);
+      const userDocRef = firestore().doc(`users/${testUser.uid}`);
       
       // Récupérer état actuel
-      const beforeDoc = await getDoc(userDocRef);
+      const beforeDoc = await userDocRef.get();
       const beforeData = beforeDoc.data();
       
       addLog(`État avant: XP=${beforeData.globalXP}, Force=${beforeData.stats.strength}`, 'info');
@@ -207,7 +218,7 @@ const SystemTestScreen = ({ navigation }) => {
       
       // Étape 2: Vérifier gains stats
       addLog('Étape 2: Vérification gains stats...', 'info');
-      const afterDoc = await getDoc(userDocRef);
+      const afterDoc = await userDocRef.get();
       const afterData = afterDoc.data();
       
       // Récupérer les gains attendus pour strict-pullups
@@ -283,8 +294,8 @@ const SystemTestScreen = ({ navigation }) => {
       }
 
       // Étape 1: État avant multi-programmes
-      const userDocRef = doc(db, 'users', testUser.uid);
-      const beforeDoc = await getDoc(userDocRef);
+      const userDocRef = firestore().doc(`users/${testUser.uid}`);
+      const beforeDoc = await userDocRef.get();
       const beforeData = beforeDoc.data();
       
       addLog(`État avant: Global XP = ${beforeData.globalXP}`, 'info');
@@ -295,7 +306,7 @@ const SystemTestScreen = ({ navigation }) => {
       await simulateWorkoutCompletion(testUser.uid, 'running-basics', 880, 180);
 
       // Étape 3: Vérifier cumul globalXP
-      const afterDoc = await getDoc(userDocRef);
+      const afterDoc = await userDocRef.get();
       const afterData = afterDoc.data();
       
       const expectedTotalXP = beforeData.globalXP + 180;
@@ -334,8 +345,8 @@ const SystemTestScreen = ({ navigation }) => {
     try {
       addLog(`Simulation workout: ${programId}, Score: ${score}, XP: ${xpEarned}`, 'info');
       
-      const userDocRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userDocRef);
+      const userDocRef = firestore().doc(`users/${userId}`);
+      const userDoc = await userDocRef.get();
       const userData = userDoc.data();
 
       // Trouver le programme
@@ -377,7 +388,7 @@ const SystemTestScreen = ({ navigation }) => {
       }
 
       // Sauvegarder
-      await updateDoc(userDocRef, {
+      await userDocRef.update({
         stats: newStats,
         globalXP: newGlobalXP,
         globalLevel: newGlobalLevel,
@@ -399,8 +410,8 @@ const SystemTestScreen = ({ navigation }) => {
   const cleanupTestData = async () => {
     try {
       if (testUser) {
-        await deleteDoc(doc(db, 'users', testUser.uid));
-        await signOut(auth);
+        await firestore().doc(`users/${testUser.uid}`).delete();
+        await auth().signOut();
         setTestUser(null);
         addLog('✅ Données de test nettoyées', 'success');
       }

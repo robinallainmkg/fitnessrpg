@@ -19,8 +19,7 @@ import { useWorkout } from '../contexts/WorkoutContext';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { calculateWorkoutScore, isLevelCompleted } from '../utils/scoring';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
 import programs from '../data/programs.json';
 
 const WorkoutSummaryScreen = ({ route, navigation }) => {
@@ -46,8 +45,9 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
 
     try {
       // Récupérer les données utilisateur actuelles
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      const userData = userDoc.exists() ? userDoc.data() : {};
+      const userDocRef = firestore().doc(`users/${user.uid}`);
+      const userDoc = await userDocRef.get();
+      const userData = userDoc.exists ? userDoc.data() : {};
       const currentStats = userData.stats || {};
       const currentGlobalXP = userData.globalXP || 0;
 

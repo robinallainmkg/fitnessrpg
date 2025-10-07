@@ -1,5 +1,4 @@
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
-import { db } from './firebase';
+import firestore from '@react-native-firebase/firestore';
 
 /**
  * Service de gestion des programmes actifs
@@ -15,13 +14,13 @@ const MAX_ACTIVE_PROGRAMS = 2;
  */
 export const getActivePrograms = async (userId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    
-    if (!userDoc.exists()) {
+    const userDocRef = firestore().doc(`users/${userId}`);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
       return [];
     }
-    
+
     return userDoc.data().activePrograms || [];
   } catch (error) {
     console.error('Erreur récupération programmes actifs:', error);
@@ -37,16 +36,16 @@ export const getActivePrograms = async (userId) => {
  */
 export const activateProgram = async (userId, programId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    
-    if (!userDoc.exists()) {
-      return { 
-        success: false, 
-        error: 'Utilisateur non trouvé' 
+    const userDocRef = firestore().doc(`users/${userId}`);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      return {
+        success: false,
+        error: 'Utilisateur non trouvé'
       };
     }
-    
+
     const activePrograms = userDoc.data().activePrograms || [];
     
     // Vérifier si déjà actif
@@ -68,8 +67,8 @@ export const activateProgram = async (userId, programId) => {
     }
     
     // Activer le programme
-    await updateDoc(userDocRef, {
-      activePrograms: arrayUnion(programId)
+    await userDocRef.update({
+      activePrograms: firestore.FieldValue.arrayUnion(programId)
     });
     
     console.log(`✅ Programme ${programId} activé pour ${userId}`);
@@ -97,16 +96,16 @@ export const activateProgram = async (userId, programId) => {
  */
 export const deactivateProgram = async (userId, programId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    
-    if (!userDoc.exists()) {
-      return { 
-        success: false, 
-        error: 'Utilisateur non trouvé' 
+    const userDocRef = firestore().doc(`users/${userId}`);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      return {
+        success: false,
+        error: 'Utilisateur non trouvé'
       };
     }
-    
+
     const activePrograms = userDoc.data().activePrograms || [];
     
     // Vérifier si le programme est bien actif
@@ -118,8 +117,8 @@ export const deactivateProgram = async (userId, programId) => {
     }
     
     // Désactiver le programme
-    await updateDoc(userDocRef, {
-      activePrograms: arrayRemove(programId)
+    await userDocRef.update({
+      activePrograms: firestore.FieldValue.arrayRemove(programId)
     });
     
     console.log(`✅ Programme ${programId} désactivé pour ${userId}`);
@@ -148,21 +147,21 @@ export const deactivateProgram = async (userId, programId) => {
  */
 export const swapActiveProgram = async (userId, programIdToActivate, programIdToDeactivate) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    
-    if (!userDoc.exists()) {
-      return { 
-        success: false, 
-        error: 'Utilisateur non trouvé' 
+    const userDocRef = firestore().doc(`users/${userId}`);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
+      return {
+        success: false,
+        error: 'Utilisateur non trouvé'
       };
     }
-    
+
     const activePrograms = userDoc.data().activePrograms || [];
-    
+
     // Vérifier que le programme à désactiver est bien actif
     if (!activePrograms.includes(programIdToDeactivate)) {
-      return { 
+      return {
         success: false, 
         error: 'Le programme à désactiver n\'est pas actif' 
       };
@@ -173,7 +172,7 @@ export const swapActiveProgram = async (userId, programIdToActivate, programIdTo
       .filter(id => id !== programIdToDeactivate)
       .concat(programIdToActivate);
     
-    await updateDoc(userDocRef, {
+    await userDocRef.update({
       activePrograms: newActivePrograms
     });
     
@@ -202,22 +201,22 @@ export const swapActiveProgram = async (userId, programIdToActivate, programIdTo
  */
 export const getAllUserPrograms = async (userId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
-    
-    if (!userDoc.exists()) {
+    const userDocRef = firestore().doc(`users/${userId}`);
+    const userDoc = await userDocRef.get();
+
+    if (!userDoc.exists) {
       return { active: [], inactive: [] };
     }
-    
+
     const userData = userDoc.data();
     const activePrograms = userData.activePrograms || [];
     const selectedPrograms = userData.selectedPrograms || [];
-    
+
     // Les programmes inactifs sont ceux sélectionnés mais non actifs
     const inactivePrograms = selectedPrograms.filter(
       id => !activePrograms.includes(id)
     );
-    
+
     return {
       active: activePrograms,
       inactive: inactivePrograms,
