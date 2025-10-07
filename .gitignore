@@ -1,1 +1,12 @@
 node_modules
+
+# Native builds (managed by Expo Prebuild)
+ios/
+
+# Expo
+.expo/
+.expo-shared/
+
+# Environment
+.env.local
+.env.*.local

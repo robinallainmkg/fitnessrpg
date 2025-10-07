@@ -4,7 +4,7 @@
       "id": "street",
       "name": "Street Workout",
       "description": "L'arbre de compétences complet du calisthenics. Débute en débutant absolu, termine en athlète d'élite.",
-      "icon": "🏋️",
+      "icon": "",
       "color": "#6C63FF",
       "type": "skill-tree",
       "programs": [
@@ -37,7 +37,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Initiation",
+              "name": "Initiation",
               "subtitle": "Premiers pas en force",
               "xpReward": 100,
               "exercises": [
@@ -85,7 +85,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Renforcement",
+              "name": "Renforcement",
               "subtitle": "Augmenter le volume",
               "xpReward": 150,
               "exercises": [
@@ -133,7 +133,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Consolidation",
+              "name": "Consolidation",
               "subtitle": "Solidifier les bases",
               "xpReward": 150,
               "exercises": [
@@ -181,7 +181,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Test Final",
+              "name": "Test Final",
               "subtitle": "Valider le module",
               "xpReward": 200,
               "exercises": [
@@ -261,7 +261,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1 : Contrôle de base",
+              "name": "Contrôle de base",
               "subtitle": "Apprendre à se tenir correctement",
               "xpReward": 100,
               "exercises": [
@@ -309,7 +309,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 2 : Développement",
+              "name": "Développement",
               "subtitle": "Augmenter les temps de maintien",
               "xpReward": 150,
               "exercises": [
@@ -357,7 +357,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 3 : Maîtrise",
+              "name": "Maîtrise",
               "subtitle": "Perfectionner la technique",
               "xpReward": 200,
               "exercises": [
@@ -429,7 +429,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Premières tractions",
+              "name": "Premières tractions",
               "subtitle": "Construire la base",
               "xpReward": 100,
               "exercises": [
@@ -467,7 +467,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Volume",
+              "name": "Volume",
               "subtitle": "Augmenter les répétitions",
               "xpReward": 150,
               "exercises": [
@@ -505,7 +505,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Force",
+              "name": "Force",
               "subtitle": "Développer la puissance",
               "xpReward": 150,
               "exercises": [
@@ -543,7 +543,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Endurance",
+              "name": "Endurance",
               "subtitle": "Solidifier les acquis",
               "xpReward": 150,
               "exercises": [
@@ -581,7 +581,7 @@
             },
             {
               "id": 5,
-              "name": "Semaine 9-10 : Test Final",
+              "name": "Test Final",
               "subtitle": "Maîtrise complète",
               "xpReward": 200,
               "exercises": [
@@ -650,7 +650,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Tuck L-Sit",
+              "name": "Tuck L-Sit",
               "subtitle": "Premiers maintiens",
               "xpReward": 150,
               "exercises": [
@@ -688,7 +688,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Progression",
+              "name": "Progression",
               "subtitle": "Augmenter la durée",
               "xpReward": 150,
               "exercises": [
@@ -726,7 +726,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : L-Sit Avancé",
+              "name": "L-Sit Avancé",
               "subtitle": "Vers le L-sit complet",
               "xpReward": 150,
               "exercises": [
@@ -764,7 +764,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Maîtrise",
+              "name": "Maîtrise",
               "subtitle": "L-sit complet",
               "xpReward": 200,
               "exercises": [
@@ -832,7 +832,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Négatifs 5s",
+              "name": "Négatifs 5s",
               "subtitle": "Maîtrise la descente contrôlée",
               "xpReward": 100,
               "exercises": [
@@ -870,7 +870,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Négatifs 7s",
+              "name": "Négatifs 7s",
               "subtitle": "Descente plus lente",
               "xpReward": 150,
               "exercises": [
@@ -908,7 +908,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Négatifs 10s",
+              "name": "Négatifs 10s",
               "subtitle": "Contrôle maximal",
               "xpReward": 200,
               "exercises": [
@@ -978,7 +978,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Haute amplitude",
+              "name": "Haute amplitude",
               "subtitle": "Première haute amplitude",
               "xpReward": 150,
               "exercises": [
@@ -1016,7 +1016,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Augmentation",
+              "name": "Augmentation",
               "subtitle": "Plus de volume",
               "xpReward": 150,
               "exercises": [
@@ -1054,7 +1054,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Maîtrise",
+              "name": "Maîtrise",
               "subtitle": "Qualité technique",
               "xpReward": 150,
               "exercises": [
@@ -1092,7 +1092,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Validation",
+              "name": "Validation",
               "subtitle": "Performance maximale",
               "xpReward": 200,
               "exercises": [
@@ -1161,7 +1161,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Dips parallèles maîtrise",
+              "name": "Dips parallèles maîtrise",
               "subtitle": "Transition des parallèles à la barre",
               "xpReward": 150,
               "exercises": [
@@ -1199,7 +1199,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Transition",
+              "name": "Transition",
               "subtitle": "Réduire l'assistance",
               "xpReward": 150,
               "exercises": [
@@ -1237,7 +1237,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Premiers stricts",
+              "name": "Premiers stricts",
               "subtitle": "Dips stricts à la barre",
               "xpReward": 150,
               "exercises": [
@@ -1275,7 +1275,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Validation",
+              "name": "Validation",
               "subtitle": "Maîtrise complète",
               "xpReward": 200,
               "exercises": [
@@ -1344,7 +1344,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Knee raises",
+              "name": "Knee raises",
               "subtitle": "Contrôle de base",
               "xpReward": 150,
               "exercises": [
@@ -1382,7 +1382,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Progression",
+              "name": "Progression",
               "subtitle": "Augmentation du volume",
               "xpReward": 150,
               "exercises": [
@@ -1420,7 +1420,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Leg raises strictes",
+              "name": "Leg raises strictes",
               "subtitle": "Qualité maximale",
               "xpReward": 150,
               "exercises": [
@@ -1458,7 +1458,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Validation",
+              "name": "Validation",
               "subtitle": "Performance maximale",
               "xpReward": 200,
               "exercises": [
@@ -1700,7 +1700,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Initiation L-sit pulls",
+              "name": "Initiation L-sit pulls",
               "subtitle": "Premiers L-sit pull-ups",
               "xpReward": 150,
               "exercises": [
@@ -1738,7 +1738,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Augmentation",
+              "name": "Augmentation",
               "subtitle": "Plus de volume",
               "xpReward": 150,
               "exercises": [
@@ -1776,7 +1776,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Consolidation",
+              "name": "Consolidation",
               "subtitle": "Force combinée",
               "xpReward": 200,
               "exercises": [
@@ -1814,7 +1814,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Validation",
+              "name": "Validation",
               "subtitle": "Maîtrise absolue",
               "xpReward": 250,
               "exercises": [
@@ -1882,7 +1882,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Knees-to-elbows",
+              "name": "Knees-to-elbows",
               "subtitle": "Maîtrise la base",
               "xpReward": 150,
               "exercises": [
@@ -1920,7 +1920,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Progression TTB",
+              "name": "Progression TTB",
               "subtitle": "Vers les toes-to-bar",
               "xpReward": 150,
               "exercises": [
@@ -1958,7 +1958,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : TTB strictes",
+              "name": "TTB strictes",
               "subtitle": "Qualité maximale",
               "xpReward": 150,
               "exercises": [
@@ -1996,7 +1996,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Validation",
+              "name": "Validation",
               "subtitle": "Maîtrise complète",
               "xpReward": 200,
               "exercises": [
@@ -2066,7 +2066,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Tuck FL initiation",
+              "name": "Tuck FL initiation",
               "subtitle": "Première progression statique",
               "xpReward": 200,
               "exercises": [
@@ -2104,7 +2104,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Tuck FL consolidation",
+              "name": "Tuck FL consolidation",
               "subtitle": "Renforcer la position tuck",
               "xpReward": 250,
               "exercises": [
@@ -2152,7 +2152,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-7 : Advanced tuck",
+              "name": "Advanced tuck",
               "subtitle": "Progression vers genoux dépliés",
               "xpReward": 250,
               "exercises": [
@@ -2200,7 +2200,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 8-9 : One leg progression",
+              "name": "One leg progression",
               "subtitle": "Vers la jambe unique",
               "xpReward": 300,
               "exercises": [
@@ -2238,7 +2238,7 @@
             },
             {
               "id": 5,
-              "name": "Semaine 10 : Validation",
+              "name": "Validation",
               "subtitle": "Test final du niveau débutant",
               "xpReward": 350,
               "exercises": [
@@ -2318,7 +2318,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Explosivité de base",
+              "name": "Explosivité de base",
               "subtitle": "Développer la vitesse pure",
               "xpReward": 200,
               "exercises": [
@@ -2356,7 +2356,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Clapping tentatives",
+              "name": "Clapping tentatives",
               "subtitle": "Premiers décollages",
               "xpReward": 250,
               "exercises": [
@@ -2394,7 +2394,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Clapping maîtrise",
+              "name": "Clapping maîtrise",
               "subtitle": "Contrôle du décollage",
               "xpReward": 250,
               "exercises": [
@@ -2432,7 +2432,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7 : Validation",
+              "name": "Validation",
               "subtitle": "Performance explosive maximale",
               "xpReward": 300,
               "exercises": [
@@ -2501,7 +2501,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Technique haute transition",
+              "name": "Technique haute transition",
               "subtitle": "Apprendre la différence",
               "xpReward": 200,
               "exercises": [
@@ -2539,7 +2539,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Premiers stricts",
+              "name": "Premiers stricts",
               "subtitle": "Sans assistance",
               "xpReward": 250,
               "exercises": [
@@ -2587,7 +2587,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Consolidation",
+              "name": "Consolidation",
               "subtitle": "Maîtriser la technique",
               "xpReward": 250,
               "exercises": [
@@ -2625,7 +2625,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7 : Validation",
+              "name": "Validation",
               "subtitle": "Performance technique maximale",
               "xpReward": 300,
               "exercises": [
@@ -2695,7 +2695,7 @@
           "levels": [
             {
               "id": 1,
-              "name": "Semaine 1-2 : Séries de 3-4",
+              "name": "Séries de 3-4",
               "subtitle": "Développer l'endurance",
               "xpReward": 250,
               "exercises": [
@@ -2733,7 +2733,7 @@
             },
             {
               "id": 2,
-              "name": "Semaine 3-4 : Séries de 5",
+              "name": "Séries de 5",
               "subtitle": "Augmentation du volume",
               "xpReward": 300,
               "exercises": [
@@ -2771,7 +2771,7 @@
             },
             {
               "id": 3,
-              "name": "Semaine 5-6 : Combos",
+              "name": "Combos",
               "subtitle": "Combinaisons techniques",
               "xpReward": 300,
               "exercises": [
@@ -2809,7 +2809,7 @@
             },
             {
               "id": 4,
-              "name": "Semaine 7-8 : Endurance",
+              "name": "Endurance",
               "subtitle": "Séries longues",
               "xpReward": 350,
               "exercises": [
@@ -2847,7 +2847,7 @@
             },
             {
               "id": 5,
-              "name": "Semaine 9 : Validation",
+              "name": "Validation",
               "subtitle": "Performance maximale",
               "xpReward": 400,
               "exercises": [
@@ -3224,7 +3224,7 @@
             {
               "id": 1,
               "name": "German hang et initiation",
-              "subtitle": "Semaine 1-2: Préparation back lever",
+              "subtitle": "Préparation back lever",
               "xpReward": 250,
               "exercises": [
                 {
@@ -3273,7 +3273,7 @@
             {
               "id": 2,
               "name": "Tuck BL consolidation",
-              "subtitle": "Semaine 3-4: Tuck back lever stable",
+              "subtitle": "Tuck back lever stable",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3321,7 +3321,7 @@
             {
               "id": 3,
               "name": "Advanced tuck",
-              "subtitle": "Semaine 5-7: Progression vers straddle",
+              "subtitle": "Progression vers straddle",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3369,7 +3369,7 @@
             {
               "id": 4,
               "name": "Straddle progression",
-              "subtitle": "Semaine 8-9: Vers straddle back lever",
+              "subtitle": "Vers straddle back lever",
               "xpReward": 350,
               "exercises": [
                 {
@@ -3407,7 +3407,7 @@
             {
               "id": 5,
               "name": "Validation",
-              "subtitle": "Semaine 10: Test straddle BL",
+              "subtitle": "Test straddle BL",
               "xpReward": 400,
               "exercises": [
                 {
@@ -3486,7 +3486,7 @@
             {
               "id": 1,
               "name": "Archer initiation",
-              "subtitle": "Semaine 1-2: Découverte archer",
+              "subtitle": "Découverte archer",
               "xpReward": 250,
               "exercises": [
                 {
@@ -3525,7 +3525,7 @@
             {
               "id": 2,
               "name": "Archer maîtrise",
-              "subtitle": "Semaine 3-4: Archer contrôlé",
+              "subtitle": "Archer contrôlé",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3563,7 +3563,7 @@
             {
               "id": 3,
               "name": "Asymétrie maximale",
-              "subtitle": "Semaine 5-6: Archer extrême",
+              "subtitle": "Archer extrême",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3601,7 +3601,7 @@
             {
               "id": 4,
               "name": "Quasi OAP",
-              "subtitle": "Semaine 7-8: Presque OAP",
+              "subtitle": "Presque OAP",
               "xpReward": 350,
               "exercises": [
                 {
@@ -3639,7 +3639,7 @@
             {
               "id": 5,
               "name": "Validation",
-              "subtitle": "Semaine 9: Test quasi-OAP",
+              "subtitle": "Test quasi-OAP",
               "xpReward": 400,
               "exercises": [
                 {
@@ -3707,7 +3707,7 @@
             {
               "id": 1,
               "name": "Déplacement latéral",
-              "subtitle": "Semaine 1-2: Découverte typewriter",
+              "subtitle": "Découverte typewriter",
               "xpReward": 250,
               "exercises": [
                 {
@@ -3746,7 +3746,7 @@
             {
               "id": 2,
               "name": "Fluidité",
-              "subtitle": "Semaine 3-4: Mouvement fluide",
+              "subtitle": "Mouvement fluide",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3794,7 +3794,7 @@
             {
               "id": 3,
               "name": "Maîtrise",
-              "subtitle": "Semaine 5-6: Typewriter avancé",
+              "subtitle": "Typewriter avancé",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3832,7 +3832,7 @@
             {
               "id": 4,
               "name": "Validation",
-              "subtitle": "Semaine 7: Test final typewriter",
+              "subtitle": "Test final typewriter",
               "xpReward": 350,
               "exercises": [
                 {
@@ -3901,7 +3901,7 @@
             {
               "id": 1,
               "name": "Prérequis front lever",
-              "subtitle": "Semaine 1-3: Base FL obligatoire",
+              "subtitle": "Base FL obligatoire",
               "xpReward": 300,
               "exercises": [
                 {
@@ -3940,7 +3940,7 @@
             {
               "id": 2,
               "name": "Négatifs ultra-lents",
-              "subtitle": "Semaine 4-6: Contrôle excentrique",
+              "subtitle": "Contrôle excentrique",
               "xpReward": 350,
               "exercises": [
                 {
@@ -3979,7 +3979,7 @@
             {
               "id": 3,
               "name": "Ice cream makers",
-              "subtitle": "Semaine 7-9: FL to BL transitions",
+              "subtitle": "FL to BL transitions",
               "xpReward": 400,
               "exercises": [
                 {
@@ -4018,7 +4018,7 @@
             {
               "id": 4,
               "name": "Transition partielle",
-              "subtitle": "Semaine 10-12: Premiers Hefesto assistés",
+              "subtitle": "Premiers Hefesto assistés",
               "xpReward": 400,
               "exercises": [
                 {
@@ -4057,7 +4057,7 @@
             {
               "id": 5,
               "name": "Premiers Hefesto",
-              "subtitle": "Semaine 13-15: Hefesto strict",
+              "subtitle": "Hefesto strict",
               "xpReward": 500,
               "exercises": [
                 {
@@ -4096,7 +4096,7 @@
             {
               "id": 6,
               "name": "Validation",
-              "subtitle": "Semaine 16: Maîtrise Hefesto",
+              "subtitle": "Maîtrise Hefesto",
               "xpReward": 700,
               "exercises": [
                 {
@@ -4176,7 +4176,7 @@
             {
               "id": 1,
               "name": "Force de base unilatérale",
-              "subtitle": "Semaine 1-4: Fondations OAP",
+              "subtitle": "Fondations OAP",
               "xpReward": 300,
               "exercises": [
                 {
@@ -4225,7 +4225,7 @@
             {
               "id": 2,
               "name": "Négatifs OAP",
-              "subtitle": "Semaine 5-8: Excentriques purs",
+              "subtitle": "Excentriques purs",
               "xpReward": 350,
               "exercises": [
                 {
@@ -4274,7 +4274,7 @@
             {
               "id": 3,
               "name": "Négatifs lents + assistance",
-              "subtitle": "Semaine 9-12: Contrôle ultime",
+              "subtitle": "Contrôle ultime",
               "xpReward": 400,
               "exercises": [
                 {
@@ -4312,7 +4312,7 @@
             {
               "id": 4,
               "name": "Assistance minimale",
-              "subtitle": "Semaine 13-16: Quasi-OAP",
+              "subtitle": "Quasi-OAP",
               "xpReward": 450,
               "exercises": [
                 {
@@ -4350,7 +4350,7 @@
             {
               "id": 5,
               "name": "Assisted OAP",
-              "subtitle": "Semaine 17-20: Progression finale",
+              "subtitle": "Progression finale",
               "xpReward": 500,
               "exercises": [
                 {
@@ -4388,7 +4388,7 @@
             {
               "id": 6,
               "name": "OAP Strict",
-              "subtitle": "Semaine 21+: Le moment de vérité",
+              "subtitle": "Le moment de vérité",
               "xpReward": 1200,
               "exercises": [
                 {

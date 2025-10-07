@@ -3,43 +3,73 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Linking,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableOpacity
 } from 'react-native';
 import {
   Card,
   Text,
-  Button,
-  Switch,
-  Divider,
-  List
+  Button
 } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
+import SignupModal from '../components/SignupModal';
 import { colors } from '../theme/colors';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { migrateExistingUsers, previewMigration, testMigrationSingleUser } from '../utils/userMigration';
-import { migrateAllUsers, verifyMigration, previewMigration as previewNewMigration } from '../utils/migrateUsers';
-import UserStatsCard from '../components/UserStatsCard';
+import { rpgTheme } from '../theme/rpgTheme';
+import firestore from '@react-native-firebase/firestore';
 
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout, resetUserData } = useAuth();
+  const { user, isGuest, logout, resetUserData, loading: authLoading } = useAuth();
   const [userStats, setUserStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
 
   useEffect(() => {
-    if (user?.uid) {
+    console.log('🔍 ProfileScreen - Vérification des fonctions:', {
+      logoutExists: !!logout,
+      resetUserDataExists: !!resetUserData,
+      userExists: !!user,
+      isGuest: isGuest,
+      authLoading: authLoading
+    });
+  }, []);
+
+  useEffect(() => {
+    console.log('🔄 ProfileScreen useEffect - user:', user?.email, 'isGuest:', isGuest);
+    
+    if (user?.uid && !isGuest) {
+      console.log('→ Chargement des stats utilisateur authentifié');
       loadUserStats();
+    } else if (isGuest) {
+      // Mode invité - pas de stats à charger
+      console.log('→ Mode invité détecté - initialisation stats par défaut');
+      setUserStats({
+        stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+        globalXP: 0,
+        globalLevel: 0,
+        title: 'Invité',
+        programs: {},
+      });
+      setLoadingStats(false);
+    } else {
+      console.log('→ Aucun utilisateur - pas de stats');
+      setLoadingStats(false);
     }
-  }, [user]);
+  }, [user, isGuest]);
 
   const loadUserStats = async () => {
+    if (!user?.uid) {
+      console.warn('⚠️ loadUserStats appelé sans user.uid');
+      setLoadingStats(false);
+      return;
+    }
+    
     try {
-      setLoading(true);
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      setLoadingStats(true);
+      const userDoc = await firestore().collection('users').doc(user.uid).get();
       
-      if (userDoc.exists()) {
+      if (userDoc.exists) {
         const userData = userDoc.data();
         
         // Structure pour utilisateur migré
@@ -75,9 +105,22 @@ const ProfileScreen = ({ navigation }) => {
         });
       }
     } catch (error) {
-      console.error('Erreur chargement stats:', error);
+      console.error('❌ Erreur chargement stats ProfileScreen:', error);
+      
+      // Mode dégradé : continuer avec données par défaut
+      if (error.code === 'firestore/unavailable') {
+        console.warn('⚠️ ProfileScreen en mode dégradé - Firestore indisponible');
+        setUserStats({
+          stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+          globalXP: 0,
+          globalLevel: 0,
+          title: 'Débutant',
+          programs: {},
+        });
+      }
+      // Ne pas afficher d'alerte pour éviter de spammer l'utilisateur
     } finally {
-      setLoading(false);
+      setLoadingStats(false);
     }
   };
 
@@ -91,196 +134,128 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
+    console.log('🔘 handleLogout appelé');
+    console.log('🔍 logout function exists?', !!logout);
+    console.log('🔍 isGuest:', isGuest);
+    
+    // Confirmation avec Alert.alert pour React Native
     Alert.alert(
       'Déconnexion',
       'Êtes-vous sûr de vouloir vous déconnecter ?',
       [
         {
           text: 'Annuler',
-          style: 'cancel',
+          onPress: () => console.log('❌ Déconnexion annulée'),
+          style: 'cancel'
         },
         {
-          text: 'Déconnexion',
-          style: 'destructive',
+          text: 'Se déconnecter',
           onPress: async () => {
-            try {
-              await logout();
-            } catch (error) {
-              console.error('Erreur déconnexion:', error);
-              Alert.alert('Erreur', 'Impossible de vous déconnecter');
-            }
+            await performLogout();
           },
-        },
-      ]
-    );
-  };
-
-
-
-  const handleMigration = async () => {
-    Alert.alert(
-      '🔄 Migration Base de Données',
-      'Ajouter les nouveaux champs (globalXP, stats, programs) à tous les utilisateurs ?',
-      [
-        { text: 'Preview', onPress: handlePreviewMigration },
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Migrer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              Alert.alert('⏳', 'Migration en cours...');
-              const result = await migrateExistingUsers();
-              
-              if (result.success) {
-                Alert.alert(
-                  '✅ Migration Réussie',
-                  `Migrés: ${result.migrated}\nIgnorés: ${result.skipped}\nErreurs: ${result.errors}`
-                );
-              } else {
-                Alert.alert('❌ Erreur Migration', result.error);
-              }
-            } catch (error) {
-              Alert.alert('❌ Erreur', error.message);
-            }
-          }
+          style: 'destructive'
         }
       ]
     );
   };
 
-  const handlePreviewMigration = async () => {
+  const performLogout = async () => {
     try {
-      Alert.alert('⏳', 'Analyse en cours...');
-      const preview = await previewMigration();
+      console.log('📤 Tentative de déconnexion...');
       
-      if (preview) {
-        console.log('📊 Preview Migration:', preview);
-        Alert.alert(
-          '👀 Preview Migration',
-          `${preview.length} utilisateurs analysés.\nVoir les détails dans la console.`
-        );
+      // Afficher un message de chargement
+      setLoadingStats(true);
+      
+      const result = await logout();
+      console.log('📤 Résultat logout:', result);
+      
+      if (result.success) {
+        console.log('✅ Déconnexion réussie - Rechargement automatique');
+        
+        // Recharger l'app automatiquement sans popup
+        if (typeof window !== 'undefined' && window.location) {
+          window.location.reload();
+        }
+        // Sur mobile, l'app se recharge automatiquement via onAuthStateChanged
+      } else {
+        setLoadingStats(false);
+        Alert.alert('Erreur', result.error || 'Impossible de vous déconnecter');
       }
     } catch (error) {
-      Alert.alert('❌ Erreur Preview', error.message);
+      setLoadingStats(false);
+      console.error('❌ Erreur déconnexion:', error);
+      Alert.alert('Erreur', 'Impossible de vous déconnecter');
     }
   };
 
-  // NOUVELLES FONCTIONS DE MIGRATION MULTI-PROGRAMMES
-  const handleNewMigration = async () => {
+  const handleResetProfile = async () => {
+    console.log('🔘 handleResetProfile appelé');
+    console.log('🔍 resetUserData function exists?', !!resetUserData);
+    console.log('🔍 isGuest:', isGuest);
+    
+    // Confirmation avec Alert.alert pour React Native
+    Alert.alert(
+      '⚠️ ATTENTION',
+      'Cette action va supprimer TOUTES vos données:\n• Progression\n• XP et niveaux\n• Statistiques\n• Séances complétées\n\nVous serez redirigé vers l\'onboarding.\n\nCette action est IRRÉVERSIBLE!\n\nÊtes-vous vraiment sûr ?',
+      [
+        {
+          text: 'Annuler',
+          onPress: () => console.log('❌ Reset annulé'),
+          style: 'cancel'
+        },
+        {
+          text: 'Réinitialiser',
+          onPress: async () => {
+            await performReset();
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
+  const performReset = async () => {
     try {
-      Alert.alert(
-        '🆕 Migration Multi-Programmes v1.0',
-        'Nouvelle migration avec structure complète :\n\n• Système multi-programmes\n• Stats individuelles\n• Titres et niveaux globaux\n\nChoisir une action :',
-        [
-          {
-            text: '👁️ Prévisualisation',
-            onPress: () => handleNewPreviewMigration()
-          },
-          {
-            text: '🔍 Vérification',
-            onPress: () => handleVerifyMigration()
-          },
-          {
-            text: '🚀 Migration Complète',
-            style: 'destructive',
-            onPress: () => handleNewFullMigration()
-          },
-          {
-            text: 'Annuler',
-            style: 'cancel'
+      console.log('🔄 Tentative de réinitialisation...');
+      
+      setLoadingStats(true);
+      
+      // 1. Supprimer les données (Firestore + AsyncStorage)
+      const result = await resetUserData();
+      console.log('🔄 Résultat reset:', result);
+      
+      if (result.success) {
+        console.log('✅ Reset réussi');
+        
+        // 2. Déconnecter l'utilisateur
+        const logoutResult = await logout();
+        console.log('🔄 Résultat logout:', logoutResult);
+        
+        if (logoutResult.success) {
+          console.log('✅ Profil réinitialisé! Rechargement automatique...');
+          
+          // Recharger l'app automatiquement sans popup
+          if (typeof window !== 'undefined' && window.location) {
+            window.location.reload();
           }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('❌ Erreur', error.message);
-    }
-  };
-
-  const handleNewPreviewMigration = async () => {
-    try {
-      const result = await previewNewMigration();
-      if (result) {
-        Alert.alert(
-          '👁️ Prévisualisation Migration v1.0',
-          `📊 Total utilisateurs: ${result.totalUsers}\n🔄 À migrer: ${result.toMigrate}\n✅ Déjà migrés: ${result.alreadyMigrated}\n\nVoir console pour détails complets.`
-        );
+          // Sur mobile, l'app se recharge automatiquement via onAuthStateChanged
+        } else {
+          setLoadingStats(false);
+          Alert.alert('Erreur', 'Erreur lors de la déconnexion: ' + (logoutResult.error || 'Erreur inconnue'));
+        }
+      } else {
+        setLoadingStats(false);
+        console.error('❌ Reset échoué:', result.error);
+        Alert.alert('Erreur', result.error || 'Impossible de réinitialiser le profil');
       }
     } catch (error) {
-      Alert.alert('❌ Erreur Prévisualisation', error.message);
+      setLoadingStats(false);
+      console.error('❌ Erreur reset:', error);
+      Alert.alert('Erreur', error.message);
     }
   };
 
-  const handleVerifyMigration = async () => {
-    try {
-      const result = await verifyMigration();
-      if (result) {
-        const successRate = result.totalUsers > 0 ? Math.round((result.migratedUsers / result.totalUsers) * 100) : 0;
-        Alert.alert(
-          '🔍 Vérification Migration v1.0',
-          `📊 Total: ${result.totalUsers}\n✅ Migrés: ${result.migratedUsers}\n❌ Non migrés: ${result.nonMigratedUsers}\n📈 Taux de succès: ${successRate}%`
-        );
-      }
-    } catch (error) {
-      Alert.alert('❌ Erreur Vérification', error.message);
-    }
-  };
-
-  const handleNewFullMigration = async () => {
-    try {
-      Alert.alert(
-        '⚠️ MIGRATION MULTI-PROGRAMMES v1.0',
-        'Cette migration va :\n\n✅ Ajouter globalXP et globalLevel\n✅ Créer le système de stats\n✅ Structurer programs.street\n✅ Ajouter les titres utilisateur\n✅ Préserver toutes les données\n\n⚠️ Action irréversible\n\nContinuer ?',
-        [
-          {
-            text: 'Annuler',
-            style: 'cancel'
-          },
-          {
-            text: '🚀 MIGRER MAINTENANT',
-            style: 'destructive',
-            onPress: async () => {
-              Alert.alert('⏳', 'Migration en cours...');
-              const success = await migrateAllUsers();
-              if (success) {
-                Alert.alert('✅ Migration Réussie !', 'Tous les utilisateurs ont été migrés vers la structure v1.0 avec succès !');
-              } else {
-                Alert.alert('❌ Échec Migration', 'La migration a échoué. Consulter les logs pour plus de détails.');
-              }
-            }
-          }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('❌ Erreur Migration', error.message);
-    }
-  };
-
-  const handleSendFeedback = () => {
-    const email = 'feedback@fitnessapp.com';
-    const subject = 'Feedback - Fitness RPG App';
-    const body = `Bonjour,\n\nJ'aimerais partager mon retour sur l'application :\n\n`;
-    
-    const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    Linking.openURL(mailto).catch(() => {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir l\'application email');
-    });
-  };
-
-  const handleSupport = () => {
-    const email = 'support@fitnessapp.com';
-    const subject = 'Support - Fitness RPG App';
-    const body = `Bonjour,\n\nJ'ai besoin d'aide avec l'application :\n\nProblème rencontré :\n\nÉtapes pour reproduire :\n\n`;
-    
-    const mailto = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    Linking.openURL(mailto).catch(() => {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir l\'application email');
-    });
-  };
-
-  if (loading) {
+  if (authLoading || loadingStats) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -289,248 +264,108 @@ const ProfileScreen = ({ navigation }) => {
   }
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Profil utilisateur */}
       <Card style={styles.profileCard}>
         <Card.Content style={styles.profileContent}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
-              {user?.email?.charAt(0).toUpperCase() || '?'}
+              {isGuest ? '👤' : (user?.email?.charAt(0).toUpperCase() || '?')}
             </Text>
           </View>
           
           <Text style={styles.userName}>
-            {user?.displayName || 'Utilisateur'}
+            {isGuest ? 'Invité' : (user?.displayName || 'Utilisateur')}
           </Text>
           
           <Text style={styles.userEmail}>
-            {user?.email}
+            {isGuest ? 'Mode invité' : user?.email}
           </Text>
           
           <Text style={styles.memberSince}>
-            Membre depuis {formatJoinDate(user?.metadata?.creationTime)}
+            {isGuest ? 'Session temporaire' : `Membre depuis ${formatJoinDate(user?.metadata?.creationTime)}`}
           </Text>
         </Card.Content>
       </Card>
 
-      {/* Stats utilisateur */}
-      {userStats && (
-        <UserStatsCard stats={userStats.stats} />
-      )}
-
-      {/* Paramètres */}
-      <Card style={styles.settingsCard}>
-        <Card.Content style={styles.settingsContent}>
-          <Text style={styles.sectionTitle}>Paramètres</Text>
-          
-          <List.Section style={styles.settingsList}>
-            <List.Item
-              title="Notifications"
-              description="Recevoir des rappels d'entraînement"
-              titleStyle={{ color: colors.text }}
-              descriptionStyle={{ color: colors.textSecondary }}
-              left={() => <List.Icon icon="bell-outline" color={colors.textSecondary} />}
-              right={() => (
-                <Switch
-                  value={true}
-                  onValueChange={() => {
-                    // TODO: Implémenter les notifications
-                    Alert.alert('Bientôt disponible', 'Cette fonctionnalité sera bientôt disponible');
-                  }}
-                />
-              )}
-            />
-            
-            <Divider />
-            
-            <List.Item
-              title="Rappels quotidiens"
-              description="Notification pour s'entraîner"
-              titleStyle={{ color: colors.text }}
-              descriptionStyle={{ color: colors.textSecondary }}
-              left={() => <List.Icon icon="calendar-clock" color={colors.textSecondary} />}
-              right={() => (
-                <Switch
-                  value={false}
-                  onValueChange={() => {
-                    Alert.alert('Bientôt disponible', 'Cette fonctionnalité sera bientôt disponible');
-                  }}
-                />
-              )}
-            />
-            
-            <Divider />
-            
-            <List.Item
-              title="Mode sombre"
-              description="Utiliser le thème sombre"
-              titleStyle={{ color: colors.text }}
-              descriptionStyle={{ color: colors.textSecondary }}
-              left={() => <List.Icon icon="theme-light-dark" color={colors.textSecondary} />}
-              right={() => (
-                <Switch
-                  value={false}
-                  onValueChange={() => {
-                    Alert.alert('Bientôt disponible', 'Cette fonctionnalité sera bientôt disponible');
-                  }}
-                />
-              )}
-            />
-          </List.Section>
-        </Card.Content>
-      </Card>
-
-      {/* Gestion des programmes */}
-      <Card style={styles.programsCard}>
-        <Card.Content style={styles.programsContent}>
-          <Text style={styles.sectionTitle}>Mes Programmes</Text>
-          
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="contained"
-              icon="dumbbell"
-              onPress={() => navigation.navigate('ProgramSelection')}
-              style={styles.manageProgramsButton}
-              contentStyle={styles.buttonContent}
-              buttonColor={colors.primary}
-            >
-              Gérer mes programmes
-            </Button>
-          </View>
-          
-          <Text style={styles.programsDescription}>
-            Ajoute, retire ou modifie tes programmes d'entraînement
-          </Text>
-        </Card.Content>
-      </Card>
-
-      {/* Support et feedback */}
-      <Card style={styles.supportCard}>
-        <Card.Content style={styles.supportContent}>
-          <Text style={styles.sectionTitle}>Support</Text>
-          
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="outlined"
-              icon="message-outline"
-              onPress={handleSendFeedback}
-              style={styles.supportButton}
-              contentStyle={styles.buttonContent}
-            >
-              Envoyer un feedback
-            </Button>
-            
-            <Button
-              mode="outlined"
-              icon="help-circle-outline"
-              onPress={handleSupport}
-              style={styles.supportButton}
-              contentStyle={styles.buttonContent}
-            >
-              Contacter le support
-            </Button>
-          </View>
-        </Card.Content>
-      </Card>
-
-      {/* À propos */}
-      <Card style={styles.aboutCard}>
-        <Card.Content style={styles.aboutContent}>
-          <Text style={styles.sectionTitle}>À propos</Text>
-          
-          <Text style={styles.appName}>Fitness RPG</Text>
-          <Text style={styles.appVersion}>Version 1.0.0</Text>
-          
-          <Text style={styles.aboutText}>
-            Une application de fitness gamifiée qui transforme tes entraînements en aventure RPG. 
-            Gagne des points, débloque des niveaux et progresse vers tes objectifs !
+      {/* Reset Profile */}
+      <View style={styles.resetCard}>
+        <View style={styles.resetContent}>
+          <Text style={styles.warningTitle}>⚠️ Zone de danger</Text>
+          <Text style={styles.warningDescription}>
+            Réinitialiser votre profil supprimera toutes vos données de manière irréversible.
           </Text>
           
-          <View style={styles.creditsContainer}>
-            <Text style={styles.creditsTitle}>Crédits</Text>
-            <Text style={styles.creditsText}>
-              Développé avec React Native et Firebase
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
-
-      {/* Outils développeur */}
-      {user?.email === 'robinallainmkg@gmail.com' && (
-        <Card style={[styles.logoutCard, { backgroundColor: colors.warning + '20' }]}>
-          <Card.Content style={styles.logoutContent}>
-            <Button
-              mode="outlined"
-              icon="restart"
-              onPress={() => {
-                Alert.alert(
-                  'Reset compte',
-                  'Réinitialiser toutes tes données ? (XP, progression, etc.)',
-                  [
-                    { text: 'Annuler', style: 'cancel' },
-                    {
-                      text: 'Reset',
-                      style: 'destructive',
-                      onPress: async () => {
-                        const result = await resetUserData();
-                        if (result.success) {
-                          Alert.alert('✅', 'Compte réinitialisé !');
-                        } else {
-                          Alert.alert('❌', result.error);
-                        }
-                      }
-                    }
-                  ]
-                );
-              }}
-              style={[styles.logoutButton, { borderColor: colors.warning, marginBottom: 8 }]}
-              contentStyle={styles.buttonContent}
-              labelStyle={{ color: colors.warning }}
-            >
-              🔄 Reset Compte (Dev)
-            </Button>
-            
-            <Button
-              mode="outlined"
-              icon="database-sync"
-              onPress={handleMigration}
-              style={[styles.logoutButton, { borderColor: colors.primary, marginBottom: 8 }]}
-              contentStyle={styles.buttonContent}
-              labelStyle={{ color: colors.primary }}
-            >
-              🗄️ Migration DB (Legacy)
-            </Button>
-            
-            <Button
-              mode="outlined"
-              icon="database-plus"
-              onPress={handleNewMigration}
-              style={[styles.logoutButton, { borderColor: colors.success }]}
-              contentStyle={styles.buttonContent}
-              labelStyle={{ color: colors.success }}
-            >
-              🆕 Migration Multi-Programmes v1.0
-            </Button>
-          </Card.Content>
-        </Card>
-      )}
-
-      {/* Déconnexion */}
-      <Card style={styles.logoutCard}>
-        <Card.Content style={styles.logoutContent}>
-          <Button
-            mode="contained"
-            icon="logout"
-            onPress={handleLogout}
-            style={styles.logoutButton}
-            contentStyle={styles.buttonContent}
-            buttonColor={colors.error}
+          <TouchableOpacity 
+            onPress={handleResetProfile}
+            style={styles.resetButton}
+            activeOpacity={0.7}
           >
-            Se déconnecter
-          </Button>
-        </Card.Content>
-      </Card>
+            <Text style={styles.resetButtonText}>🔄 Réinitialiser le profil</Text>
+          </TouchableOpacity>
+          
+          {/* Bouton Debug Firestore (DEV uniquement) */}
+          {__DEV__ && (
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('FirestoreDiagnostic')}
+              style={[styles.resetButton, { backgroundColor: '#EF4444', marginTop: 12 }]}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.resetButtonText}>🔍 Diagnostic Firestore</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Déconnexion ou Créer un compte (pour invités) */}
+      {isGuest ? (
+        <View style={styles.logoutCard}>
+          <View style={styles.guestWarning}>
+            <Text style={styles.guestWarningIcon}>⚠️</Text>
+            <View style={styles.guestWarningText}>
+              <Text style={styles.guestWarningTitle}>Mode invité</Text>
+              <Text style={styles.guestWarningSubtitle}>
+                Tes données ne sont pas sauvegardées de façon permanente
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity 
+            onPress={() => setShowSignupModal(true)}
+            style={styles.createAccountButton}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.createAccountButtonText}>✨ Créer mon compte</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.logoutCard}>
+          <View style={styles.logoutContent}>
+            <TouchableOpacity 
+              onPress={handleLogout}
+              style={styles.logoutButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.logoutButtonText}>🚪 Se déconnecter</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </ScrollView>
+
+    {/* Signup Modal pour invités */}
+    <SignupModal
+      visible={showSignupModal}
+      onClose={() => setShowSignupModal(false)}
+      onSuccess={() => {
+        setShowSignupModal(false);
+        // Recharger les stats après création de compte
+        if (user?.uid) {
+          loadUserStats();
+        }
+      }}
+    />
+    </>
   );
 };
 
@@ -545,157 +380,208 @@ const formatJoinDate = (timestamp) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: rpgTheme.colors.background.primary,
   },
   loadingContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   content: {
-    padding: 16,
+    padding: rpgTheme.spacing.md,
   },
   profileCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 16,
-    elevation: 4,
+    backgroundColor: rpgTheme.colors.background.card,
+    marginBottom: rpgTheme.spacing.md,
+    borderRadius: rpgTheme.borderRadius.lg,
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.neon.blue + '40',
+    ...rpgTheme.effects.shadows.card,
   },
   profileContent: {
     alignItems: 'center',
-    padding: 24,
+    padding: rpgTheme.spacing.xl,
   },
   avatarContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.primary,
+    backgroundColor: rpgTheme.colors.neon.blue,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: rpgTheme.spacing.md,
+    borderWidth: 3,
+    borderColor: rpgTheme.colors.neon.blue,
+    ...rpgTheme.effects.shadows.glow,
   },
   avatarText: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: rpgTheme.typography.weights.bold,
+    color: rpgTheme.colors.text.primary,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
+    fontSize: rpgTheme.typography.sizes.heading,
+    fontWeight: rpgTheme.typography.weights.bold,
+    color: rpgTheme.colors.text.primary,
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginBottom: 8,
+    fontSize: rpgTheme.typography.sizes.body,
+    color: rpgTheme.colors.text.secondary,
+    marginBottom: rpgTheme.spacing.sm,
   },
   memberSince: {
-    fontSize: 14,
-    color: colors.textSecondary,
+    fontSize: rpgTheme.typography.sizes.caption,
+    color: rpgTheme.colors.text.muted,
     fontStyle: 'italic',
   },
-  settingsCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 16,
+  resetCard: {
+    backgroundColor: rpgTheme.colors.background.card,
+    marginBottom: rpgTheme.spacing.md,
+    borderRadius: rpgTheme.borderRadius.lg,
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.status.error + '60',
+    shadowColor: rpgTheme.colors.status.error,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 4,
   },
-  settingsContent: {
-    padding: 20,
+  resetContent: {
+    padding: rpgTheme.spacing.lg,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 16,
+  warningTitle: {
+    fontSize: rpgTheme.typography.sizes.subheading,
+    fontWeight: rpgTheme.typography.weights.bold,
+    color: rpgTheme.colors.status.error,
+    marginBottom: rpgTheme.spacing.sm,
   },
-  settingsList: {
-    margin: 0,
-    padding: 0,
+  warningDescription: {
+    fontSize: rpgTheme.typography.sizes.caption,
+    color: rpgTheme.colors.text.secondary,
+    marginBottom: rpgTheme.spacing.md,
+    lineHeight: 18,
   },
-  programsCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 16,
+  resetButton: {
+    marginTop: rpgTheme.spacing.sm,
+    backgroundColor: rpgTheme.colors.status.error,
+    paddingVertical: 14,
+    paddingHorizontal: rpgTheme.spacing.lg,
+    borderRadius: rpgTheme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.status.error,
+    shadowColor: rpgTheme.colors.status.error,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
     elevation: 4,
   },
-  programsContent: {
-    padding: 20,
-  },
-  manageProgramsButton: {
-    marginBottom: 8,
-  },
-  programsDescription: {
-    fontSize: 12,
-    color: colors.textSecondary,
+  resetButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginTop: 8,
   },
-  supportCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 16,
+  testButton: {
+    marginTop: rpgTheme.spacing.md,
+    backgroundColor: '#7B61FF', // Violet
+    paddingVertical: 14,
+    paddingHorizontal: rpgTheme.spacing.lg,
+    borderRadius: rpgTheme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: '#7B61FF',
+    shadowColor: '#7B61FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
     elevation: 4,
   },
-  supportContent: {
-    padding: 20,
-  },
-  buttonContainer: {
-    gap: 12,
-  },
-  supportButton: {
-    borderColor: colors.primary,
-  },
-  buttonContent: {
-    height: 48,
-  },
-  aboutCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 16,
-    elevation: 4,
-  },
-  aboutContent: {
-    padding: 20,
-  },
-  appName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  appVersion: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 16,
-  },
-  aboutText: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  creditsContainer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: 16,
-  },
-  creditsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  creditsText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    lineHeight: 16,
+  testButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   logoutCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 32,
+    backgroundColor: rpgTheme.colors.background.card,
+    marginBottom: rpgTheme.spacing.xxl,
+    borderRadius: rpgTheme.borderRadius.lg,
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.neon.blue + '40',
+    shadowColor: rpgTheme.colors.neon.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 4,
   },
   logoutContent: {
-    padding: 20,
+    padding: rpgTheme.spacing.lg,
   },
   logoutButton: {
-    marginTop: 8,
+    backgroundColor: rpgTheme.colors.neon.blue,
+    paddingVertical: 14,
+    paddingHorizontal: rpgTheme.spacing.lg,
+    borderRadius: rpgTheme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.neon.blue,
+    shadowColor: rpgTheme.colors.neon.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logoutButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  guestWarning: {
+    flexDirection: 'row',
+    padding: rpgTheme.spacing.lg,
+    backgroundColor: 'rgba(251, 191, 36, 0.1)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(251, 191, 36, 0.2)',
+    alignItems: 'center',
+  },
+  guestWarningIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  guestWarningText: {
+    flex: 1,
+  },
+  guestWarningTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FBBF24',
+    marginBottom: 4,
+  },
+  guestWarningSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 18,
+  },
+  createAccountButton: {
+    margin: rpgTheme.spacing.lg,
+    backgroundColor: '#7B61FF',
+    paddingVertical: 16,
+    paddingHorizontal: rpgTheme.spacing.lg,
+    borderRadius: rpgTheme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: '#4D9EFF',
+    shadowColor: '#7B61FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  createAccountButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
 });
 

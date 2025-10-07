@@ -107,7 +107,7 @@ const SkillNode = ({
       case 'LOCKED':
         return {
           ...baseStyle,
-          backgroundColor: '#1A1A1A', // Très sombre, presque noir
+          backgroundColor: '#1A1A1A', // Très sombre, presque noir - OPAQUE
           borderColor: '#333333', // Gris très foncé
           borderWidth: 2,
           // Pas de shadow
@@ -116,7 +116,7 @@ const SkillNode = ({
       case 'UNLOCKED':
         return {
           ...baseStyle,
-          backgroundColor: program.color + '4D', // 30% opacity pour effet vibrant
+          backgroundColor: '#1A1A1A', // Fond noir opaque pour cacher les traits
           borderColor: program.color,
           borderWidth: 3,
           // Shadow/glow vibrant
@@ -130,7 +130,7 @@ const SkillNode = ({
       case 'IN_PROGRESS':
         return {
           ...baseStyle,
-          backgroundColor: program.color + '40', // 25% opacity
+          backgroundColor: '#1A1A1A', // Fond noir opaque pour cacher les traits
           borderColor: '#FFD700', // Or
           borderWidth: 3,
           shadowColor: '#FFD700',
@@ -143,7 +143,7 @@ const SkillNode = ({
       case 'COMPLETED':
         return {
           ...baseStyle,
-          backgroundColor: '#4CAF50' + '66', // Vert vibrant 40% opacity  
+          backgroundColor: '#1A1A1A', // Fond noir opaque pour cacher les traits
           borderColor: '#4CAF50',
           borderWidth: 3,
           shadowColor: '#4CAF50',

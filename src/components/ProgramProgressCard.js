@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, Button, Chip, ProgressBar } from 'react-native-paper';
 import { colors } from '../theme/colors';
+import { getTopCumulativeStats } from '../utils/programStats';
+import programs from '../data/programs.json';
 
 const ProgramProgressCard = ({ 
   program, 
@@ -30,6 +32,22 @@ const ProgramProgressCard = ({
   // Calcul du pourcentage de progression
   const progressPercentage = totalSkills > 0 ? (completedSkills / totalSkills) : 0;
   const progressPercentageDisplay = Math.round(progressPercentage * 100);
+
+  // Calculer les top 3 stats cumulées
+  // Si program.programs existe, c'est une catégorie complète
+  // Sinon, chercher la catégorie complète dans programs.json
+  let topStats = [];
+  if (program.programs) {
+    topStats = getTopCumulativeStats(program);
+  } else if (program.id) {
+    // Chercher la catégorie parente dans programs.json
+    const parentCategory = programs.categories.find(cat => 
+      cat.programs?.some(p => p.id === program.id)
+    );
+    if (parentCategory) {
+      topStats = getTopCumulativeStats(parentCategory);
+    }
+  }
 
   // Création du background gradient simulé avec superposition
   const cardBackgroundColor = color + '15'; // Transparence légère
@@ -63,6 +81,24 @@ const ProgramProgressCard = ({
               {level > 0 && (
                 <Text style={styles.programLevel}>Niveau {level}</Text>
               )}
+              
+              {/* Tags des stats principales */}
+              {topStats.length > 0 && (
+                <View style={styles.statsTagsContainer}>
+                  {topStats.map((stat, index) => (
+                    <Chip
+                      key={stat.stat}
+                      mode="outlined"
+                      compact
+                      style={[styles.statTag, { borderColor: color + '60' }]}
+                      textStyle={[styles.statTagText, { color: color }]}
+                    >
+                      {stat.icon} {stat.label}
+                    </Chip>
+                  ))}
+                </View>
+              )}
+              
               {description && (
                 <Text style={styles.programDescription} numberOfLines={2}>
                   {description}
@@ -184,6 +220,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
     marginBottom: 4,
+  },
+  statsTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  statTag: {
+    height: 24,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+  },
+  statTagText: {
+    fontSize: 11,
+    fontWeight: '600',
+    marginVertical: 0,
+    marginHorizontal: 4,
   },
   programDescription: {
     fontSize: 12,

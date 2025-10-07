@@ -1,239 +1,209 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Card, Chip, ProgressBar } from 'react-native-paper';
-import { colors } from '../theme/colors';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import { rpgTheme, getRankColor } from '../theme/rpgTheme';
 
+// Import des avatars disponibles
+const AVATARS = {
+  0: require('../../assets/avatars/avatar (1).jpg'),
+  1: require('../../assets/avatars/avatar (2).jpg'),
+  2: require('../../assets/avatars/avatar (3).jpg'),
+  3: require('../../assets/avatars/avatar (4).jpg'),
+  4: require('../../assets/avatars/avatar (5).jpg'),
+  5: require('../../assets/avatars/avatar (6).jpg'),
+};
+
+/**
+ * Header utilisateur avec avatar, niveau, XP et badge de titre
+ * Design RPG/Manga avec bordure néon et glow effect
+ */
 const UserHeader = ({ 
   username = 'Utilisateur', 
   globalLevel = 0, 
   globalXP = 0, 
-  title = 'Débutant',
+  title = 'Débutant', 
+  avatarId = 0,
   streak = 0 
 }) => {
-  // Calcul de l'XP nécessaire pour le prochain niveau
-  const nextLevelXP = Math.pow(globalLevel + 1, 2) * 100;
+  // Calcul de la progression XP vers le prochain niveau
+  const xpForNextLevel = 100;
+  const currentLevelXP = globalXP % xpForNextLevel;
+  const progressPercent = (currentLevelXP / xpForNextLevel) * 100;
   
-  // XP minimum pour le niveau actuel
-  const currentLevelXP = Math.pow(globalLevel, 2) * 100;
+  // Récupérer la couleur du titre basée sur le rang
+  const titleColor = getRankColor(title);
   
-  // Progression vers le prochain niveau
-  const progressXP = globalXP - currentLevelXP;
-  const neededXP = nextLevelXP - currentLevelXP;
-  const progress = Math.min(Math.max(progressXP / neededXP, 0), 1);
-
-  // Génération des initiales pour l'avatar
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join('');
-  };
-
-  // Couleur du titre selon le niveau
-  const getTitleColor = (level) => {
-    if (level >= 20) return '#FFD700'; // Or - Légende
-    if (level >= 12) return '#C0C0C0'; // Argent - Maître
-    if (level >= 7) return '#CD7F32';  // Bronze - Champion
-    if (level >= 3) return '#4CAF50';  // Vert - Guerrier
-    return '#9E9E9E'; // Gris - Débutant
-  };
-
+  // Sélectionner l'avatar (avec fallback sur avatar 0)
+  const selectedAvatar = AVATARS[avatarId % Object.keys(AVATARS).length] || AVATARS[0];
+  
   return (
-    <Card style={styles.headerCard}>
-      <View style={[styles.gradientContainer, { backgroundColor: colors.primary }]}>
-        <View style={styles.headerContent}>
-          {/* Avatar et informations principales */}
-          <View style={styles.mainInfo}>
-            {/* Avatar */}
-            <View style={[styles.avatar, { borderColor: colors.surface }]}>
-              <Text style={styles.avatarText}>
-                {getInitials(username)}
-              </Text>
-            </View>
-
-            {/* Informations utilisateur */}
-            <View style={styles.userInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.username} numberOfLines={1}>
-                  {username}
-                </Text>
-                
-                {/* Badge streak si > 0 */}
-                {streak > 0 && (
-                  <View style={styles.streakBadge}>
-                    <Text style={styles.streakText}>🔥{streak}</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Titre avec couleur dynamique */}
-              <Chip 
-                mode="flat" 
-                style={[styles.titleChip, { backgroundColor: getTitleColor(globalLevel) + '20' }]}
-                textStyle={[styles.titleText, { color: getTitleColor(globalLevel) }]}
-                compact
-              >
-                {title}
-              </Chip>
-
-              {/* Niveau global */}
-              <Text style={styles.levelText}>
-                Niveau {globalLevel}
-              </Text>
-
-              {/* Barre de progression vers prochain niveau */}
-              <View style={styles.progressContainer}>
-                <ProgressBar
-                  progress={progress}
-                  color={colors.surface}
-                  style={styles.progressBar}
-                />
-                <Text style={styles.progressText}>
-                  {progressXP.toLocaleString()} / {neededXP.toLocaleString()} XP
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Informations secondaires */}
-          <View style={styles.secondaryInfo}>
-            <View style={styles.xpContainer}>
-              <Text style={styles.xpLabel}>XP Total</Text>
-              <Text style={styles.xpValue}>
-                {globalXP.toLocaleString()}
-              </Text>
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        {/* Avatar avec bordure néon et glow */}
+        <View style={styles.avatarContainer}>
+          <Image
+            source={selectedAvatar}
+            style={styles.avatar}
+            resizeMode="cover"
+          />
+        </View>
+        
+        {/* Info utilisateur (centre) */}
+        <View style={styles.userInfo}>
+          <Text style={styles.username} numberOfLines={1}>{username}</Text>
+          
+          {/* Badge de titre */}
+          <View style={styles.badgeContainer}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{title}</Text>
             </View>
           </View>
         </View>
+        
+        {/* Icône épée à droite */}
+        <View style={styles.swordContainer}>
+          <Text style={styles.swordIcon}>⚔️</Text>
+        </View>
       </View>
-    </Card>
+      
+      {/* Barre XP pleine largeur en dessous */}
+      <View style={styles.xpBarContainer}>
+        <View style={styles.xpBarBackground}>
+          <View 
+            style={[
+              styles.xpBarFill, 
+              { width: `${progressPercent}%` }
+            ]} 
+          />
+        </View>
+        <View style={styles.xpInfoRow}>
+          <Text style={styles.level}>Niveau {globalLevel}</Text>
+          <Text style={styles.xpText}>
+            {currentLevelXP} / {xpForNextLevel} XP
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  headerCard: {
-    margin: 16,
-    marginBottom: 8,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
-    borderRadius: 12,
-    overflow: 'hidden',
+  wrapper: {
+    marginHorizontal: rpgTheme.spacing.md,
+    marginTop: 60, // Augmenté encore de 20px
+    marginBottom: rpgTheme.spacing.sm,
   },
-  gradientContainer: {
-    padding: 20,
-  },
-  headerContent: {
+  
+  container: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'flex-end',
+    backgroundColor: 'transparent',
+    padding: rpgTheme.spacing.sm, // Réduit le padding interne
+    marginBottom: rpgTheme.spacing.xs,
   },
-  mainInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.surface,
+  
+  avatarContainer: {
+    width: 80, // Réduit de 100 à 80
+    height: 80,
+    borderRadius: 40,
     borderWidth: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
+    borderColor: rpgTheme.colors.neon.blue,
+    padding: 3,
+    marginRight: rpgTheme.spacing.md,
+    // Glow effect
+    shadowColor: rpgTheme.colors.neon.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 15,
+    elevation: 10,
   },
-  avatarText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.primary,
+  
+  avatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 37, // Ajusté pour correspondre au nouveau rayon
   },
+  
   userInfo: {
     flex: 1,
   },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  
+  username: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+  },
+  
+  badgeContainer: {
     marginBottom: 4,
   },
-  username: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.surface,
-    flex: 1,
-  },
-  streakBadge: {
-    backgroundColor: colors.surface + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    marginLeft: 8,
-  },
-  streakText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: colors.surface,
-  },
-  titleChip: {
+  
+  badge: {
     alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(158, 158, 158, 0.25)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(158, 158, 158, 0.5)',
+  },
+  
+  badgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(200, 200, 200, 0.9)',
+  },
+  
+  swordContainer: {
+    marginLeft: rpgTheme.spacing.md,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  swordIcon: {
+    fontSize: 28,
+  },
+  
+  
+  
+  xpBarBackground: {
+    height: 18,
+    backgroundColor: 'rgba(26, 34, 68, 0.9)',
+    borderRadius: 9,
+    overflow: 'hidden',
     marginBottom: 6,
     borderWidth: 1,
-    borderColor: colors.surface + '30',
+    borderColor: 'rgba(77, 158, 255, 0.3)',
   },
-  titleText: {
-    fontSize: 12,
-    fontWeight: 'bold',
+  
+  xpBarFill: {
+    height: '100%',
+    backgroundColor: rpgTheme.colors.neon.blue,
+    borderRadius: 9,
+    // Effet de dégradé lumineux (simulé avec shadow)
+    shadowColor: rpgTheme.colors.neon.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
   },
-  levelText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.surface,
-    marginBottom: 8,
-  },
-  progressContainer: {
-    width: '100%',
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.surface + '30',
-    marginBottom: 4,
-  },
-  progressText: {
-    fontSize: 12,
-    color: colors.surface + 'DD',
-    textAlign: 'right',
-  },
-  secondaryInfo: {
-    alignItems: 'flex-end',
-    marginLeft: 12,
-  },
-  xpContainer: {
+  
+  xpInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.surface + '15',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.surface + '30',
   },
-  xpLabel: {
+  
+  level: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  
+  xpText: {
     fontSize: 11,
-    color: colors.surface + 'AA',
-    marginBottom: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  xpValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.surface,
+    color: 'rgba(200, 200, 200, 0.8)',
   },
 });
 

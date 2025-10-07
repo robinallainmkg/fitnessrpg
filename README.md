@@ -71,7 +71,7 @@ La documentation complète est organisée dans le dossier **[`/docs`](./docs/REA
 
 ## 🔥 Configuration Firebase
 
-**📋 [Guide Complet Firebase →](./docs/setup/FIREBASE_FIX.md)**
+**📋 [Guide Complet Firebase →](./docs/  setup/FIREBASE_FIX.md)**
 
 ### Résumé
 1. Créer un projet Firebase

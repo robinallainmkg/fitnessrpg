@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
-import { doc, addDoc, collection, updateDoc, getDoc, setDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useAuth } from './AuthContext';
-import { db } from '../services/firebase';
 import { calculateWorkoutScore, calculateXPBonus } from '../utils/scoring';
 import programsData from '../data/programs.json';
 
@@ -217,10 +216,10 @@ export const WorkoutProvider = ({ children }) => {
    */
   const updateUserProgress = async (programId, completedLevelId) => {
     try {
-      const progressRef = doc(db, 'userProgress', `${user.uid}_${programId}`);
+      const progressRef = firestore().collection('userProgress').doc(`${user.uid}_${programId}`);
       
       // Charger la progression actuelle
-      const progressDoc = await getDoc(progressRef);
+      const progressDoc = await progressRef.get();
       const currentProgress = progressDoc.data();
       
       const newCompletedLevels = [...(currentProgress?.completedLevels || [])];
@@ -239,12 +238,12 @@ export const WorkoutProvider = ({ children }) => {
         nextLevel <= 6 ? nextLevel : completedLevelId
       );
 
-      await updateDoc(progressRef, {
+      await progressRef.update({
         currentLevel: newCurrentLevel,
         unlockedLevels: newUnlockedLevels,
         completedLevels: newCompletedLevels,
         totalSessions: (currentProgress?.totalSessions || 0) + 1,
-        lastSessionAt: serverTimestamp()
+        lastSessionAt: firestore.FieldValue.serverTimestamp()
       });
 
     } catch (error) {
@@ -257,13 +256,13 @@ export const WorkoutProvider = ({ children }) => {
    */
   const updateUserXP = async (xpToAdd) => {
     try {
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userDoc = await userRef.get();
       const currentXP = userDoc.data()?.totalXP || 0;
 
-      await updateDoc(userRef, {
+      await userRef.update({
         totalXP: currentXP + xpToAdd,
-        lastXPUpdate: serverTimestamp()
+        lastXPUpdate: firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
       console.error('Erreur mise à jour XP:', error);

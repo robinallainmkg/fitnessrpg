@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert, ImageBackground } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, ImageBackground, TouchableOpacity } from 'react-native';
 import { Card, Button, Text, Chip, ActivityIndicator } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
+import SignupModal from '../components/SignupModal';
 import programs from '../data/programs.json';
 import { colors } from '../theme/colors';
 
@@ -13,24 +14,71 @@ const ProgramSelectionScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [existingPrograms, setExistingPrograms] = useState({});
-  const { user } = useAuth();
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [pendingProgramData, setPendingProgramData] = useState(null);
+  const { user, isGuest, saveGuestData } = useAuth();
   const maxPrograms = 2;
+
+  // Personnaliser le header de navigation avec style gaming
+  useEffect(() => {
+    navigation.setOptions({
+      title: '⚔️ Choisis tes Quêtes',
+      headerStyle: {
+        backgroundColor: '#4D9EFF',
+        elevation: 8,
+        shadowColor: '#4D9EFF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      headerTintColor: '#FFFFFF',
+      headerTitleStyle: {
+        fontWeight: '700',
+        fontSize: 18,
+        letterSpacing: 0.5,
+      },
+      headerShadowVisible: true,
+    });
+  }, [navigation]);
 
   // Charger les programmes existants de l'utilisateur
   useEffect(() => {
     const loadExistingPrograms = async () => {
       try {
-        const userRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const userPrograms = userData.programs || {};
+        // Si mode invité, charger depuis AsyncStorage
+        if (isGuest) {
+          console.log('👤 Mode invité - Chargement depuis AsyncStorage');
+          const guestPrograms = await AsyncStorage.getItem('@fitnessrpg:guest_programs');
+          if (guestPrograms) {
+            const parsedPrograms = JSON.parse(guestPrograms);
+            setSelectedPrograms(Object.keys(parsedPrograms));
+            setExistingPrograms(parsedPrograms);
+          }
+          setInitialLoading(false);
+          return;
+        }
+
+        // Si utilisateur authentifié, charger depuis Firestore
+        if (user && !isGuest) {
+          const userRef = firestore().collection('users').doc(user.uid);
+          const userDoc = await userRef.get();
           
-          // Pré-sélectionner les programmes existants
-          const existingProgramIds = Object.keys(userPrograms);
-          setSelectedPrograms(existingProgramIds);
-          setExistingPrograms(userPrograms);
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            const userPrograms = userData.programs || {};
+            
+            // Pré-sélectionner les programmes existants
+            const existingProgramIds = Object.keys(userPrograms);
+            setSelectedPrograms(existingProgramIds);
+            setExistingPrograms(userPrograms);
+            
+            console.log('🔍 ProgramSelection State:', {
+              loading: initialLoading,
+              selectedPrograms: existingProgramIds,
+              isExistingUser: existingProgramIds.length > 0,
+              buttonDisabled: existingProgramIds.length === 0
+            });
+          }
         }
       } catch (error) {
         console.error('Erreur chargement programmes:', error);
@@ -40,7 +88,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
     };
 
     loadExistingPrograms();
-  }, [user.uid]);
+  }, [user, isGuest]);
 
   const handleSelectProgram = (programId) => {
     if (selectedPrograms.includes(programId)) {
@@ -63,17 +111,59 @@ const ProgramSelectionScreen = ({ navigation }) => {
       return;
     }
 
+    console.log('🔘 Bouton validation cliqué, selectedPrograms:', selectedPrograms);
+    
+    // Si mode invité, sauvegarder temporairement et afficher modal signup
+    if (isGuest) {
+      console.log('👤 Mode invité détecté - Préparation données pour signup');
+      
+      // Préparer les données du programme
+      const programsData = {};
+      selectedPrograms.forEach(programId => {
+        const category = programs.categories.find(c => c.id === programId);
+        if (category && category.programs) {
+          programsData[programId] = {
+            xp: 0,
+            level: 1,
+            completedSkills: [],
+            skillProgress: {},
+            totalSkills: category.programs.length,
+            lastSession: null
+          };
+        }
+      });
+
+      // Sauvegarder en AsyncStorage pour mode invité
+      await AsyncStorage.setItem('@fitnessrpg:guest_programs', JSON.stringify(programsData));
+      
+      // Préparer les données pour la conversion
+      const guestDataToSave = {
+        programs: programsData,
+        selectedPrograms: selectedPrograms,
+        activePrograms: selectedPrograms.slice(0, 2),
+        onboardingCompleted: true,
+      };
+      
+      setPendingProgramData(guestDataToSave);
+      await saveGuestData(guestDataToSave);
+      
+      // Afficher le modal de signup
+      setShowSignupModal(true);
+      return;
+    }
+
+    // Mode authentifié - procéder normalement
     setLoading(true);
     
     try {
       const userId = user.uid;
-      const userRef = doc(db, 'users', userId);
+      const userRef = firestore().collection('users').doc(userId);
       
       // Créer l'objet programs pour Firestore
       const programsData = {};
       selectedPrograms.forEach(programId => {
         const category = programs.categories.find(c => c.id === programId);
-        if (category) {
+        if (category && category.programs) {
           // Garder les données existantes ou créer nouvelles avec la structure correcte
           programsData[programId] = existingPrograms[programId] || {
             xp: 0,
@@ -109,31 +199,26 @@ const ProgramSelectionScreen = ({ navigation }) => {
         updateData.globalLevel = 1;
         updateData.email = user.email;
         
-        await setDoc(userRef, updateData, { merge: true });
+        await userRef.set(updateData, { merge: true });
         console.log('✅ Nouveau document utilisateur créé avec programmes');
       } else {
         // Pour un utilisateur existant, mettre à jour le document
-        await updateDoc(userRef, updateData);
+        await userRef.update(updateData);
         console.log('✅ Document utilisateur mis à jour');
       }
 
       // Navigation vers HomeScreen avec trigger tooltip pour nouveaux utilisateurs
       if (Object.keys(existingPrograms).length === 0) {
-        console.log('🚀 Navigation vers Home avec tooltip trigger pour nouvel utilisateur');
+        console.log('🚀 Programmes sélectionnés - App.js va détecter le changement et afficher Main');
+        
+        // Marquer l'onboarding comme terminé dans AsyncStorage
+        await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
+        
         // Réinitialiser le flag tooltip pour permettre l'affichage
         await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
         
-        // Petit délai pour permettre à Firestore de se synchroniser
-        setTimeout(() => {
-          navigation.navigate('Main', { 
-            screen: 'Home',
-            params: { 
-              triggerTreeTooltip: true,
-              forceShowDashboard: true,  // Force l'affichage du dashboard même si hook pas encore à jour
-              newUserPrograms: selectedPrograms  // Passe les programmes sélectionnés
-            }
-          });
-        }, 500);
+        // ✅ App.js va automatiquement détecter le changement et afficher Main Stack
+        // Pas besoin de navigation.reset() ici car on est dans un Stack différent
       } else {
         console.log('🚀 Navigation vers Home pour utilisateur existant avec refresh');
         // Forcer le rechargement des données en passant un timestamp
@@ -193,163 +278,241 @@ const ProgramSelectionScreen = ({ navigation }) => {
   if (initialLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement de tes programmes...</Text>
+        <ActivityIndicator size="large" color="#4D9EFF" />
+        <Text style={styles.loadingText}>⚔️ Chargement de tes quêtes...</Text>
       </View>
     );
   }
 
   const isExistingUser = Object.keys(existingPrograms).length > 0;
+  
+  console.log('🔍 ProgramSelection State:', {
+    selectedPrograms,
+    isExistingUser,
+    loading,
+    buttonDisabled: selectedPrograms.length === 0 || loading
+  });
+
+  const handleSignupSuccess = async () => {
+    console.log('✅ Signup réussi - Navigation vers HomeScreen');
+    
+    // Marquer l'onboarding comme terminé
+    await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
+    
+    // Nettoyer les données temporaires
+    await AsyncStorage.removeItem('@fitnessrpg:guest_programs');
+    
+    // Naviguer vers l'écran principal
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Main' }],
+    });
+  };
+
+  const handleContinueAsGuest = () => {
+    console.log('👤 Continuer en mode invité');
+    setShowSignupModal(false);
+    
+    // Permettre la navigation en mode invité
+    Alert.alert(
+      'Mode invité activé',
+      'Tu peux utiliser l\'app, mais tes données ne seront pas sauvegardées de façon permanente. Crée un compte à tout moment depuis ton profil.',
+      [
+        {
+          text: 'Compris !',
+          onPress: async () => {
+            // Marquer onboarding comme terminé
+            await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
+            
+            // Naviguer vers l'app
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Main' }],
+            });
+          }
+        }
+      ]
+    );
+  };
 
   return (
-    <ImageBackground 
-      source={require('../../assets/Home-BG-2.jpg')} 
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <View style={styles.backgroundOverlay} />
+    <>
+      <ImageBackground 
+        source={require('../../assets/Home-BG-2.jpg')} 
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.backgroundOverlay} />
+      
+      {/* Bouton retour */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
       <ScrollView style={styles.container}>
-      {/* Header */}
+      {/* Header avec style gaming */}
       <View style={styles.header}>
         <Text style={styles.title}>
-          {isExistingUser ? "Modifie tes programmes" : "Quelle discipline souhaites-tu développer ?"}
+          {isExistingUser ? "⚔️ Modifie tes Quêtes" : "⚔️ Choisis ta Discipline"}
         </Text>
         <Text style={styles.subtitle}>
-          {isExistingUser ? "Tu peux changer tes programmes actuels" : `Rejoins jusqu'à ${maxPrograms} programmes simultanés`}
+          {isExistingUser ? "Change tes programmes d'entraînement" : `Rejoins jusqu'à ${maxPrograms} programmes simultanés`}
         </Text>
         <Text style={styles.description}>
           {isExistingUser 
-            ? "Ajoute, retire ou modifie tes programmes d'entraînement selon tes envies !"
-            : `Tu peux soit focus à fond dans un domaine, ou en faire ${maxPrograms} pour varier les plaisirs !`
+            ? "Rejoins jusqu'à 2 programmes simultanés"
+            : "Focus sur une discipline ou varie les plaisirs !"
           }
         </Text>
         
-        {/* Chips sélection */}
+        {/* Chip de sélection avec style néon */}
         <View style={styles.selectionInfo}>
-          <Chip 
-            icon="check-circle"
-            mode="flat"
-            style={{
-              backgroundColor: selectedPrograms.length > 0 ? colors.primary + '20' : colors.border + '40',
-              borderColor: selectedPrograms.length > 0 ? colors.primary : colors.border,
-              borderWidth: 1
-            }}
-            textStyle={{
-              color: selectedPrograms.length > 0 ? colors.primary : colors.textSecondary,
-              fontWeight: '600'
-            }}
-          >
-            {selectedPrograms.length}/{maxPrograms} sélectionné(s)
-          </Chip>
+          <View style={[
+            styles.selectionChip,
+            selectedPrograms.length > 0 && styles.selectionChipActive
+          ]}>
+            <Text style={[
+              styles.selectionChipText,
+              selectedPrograms.length > 0 && styles.selectionChipTextActive
+            ]}>
+              {selectedPrograms.length > 0 ? '✓' : '○'} {selectedPrograms.length}/{maxPrograms} sélectionné(s)
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* Liste des programmes */}
+      {/* Liste des programmes avec style gaming */}
       {programs.categories.map((category) => {
         const isSelected = selectedPrograms.includes(category.id);
         const isDisabled = !isSelected && selectedPrograms.length >= maxPrograms;
 
         return (
-          <Card
+          <TouchableOpacity
             key={category.id}
-            style={[
-              styles.programCard,
-              isSelected && styles.programCardSelected,
-              isDisabled && styles.programCardDisabled
-            ]}
+            activeOpacity={0.8}
+            disabled={isDisabled}
             onPress={() => !isDisabled && handleSelectProgram(category.id)}
+            style={styles.cardContainer}
           >
-            <Card.Content>
-              <View style={styles.cardHeader}>
-                <Text style={styles.programIcon}>{category.icon}</Text>
-                <View style={styles.cardTitleContainer}>
-                  <Text style={styles.programName}>{category.name}</Text>
+            <ImageBackground
+              source={require('../../assets/programmes/StreetWorkout.jpg')}
+              style={[
+                styles.programCard,
+                isSelected && styles.programCardSelected,
+                isDisabled && styles.programCardDisabled
+              ]}
+              imageStyle={styles.cardImage}
+            >
+              {/* Overlay gradient */}
+              <LinearGradient
+                colors={[
+                  'rgba(10, 14, 39, 0.00)',
+                  'rgba(10, 14, 39, 0.20)',
+                  'rgba(10, 14, 39, 0.70)',
+                  'rgba(10, 14, 39, 0.95)'
+                ]}
+                locations={[0, 0.3, 0.65, 1]}
+                style={styles.cardOverlay}
+              />
+              
+              <View style={styles.cardContent}>
+                {/* Badge sélectionné en haut à gauche */}
+                <View style={styles.topContent}>
                   {isSelected && (
-                    <Chip 
-                      mode="flat" 
-                      style={styles.selectedChip}
-                      textStyle={{
-                        color: colors.success,
-                        fontWeight: 'bold',
-                        fontSize: 12
-                      }}
-                      compact
-                    >
-                      ✓ Sélectionné
-                    </Chip>
+                    <View style={styles.selectedBadge}>
+                      <Text style={styles.selectedBadgeEmoji}>✓</Text>
+                      <Text style={styles.selectedBadgeText}>SÉLECTIONNÉ</Text>
+                    </View>
                   )}
                 </View>
-              </View>
-              
-              <Text style={styles.programDescription}>
-                {category.description}
-              </Text>
-              
-              {/* Infos du programme */}
-              <View style={styles.programInfo}>
-                {/* Capacités développées */}
-                {getPrimaryStats(category).map(stat => (
-                  <Chip 
-                    key={stat}
-                    mode="outlined" 
-                    compact 
-                    style={styles.infoChip}
-                    textStyle={{ color: colors.primary, fontSize: 12, fontWeight: '500' }}
-                  >
-                    {getStatIcon(stat)}
-                  </Chip>
-                ))}
                 
-                {/* Nombre de compétences */}
-                <Chip 
-                  mode="outlined" 
-                  compact 
-                  style={styles.infoChip}
-                  textStyle={{ color: colors.primary, fontSize: 12, fontWeight: '500' }}
-                >
-                  🎯 {category.programs.length} compétences
-                </Chip>
+                {/* Contenu principal en bas */}
+                <View style={styles.bottomContent}>
+                  {/* Titre du programme */}
+                  <Text style={styles.programName} numberOfLines={1}>
+                    {category.icon && category.icon + ' '}{category.name}
+                  </Text>
+                  
+                  {/* Description */}
+                  <Text style={styles.programDescription} numberOfLines={2}>
+                    {category.description}
+                  </Text>
+                  
+                  {/* Tags/Stats */}
+                  <View style={styles.programInfo}>
+                    {getPrimaryStats(category).map(stat => (
+                      <View key={stat} style={styles.statBadge}>
+                        <Text style={styles.statBadgeText}>
+                          {getStatIcon(stat)}
+                        </Text>
+                      </View>
+                    ))}
+                    
+                    <View style={styles.statBadge}>
+                      <Text style={styles.statBadgeText}>
+                        🎯 {category.programs?.length || 0} compétences
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               </View>
-            </Card.Content>
-          </Card>
+            </ImageBackground>
+          </TouchableOpacity>
         );
       })}
 
-      {/* Bouton validation */}
-      <Button
-        mode="contained"
-        onPress={handleValidate}
+      {/* Bouton validation avec style gaming */}
+      <TouchableOpacity
+        activeOpacity={0.8}
         disabled={selectedPrograms.length === 0 || loading}
-        style={styles.validateButton}
-        buttonColor={selectedPrograms.length > 0 ? colors.primary : colors.border}
-        loading={loading}
-        icon={loading ? undefined : isExistingUser ? "content-save" : "check-circle"}
-        contentStyle={{ paddingVertical: 8 }}
-        labelStyle={{ 
-          fontSize: 16, 
-          fontWeight: 'bold',
-          color: selectedPrograms.length > 0 ? '#FFFFFF' : colors.textSecondary
+        onPress={() => {
+          console.log('🔘 Bouton validation cliqué, selectedPrograms:', selectedPrograms);
+          handleValidate();
         }}
       >
-        {loading 
-          ? "Sauvegarde..." 
-          : isExistingUser 
-          ? "Sauvegarder les modifications"
-          : "Confirmer la sélection"
-        }
-      </Button>
+        <View style={[
+          styles.validateButton,
+          (selectedPrograms.length === 0 || loading) && styles.validateButtonDisabled
+        ]}>
+          <Text style={[
+            styles.validateButtonText,
+            (selectedPrograms.length === 0 || loading) && styles.validateButtonTextDisabled
+          ]}>
+            {loading 
+              ? "⏳ Sauvegarde..." 
+              : isExistingUser 
+              ? "Confirmer la sélection"
+              : selectedPrograms.length === 0
+              ? "⚔️ Sélectionne au moins 1 programme"
+              : "⚔️ Confirmer la sélection"
+            }
+          </Text>
+        </View>
+      </TouchableOpacity>
       
-      {/* Message pour nouveaux utilisateurs */}
+      {/* Message d'aide avec style */}
       {!isExistingUser && (
         <Text style={styles.helpText}>
-          Tu pourras changer tes programmes plus tard dans ton profil
+          💡 Tu pourras modifier tes programmes dans ton profil
         </Text>
       )}
       
-      {/* Espace en bas pour le scroll */}
+      {/* Espace en bas */}
       <View style={styles.bottomSpace} />
       </ScrollView>
     </ImageBackground>
+
+    {/* Signup Modal */}
+    <SignupModal
+      visible={showSignupModal}
+      onClose={handleContinueAsGuest}
+      onSuccess={handleSignupSuccess}
+      guestData={pendingProgramData}
+    />
+    </>
   );
 };
 
@@ -359,182 +522,254 @@ const styles = StyleSheet.create({
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Plus sombre pour le gaming look
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  backButtonText: {
+    fontSize: 28,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   container: {
     flex: 1,
-    padding: 16
+    paddingTop: 60, // Espace pour le bouton retour
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background
+    backgroundColor: '#0F172A'
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: colors.textSecondary
+    color: '#94A3B8',
+    fontWeight: '600'
   },
   header: {
-    marginBottom: 32,
-    paddingHorizontal: 4,
+    marginTop: 40, // Baissé pour laisser place au bouton retour
+    marginHorizontal: 16,
+    marginBottom: 24,
+    paddingHorizontal: 16,
     paddingVertical: 20,
-    backgroundColor: colors.surface,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)', // Semi-transparent dark
     borderRadius: 16,
-    elevation: 2
+    borderWidth: 2,
+    borderColor: 'rgba(77, 158, 255, 0.3)', // Bordure bleue néon
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   title: {
-    fontSize: 26,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '700',
     marginBottom: 12,
-    color: colors.text,
+    color: '#FFFFFF',
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    letterSpacing: 1,
+    textShadowColor: '#4D9EFF',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     marginBottom: 8,
-    color: colors.textSecondary,
+    color: '#B8C5D6',
     textAlign: 'center',
     fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   description: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 20,
+    fontSize: 14,
+    color: '#94A3B8',
+    marginBottom: 16,
     textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 16
+    lineHeight: 20,
+    paddingHorizontal: 8
   },
   selectionInfo: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 4
+    marginTop: 8
+  },
+  selectionChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(148, 163, 184, 0.4)',
+    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+  },
+  selectionChipActive: {
+    borderColor: '#4D9EFF',
+    backgroundColor: 'rgba(77, 158, 255, 0.15)',
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+  },
+  selectionChipText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  selectionChipTextActive: {
+    color: '#4D9EFF',
+  },
+  cardContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   programCard: {
-    marginBottom: 16,
-    elevation: 4,
-    backgroundColor: colors.surface,
+    height: 280,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(77, 158, 255, 0.3)',
+  },
+  cardImage: {
+    borderRadius: 14,
+    resizeMode: 'cover',
+    width: '100%',
+    height: '100%',
+  },
+  cardOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   programCardSelected: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-    elevation: 6,
-    backgroundColor: colors.card,
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderColor: '#00E5FF',
+    borderWidth: 3,
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 15,
+    elevation: 10,
   },
   programCardDisabled: {
     opacity: 0.4,
-    backgroundColor: colors.surface
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-    paddingTop: 4
-  },
-  programIcon: {
-    fontSize: 52,
-    marginRight: 16,
-    marginTop: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4
-  },
-  cardTitleContainer: {
+  cardContent: {
     flex: 1,
-    paddingTop: 4
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  topContent: {
+    // Zone pour le badge en haut
+  },
+  selectedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 229, 255, 0.25)',
+    borderWidth: 2,
+    borderColor: '#00E5FF',
+  },
+  selectedBadgeEmoji: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  selectedBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#00E5FF',
+    letterSpacing: 0.5,
+  },
+  bottomContent: {
+    // Contenu regroupé en bas
   },
   programName: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 8
-  },
-  selectedChip: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.success + '20',
-    borderColor: colors.success
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6,
+    lineHeight: 28,
   },
   programDescription: {
-    fontSize: 15,
-    marginBottom: 16,
-    color: colors.textSecondary,
-    lineHeight: 22
+    fontSize: 14,
+    color: '#CBD5E1',
+    marginBottom: 12,
+    lineHeight: 20,
+    fontWeight: '500',
   },
   programInfo: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 16
   },
-  infoChip: {
-    height: 32,
-    backgroundColor: colors.primary + '15',
-    borderColor: colors.primary + '40'
-  },
-  statsContainer: {
-    marginTop: 8,
-    padding: 12,
-    backgroundColor: colors.background,
+  statBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 12,
+    backgroundColor: 'rgba(123, 97, 255, 0.15)',
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: 'rgba(123, 97, 255, 0.4)',
   },
-  statsLabel: {
-    fontSize: 13,
+  statBadgeText: {
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 10,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5
-  },
-  statsChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8
-  },
-  statChip: {
-    height: 32,
-    backgroundColor: colors.secondary + '15',
-    borderColor: colors.secondary + '40'
+    color: '#B8C5D6',
   },
   validateButton: {
-    marginVertical: 32,
-    paddingVertical: 12,
-    borderRadius: 25,
-    elevation: 4,
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    backgroundColor: '#4D9EFF',
+    borderWidth: 3,
+    borderColor: '#7B61FF',
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  validateButtonDisabled: {
+    backgroundColor: 'rgba(148, 163, 184, 0.3)',
+    borderColor: 'rgba(148, 163, 184, 0.5)',
+    shadowOpacity: 0.2,
+    elevation: 2,
+  },
+  validateButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  validateButtonTextDisabled: {
+    color: 'rgba(255, 255, 255, 0.5)',
   },
   helpText: {
     fontSize: 13,
-    color: colors.textSecondary,
+    color: '#94A3B8',
     textAlign: 'center',
-    marginTop: -20,
+    marginHorizontal: 16,
+    marginTop: -8,
     marginBottom: 16,
     fontStyle: 'italic',
-    opacity: 0.8
   },
   bottomSpace: {
     height: 32

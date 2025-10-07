@@ -1,165 +1,156 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Text, ProgressBar, Chip } from 'react-native-paper';
-import { colors } from '../theme/colors';
+import { View, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import { Text } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
+import { rpgTheme } from '../theme/rpgTheme';
 
 /**
- * Carte d'affichage d'un programme actif
- * Affiche le nom, l'icône et le statut du programme
+ * Carte d'affichage d'un programme actif avec image de fond immersive
+ * Style RPG/Manga avec overlay gradient et bordure néon
  */
 const ActiveProgramCard = ({ program, onPress, onManage }) => {
   const { name, icon, color, status = 'active', completedSkills = 0, totalSkills = 0 } = program;
   
   const progress = totalSkills > 0 ? completedSkills / totalSkills : 0;
+  const progressPercent = Math.round(progress * 100);
   const isCompleted = completedSkills >= totalSkills && totalSkills > 0;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-      <Card 
-        style={[
-          styles.card,
-          { borderLeftColor: color || colors.primary, borderLeftWidth: 4 }
-        ]}
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.cardContainer}>
+      <ImageBackground
+        source={require('../../assets/programmes/StreetWorkout.jpg')}
+        style={styles.card}
+        imageStyle={styles.cardImage}
       >
-        <Card.Content style={styles.content}>
-          {/* En-tête */}
-          <View style={styles.header}>
-            <View style={styles.titleRow}>
-              <Text style={styles.icon}>{icon}</Text>
-              <View style={styles.titleContainer}>
-                <Text style={styles.programName} numberOfLines={1}>
-                  {name}
-                </Text>
-                {totalSkills > 0 && (
-                  <Text style={styles.skillsInfo}>
-                    {completedSkills} / {totalSkills} compétences
-                  </Text>
-                )}
-              </View>
-            </View>
+        {/* Overlay gradient du haut vers le bas - image visible en haut, sombre en bas */}
+        <LinearGradient
+          colors={[
+            'rgba(10, 14, 39, 0.00)',  // Complètement transparent en haut
+            'rgba(10, 14, 39, 0.20)',  // Très léger
+            'rgba(10, 14, 39, 0.60)',  // Transition
+            'rgba(10, 14, 39, 0.90)'   // Opaque en bas pour texte lisible
+          ]}
+          locations={[0, 0.4, 0.7, 1]}
+          style={styles.overlay}
+        />
+        
+        <View style={styles.content}>
+          {/* Tout le contenu est poussé vers le bas */}
+          <View style={styles.bottomContent}>
+            {/* Titre du programme - gros et bold */}
+            <Text style={styles.programName} numberOfLines={1}>{name}</Text>
             
-            {/* Badge de statut */}
-            <Chip 
-              mode="flat"
-              style={[
-                styles.statusChip,
-                { 
-                  backgroundColor: isCompleted 
-                    ? colors.success + '20' 
-                    : status === 'active' 
-                      ? colors.primary + '20' 
-                      : colors.border + '20'
-                }
-              ]}
-              textStyle={styles.statusText}
-            >
-              {isCompleted ? '✅ Terminé' : '🔥 Actif'}
-            </Chip>
-          </View>
-
-          {/* Barre de progression (compétences) */}
-          {totalSkills > 0 && (
-            <View style={styles.progressSection}>
-              <ProgressBar
-                progress={progress}
-                color={isCompleted ? colors.success : color || colors.primary}
-                style={styles.progressBar}
-              />
-              <Text style={styles.progressText}>
-                {Math.round(progress * 100)}% complété
+            {/* Progression en texte */}
+            {totalSkills > 0 && (
+              <Text style={styles.skillsProgress}>
+                {completedSkills} / {totalSkills} compétences
+              </Text>
+            )}
+            
+            {/* Badge Actif/Terminé en bas */}
+            <View style={[
+              styles.statusBadge,
+              { 
+                backgroundColor: isCompleted 
+                  ? rpgTheme.colors.status.completed + '30' 
+                  : rpgTheme.colors.status.active + '30',
+                borderColor: isCompleted 
+                  ? rpgTheme.colors.status.completed 
+                  : rpgTheme.colors.status.active,
+              }
+            ]}>
+              <Text style={styles.badgeEmoji}>
+                {isCompleted ? '✅' : '🔥'}
+              </Text>
+              <Text style={[
+                styles.badgeText,
+                { color: isCompleted ? rpgTheme.colors.status.completed : rpgTheme.colors.status.active }
+              ]}>
+                {isCompleted ? 'Terminé' : 'Actif'}
               </Text>
             </View>
-          )}
-
-          {/* Actions */}
-          {onManage && (
-            <TouchableOpacity 
-              onPress={onManage}
-              style={styles.manageButton}
-            >
-              <Text style={styles.manageText}>Gérer ⚙️</Text>
-            </TouchableOpacity>
-          )}
-        </Card.Content>
-      </Card>
+          </View>
+        </View>
+      </ImageBackground>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  cardContainer: {
+    marginHorizontal: rpgTheme.spacing.md,
+    marginBottom: rpgTheme.spacing.md,
+  },
+  
   card: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    backgroundColor: colors.surface,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    height: 240,
+    borderRadius: rpgTheme.borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.neon.blue,
+    ...rpgTheme.effects.shadows.card,
   },
+  
+  cardImage: {
+    borderRadius: rpgTheme.borderRadius.lg - 2,
+    resizeMode: 'cover',
+    width: '100%',
+    height: '100%',
+  },
+  
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  
   content: {
-    padding: 16,
+    flex: 1,
+    justifyContent: 'flex-end', // Tout en bas
+    padding: rpgTheme.spacing.md,
+    paddingBottom: rpgTheme.spacing.lg,
   },
-  header: {
-    marginBottom: 12,
+  
+  bottomContent: {
+    // Contenu regroupé en bas
   },
-  titleRow: {
+  
+  icon: {
+    fontSize: 40,
+    marginBottom: rpgTheme.spacing.sm,
+  },
+  
+  programName: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: rpgTheme.colors.text.primary,
+    marginBottom: 6,
+    lineHeight: 30,
+  },
+  
+  skillsProgress: {
+    fontSize: 14,
+    color: rpgTheme.colors.text.secondary,
+    marginBottom: rpgTheme.spacing.sm,
+    fontWeight: rpgTheme.typography.weights.medium,
+  },
+  
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  icon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  titleContainer: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  programName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  skillsInfo: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  statusChip: {
     alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  progressSection: {
-    marginTop: 12,
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.border + '40',
-  },
-  progressText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 6,
-    textAlign: 'right',
-  },
-  manageButton: {
-    marginTop: 12,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: colors.border + '20',
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    borderRadius: rpgTheme.borderRadius.md,
+    borderWidth: 2, // Bordure plus épaisse
+    marginTop: rpgTheme.spacing.sm,
   },
-  manageText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '600',
+  
+  badgeEmoji: {
+    fontSize: 18,
+  },
+  
+  badgeText: {
+    fontSize: rpgTheme.typography.sizes.body, // Plus gros
+    fontWeight: rpgTheme.typography.weights.bold, // Plus bold
   },
 });
 

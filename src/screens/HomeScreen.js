@@ -6,7 +6,8 @@ import {
   Animated,
   Alert,
   RefreshControl,
-  ImageBackground
+  ImageBackground,
+  TouchableOpacity
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -17,9 +18,9 @@ import {
   Chip,
   Divider
 } from 'react-native-paper';
-import { collection, doc, getDocs, getDoc, query, where, orderBy, limit } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../services/firebase';
+import { getWithRetry } from '../utils/firestoreRetry';
 import { colors } from '../theme/colors';
 import UserHeader from '../components/UserHeader';
 import ProgramProgressCard from '../components/ProgramProgressCard';
@@ -27,7 +28,7 @@ import LoadingProgramCard from '../components/LoadingProgramCard';
 import TreeTooltipOverlay from '../components/onboarding/TreeTooltipOverlay';
 import ActiveProgramCard from '../components/ActiveProgramCard';
 import SessionQueueCard from '../components/SessionQueueCard';
-import { useUserPrograms, useRecommendedPrograms } from '../hooks/useUserPrograms';
+import { useUserPrograms, useUserCategories } from '../hooks/useUserPrograms';
 import { getUserSessionQueue } from '../services/sessionQueueService';
 import programs from '../data/programs.json';
 
@@ -47,9 +48,9 @@ const HomeScreen = ({ navigation, route }) => {
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [hasSelectedPrograms, setHasSelectedPrograms] = useState(null); // null = pas encore chargé, true/false = défini
   const refetchTriggered = useRef(false);
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   
-  // Hook pour les programmes utilisateur
+  // Hook pour les programmes utilisateur (skills individuels)
   const { 
     userPrograms, 
     loading: programsLoading, 
@@ -57,8 +58,27 @@ const HomeScreen = ({ navigation, route }) => {
     refetch: refetchPrograms 
   } = useUserPrograms();
   
-  // Hook pour les programmes recommandés
-  const { recommendedPrograms } = useRecommendedPrograms(3);
+  // Hook pour les catégories complètes avec progression agrégée
+  const {
+    categories: userCategories,
+    loading: categoriesLoading,
+    error: categoriesError,
+    refetch: refetchCategories
+  } = useUserCategories();
+  
+  // ✅ OPTIMISATION: Calculer les recommandations localement au lieu d'appeler des hooks supplémentaires
+  // Cela évite des requêtes Firestore dupliquées
+  const recommendedPrograms = React.useMemo(() => {
+    return userPrograms
+      .filter(up => !up.isStarted && up.hasSkills)
+      .slice(0, 3);
+  }, [userPrograms]);
+  
+  const recommendedCategories = React.useMemo(() => {
+    return userCategories
+      .filter(cat => !cat.isStarted)
+      .slice(0, 3);
+  }, [userCategories]);
 
   // Fonction pour mesurer la première carte
   const measureFirstCard = () => {
@@ -71,12 +91,29 @@ const HomeScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (user?.uid) {
+      // Utilisateur authentifié
       loadAllData();
+      startFadeAnimation();
+    } else if (isGuest) {
+      // Mode invité - initialiser avec des valeurs par défaut
+      console.log('👤 Mode invité détecté - initialisation HomeScreen');
+      setUserStats({
+        globalXP: 0,
+        globalLevel: 0,
+        title: 'Invité',
+        stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+        programs: {},
+        streakDays: 0,
+        displayName: 'Invité',
+        avatarId: 0
+      });
+      setHasSelectedPrograms(false);
+      setLoading(false);
       startFadeAnimation();
     }
     // Réinitialiser le flag refetch à chaque changement d'utilisateur
     refetchTriggered.current = false;
-  }, [user]);
+  }, [user, isGuest]);
 
   // UseEffect pour détecter le trigger tooltip ou refresh
   useEffect(() => {
@@ -85,10 +122,22 @@ const HomeScreen = ({ navigation, route }) => {
         const shown = await AsyncStorage.getItem('@fitnessrpg:tree_tooltip_shown');
         const trigger = route.params?.triggerTreeTooltip;
         const refresh = route.params?.refresh;
+        const forceRefresh = route.params?.forceRefresh;
+        
+        // Si c'est un forceRefresh (reset profile), recharger TOUTES les données
+        if (forceRefresh) {
+          console.log('🔄 Force refresh triggered - reloading all data');
+          // NETTOYER LES PARAMS IMMÉDIATEMENT pour éviter la loop
+          navigation.setParams({ forceRefresh: undefined, resetComplete: undefined });
+          setHasSelectedPrograms(null); // Reset pour forcer la vérification
+          await loadAllData();
+          return;
+        }
         
         // Si c'est un refresh depuis ProgramSelectionScreen, recharger les données
         if (refresh) {
           console.log('🔄 Refresh triggered from ProgramSelection');
+          navigation.setParams({ refresh: undefined });
           await loadActiveProgramsAndQueue();
         }
         
@@ -156,8 +205,31 @@ const HomeScreen = ({ navigation, route }) => {
       await loadActiveProgramsAndQueue();
       
     } catch (error) {
-      console.error('Erreur chargement données:', error);
-      Alert.alert('Erreur', 'Impossible de charger les données');
+      console.error('❌ Erreur chargement données HomeScreen:', error);
+      
+      // Mode dégradé : Si Firestore unavailable, continuer avec données par défaut
+      if (error.code === 'firestore/unavailable') {
+        console.warn('⚠️ Mode dégradé activé - Firestore indisponible');
+        setUserStats({
+          globalXP: 0,
+          globalLevel: 0,
+          title: 'Débutant',
+          stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+          programs: {},
+          streakDays: 0,
+          displayName: user.email?.split('@')[0] || 'Utilisateur',
+          avatarId: 0
+        });
+        setHasSelectedPrograms(false);
+        setLastSession(null);
+      } else {
+        // Autre erreur, afficher alerte
+        Alert.alert(
+          'Erreur de connexion', 
+          'Impossible de charger vos données. Vérifiez votre connexion internet.',
+          [{ text: 'OK' }]
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -165,7 +237,8 @@ const HomeScreen = ({ navigation, route }) => {
 
   const loadUserStats = async () => {
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userDoc = await getWithRetry(userRef);
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -185,7 +258,8 @@ const HomeScreen = ({ navigation, route }) => {
             stats: userData.stats || { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
             programs: userData.programs || { street: { xp: 0, level: 0, completedSkills: 0 } },
             streakDays: userData.streak || 0,
-            displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur'
+            displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur',
+            avatarId: userData.avatarId || 0
           };
         }
         
@@ -206,7 +280,8 @@ const HomeScreen = ({ navigation, route }) => {
             }
           },
           streakDays: 0,
-          displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur'
+          displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur',
+          avatarId: userData.avatarId || 0
         };
       }
       
@@ -219,7 +294,8 @@ const HomeScreen = ({ navigation, route }) => {
         stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
         programs: {},
         streakDays: 0,
-        displayName: user.email?.split('@')[0] || 'Utilisateur'
+        displayName: user.email?.split('@')[0] || 'Utilisateur',
+        avatarId: 0
       };
       
     } catch (error) {
@@ -232,14 +308,12 @@ const HomeScreen = ({ navigation, route }) => {
 
   const loadLastSession = async () => {
     try {
-      const sessionsQuery = query(
-        collection(db, 'workoutSessions'),
-        where('userId', '==', user.uid),
-        orderBy('completedAt', 'desc'),
-        limit(1)
-      );
-      
-      const snapshot = await getDocs(sessionsQuery);
+      const snapshot = await firestore()
+        .collection('workoutSessions')
+        .where('userId', '==', user.uid)
+        .orderBy('completedAt', 'desc')
+        .limit(1)
+        .get();
       
       if (!snapshot.empty) {
         const sessionData = snapshot.docs[0].data();
@@ -253,6 +327,11 @@ const HomeScreen = ({ navigation, route }) => {
       return null;
       
     } catch (error) {
+      // Si l'erreur est liée à un index manquant, ignorer silencieusement
+      if (error.message && error.message.includes('index')) {
+        console.warn('⚠️ Index Firestore manquant pour workoutSessions - session ignorée');
+        return null;
+      }
       console.error('Erreur chargement dernière session:', error);
       return null;
     }
@@ -273,9 +352,9 @@ const HomeScreen = ({ navigation, route }) => {
     try {
       setLoadingQueue(true);
       
-      // Récupérer les données utilisateur
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
+      // Récupérer les données utilisateur avec retry
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userDoc = await getWithRetry(userRef);
       
       if (!userDoc.exists()) {
         setActivePrograms([]);
@@ -335,7 +414,14 @@ const HomeScreen = ({ navigation, route }) => {
       setSessionQueue(queue);
       
     } catch (error) {
-      console.error('Erreur chargement programmes actifs:', error);
+      // Mode silencieux - log minimal
+      if (__DEV__ && error.code !== 'firestore/unavailable') {
+        console.warn('⚠️ loadActiveProgramsAndQueue error:', error.code);
+      }
+      
+      // Fallback: définir des valeurs par défaut pour éviter les crashes UI
+      setActivePrograms([]);
+      setSessionQueue([]);
     } finally {
       setLoadingQueue(false);
     }
@@ -349,46 +435,52 @@ const HomeScreen = ({ navigation, route }) => {
     setRefreshing(false);
   };
 
-  const handleStartJourney = () => {
-    navigation.navigate('ProgramSelection');
-  };
-
   const handleStartSession = (session) => {
-    // Naviguer vers l'écran de workout avec les données de la séance
+    console.log('🚀 Démarrage de la séance:', session);
+    
+    // Trouver le programme complet dans programs.json
+    const category = programs.categories.find(cat => cat.id === session.programId);
+    if (!category) {
+      Alert.alert('Erreur', 'Programme non trouvé');
+      return;
+    }
+    
+    // Trouver la compétence (skill) dans le programme
+    const skill = category.programs.find(p => p.id === session.skillId);
+    if (!skill) {
+      Alert.alert('Erreur', 'Compétence non trouvée');
+      return;
+    }
+    
+    // Trouver le niveau dans la compétence
+    const levelIndex = session.levelNumber - 1; // levelNumber est 1-based
+    const level = skill.levels[levelIndex];
+    if (!level) {
+      Alert.alert('Erreur', 'Niveau non trouvé');
+      return;
+    }
+    
+    // Naviguer vers l'écran de workout avec les objets complets
     navigation.navigate('Workout', {
-      programId: session.programId,
-      levelId: session.level,
-      programName: session.programName,
+      program: {
+        id: skill.id,
+        name: skill.name,
+        category: category.name,
+        icon: session.programIcon || skill.icon,
+      },
+      level: {
+        id: level.id,
+        name: level.name,
+        subtitle: level.subtitle,
+        exercises: level.exercises || [],
+        xpReward: level.xpReward,
+      }
     });
   };
 
   const handleViewActiveProgram = (programId) => {
     // Naviguer vers la vue détaillée du programme (arbre de compétences)
     navigation.navigate('SkillTree', { programId });
-  };
-
-  const handleResetForTesting = async () => {
-    try {
-      // Supprimer document utilisateur de Firestore
-      const { deleteDoc, doc } = await import('firebase/firestore');
-      const { db } = await import('../services/firebase');
-      
-      const userRef = doc(db, 'users', user.uid);
-      await deleteDoc(userRef);
-      
-      // Supprimer flag tooltip
-      await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
-      
-      // Forcer le rechargement de l'écran
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Main', params: { screen: 'Home' } }],
-      });
-      
-    } catch (error) {
-      console.error('Erreur reset:', error);
-      Alert.alert('Erreur', 'Impossible de reset: ' + error.message);
-    }
   };
 
   const handleViewProgram = (programId) => {
@@ -498,96 +590,6 @@ const HomeScreen = ({ navigation, route }) => {
     );
   };
 
-  // Composants internes
-  const OnboardingView = () => (
-    <ImageBackground 
-      source={require('../../assets/Home-BG-2.jpg')} 
-      style={styles.onboardingContainer}
-      resizeMode="cover"
-    >
-      <View style={styles.backgroundOverlay}>
-      <Animated.View style={[styles.onboardingContent, { opacity: fadeAnim }]}>
-        <Text style={styles.onboardingTitle}>
-          🚀 Bienvenue dans HybridRPG
-        </Text>
-        
-        <Text style={styles.onboardingSubtitle}>
-          Ton corps est ton avatar. Chaque entraînement est une mission. Chaque niveau franchi révèle ton potentiel.
-        </Text>
-
-        <Text style={styles.onboardingQuote}>
-          🔥 Entraîne-toi. Gagne de l'XP. Évolue.
-        </Text>
-
-        <View style={styles.onboardingFeatures}>
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🏋️</Text>
-            <Text style={styles.featureText}>
-              <Text style={styles.featureTextBold}>Progression & XP</Text>
-              {"\n"}Chaque séance réussie te rapporte de l'XP et t'aide à passer au niveau suivant.
-            </Text>
-          </View>
-          
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🌳</Text>
-            <Text style={styles.featureText}>
-              <Text style={styles.featureTextBold}>Arbre de Compétences</Text>
-              {"\n"}Choisis tes disciplines, débloque des skills et deviens un athlète hybride complet.
-            </Text>
-          </View>
-          
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>🏆</Text>
-            <Text style={styles.featureText}>
-              <Text style={styles.featureTextBold}>Quêtes & Maîtrise</Text>
-              {"\n"}Avance à travers des programmes uniques et atteins la forme ultime.
-            </Text>
-          </View>
-        </View>
-
-        {/* Programmes recommandés pour les nouveaux utilisateurs */}
-        {!programsLoading && recommendedPrograms.length > 0 && (
-          <View style={styles.recommendedSection}>
-            <Text style={styles.recommendedTitle}>
-              Programmes populaires pour commencer 🚀
-            </Text>
-            {recommendedPrograms.slice(0, 2).map(({ program, progress }) => (
-              <ProgramProgressCard
-                key={program.id}
-                program={program}
-                progress={progress}
-                onPress={() => handleViewProgram(program.id)}
-              />
-            ))}
-          </View>
-        )}
-
-        <Button
-          mode="contained"
-          onPress={handleStartJourney}
-          style={styles.startButton}
-          contentStyle={styles.startButtonContent}
-          buttonColor={colors.primary}
-        >
-          Commencer mon aventure
-        </Button>
-        
-        {/* Bouton Reset pour les tests - À SUPPRIMER en production */}
-        <Button
-          mode="text"
-          onPress={handleResetForTesting}
-          style={styles.resetButton}
-          labelStyle={{ color: colors.warning, fontSize: 12 }}
-        >
-          🔄 Reset (test)
-        </Button>
-      </Animated.View>
-      </View>
-    </ImageBackground>
-  );
-
-
-
   const StreakCard = ({ streak }) => {
     if (streak === 0) return null;
     
@@ -658,7 +660,7 @@ const HomeScreen = ({ navigation, route }) => {
 
   // Détection mode - vérifier si l'utilisateur a sélectionné des programmes dans Firestore
   const forceShowDashboard = route.params?.forceShowDashboard;
-  const isNewUser = !forceShowDashboard && hasSelectedPrograms === false; // Nouvel utilisateur = pas de programmes sélectionnés
+  // Note: L'onboarding est maintenant géré par OnboardingScreen.js séparé via App.js
 
   if (loading || hasSelectedPrograms === null) {
     return (
@@ -669,13 +671,9 @@ const HomeScreen = ({ navigation, route }) => {
     );
   }
 
-  if (isNewUser) {
-    return <OnboardingView />;
-  }
-
   return (
     <ImageBackground 
-      source={require('../../assets/Home-BG-1.jpg')} 
+      source={require('../../assets/Home-BG-0.jpg')} 
       style={styles.container}
       resizeMode="cover"
     >
@@ -687,18 +685,19 @@ const HomeScreen = ({ navigation, route }) => {
         }
         showsVerticalScrollIndicator={false}
       >
-      <Animated.View style={{ opacity: fadeAnim }}>
-        {/* Header utilisateur */}
-        <UserHeader
-          username={userStats.displayName}
-          globalLevel={userStats.globalLevel}
-          globalXP={userStats.globalXP}
-          title={userStats.title}
-          streak={userStats.streakDays}
-        />
+        <Animated.View style={{ opacity: fadeAnim }}>
+          {/* Header utilisateur */}
+          <UserHeader
+            username={userStats.displayName}
+            globalLevel={userStats.globalLevel}
+            globalXP={userStats.globalXP}
+            title={userStats.title}
+            streak={userStats.streakDays}
+            avatarId={userStats.avatarId || 0}
+          />
 
-        {/* Streak */}
-        <StreakCard streak={userStats.streakDays} />
+          {/* Streak */}
+          <StreakCard streak={userStats.streakDays} />
 
         {/* ===== NOUVELLE SECTION : Programmes Actifs ===== */}
         {loadingQueue ? (
@@ -711,16 +710,16 @@ const HomeScreen = ({ navigation, route }) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                Programmes Actifs ⚡
+                ⚔️ Quêtes en cours
               </Text>
-              <Button
-                mode="text"
-                onPress={() => navigation.navigate('ManageActivePrograms')}
-                compact
-                labelStyle={{ fontSize: 12 }}
+              <TouchableOpacity
+                style={styles.manageButton}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('ProgramSelection')}
               >
-                Gérer
-              </Button>
+                <Text style={styles.manageButtonIcon}>⚙️</Text>
+                <Text style={styles.manageButtonText}>Gérer</Text>
+              </TouchableOpacity>
             </View>
             {activePrograms.map(program => (
               <ActiveProgramCard
@@ -731,20 +730,25 @@ const HomeScreen = ({ navigation, route }) => {
             ))}
           </View>
         ) : (
-          <Card style={styles.sectionCard}>
-            <Card.Content>
-              <Text style={styles.emptyStateText}>
-                🎯 Aucun programme actif
+          <Card style={[styles.sectionCard, styles.emptyStateCard]}>
+            <Card.Content style={styles.emptyStateContent}>
+              <View style={styles.emptyStateIconContainer}>
+                <Text style={styles.emptyStateIcon}>📋</Text>
+              </View>
+              <Text style={styles.emptyStateTitle}>
+                Aucun programme actif
               </Text>
               <Text style={styles.emptyStateSubtext}>
-                Active un programme pour voir tes séances
+                Active un programme pour commencer ton aventure
               </Text>
               <Button
                 mode="contained"
-                onPress={() => navigation.navigate('ManageActivePrograms')}
-                style={{ marginTop: 12 }}
+                onPress={() => navigation.navigate('ProgramSelection')}
+                style={styles.emptyStateButton}
+                labelStyle={styles.emptyStateButtonLabel}
+                buttonColor={colors.primary}
               >
-                Activer un programme
+                Choisir un programme
               </Button>
             </Card.Content>
           </Card>
@@ -753,9 +757,11 @@ const HomeScreen = ({ navigation, route }) => {
         {/* ===== NOUVELLE SECTION : Queue de Séances ===== */}
         {sessionQueue.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              Prochaines séances disponibles 🎯
-            </Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                🎯 Missions disponibles
+              </Text>
+            </View>
             {sessionQueue.slice(0, 5).map(session => (
               <SessionQueueCard
                 key={session.id}
@@ -767,53 +773,7 @@ const HomeScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Programmes actifs */}
-        {programsLoading ? (
-          <LoadingProgramCard count={2} />
-        ) : programsError ? (
-          <Card style={styles.errorCard}>
-            <Card.Content>
-              <Text variant="bodyMedium" style={styles.errorText}>
-                Erreur lors du chargement des programmes
-              </Text>
-              <Button 
-                mode="outlined" 
-                onPress={refetchPrograms}
-                style={{ marginTop: 8 }}
-              >
-                Réessayer
-              </Button>
-            </Card.Content>
-          </Card>
-        ) : (
-          userPrograms
-            .filter(up => up.isStarted) // Seulement les programmes commencés
-            .map(({ program, progress }, index) => (
-              index === 0 ? (
-                <View key={program.id} ref={firstCardRef} collapsable={false}>
-                  <ProgramProgressCard
-                    program={program}
-                    progress={progress}
-                    onPress={() => handleViewProgram(program.id)}
-                  />
-                </View>
-              ) : (
-                <ProgramProgressCard
-                  key={program.id}
-                  program={program}
-                  progress={progress}
-                  onPress={() => handleViewProgram(program.id)}
-                />
-              )
-            ))
-        )}
 
-        {/* Mes Programmes */}
-        <MyProgramsSection 
-          programs={userPrograms}
-          onViewTree={handleViewTree}
-          onContinue={handleContinueProgram}
-        />
 
         {/* Dernière séance */}
         <LastSessionCard session={lastSession} />
@@ -1153,10 +1113,63 @@ const styles = StyleSheet.create({
     color: colors.text,
     letterSpacing: 0.3,
   },
+  manageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(77, 158, 255, 0.15)', // Fond unique simplifié
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.4)',
+    gap: 6,
+  },
+  manageButtonIcon: {
+    fontSize: 16,
+    color: '#4D9EFF',
+  },
+  manageButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4D9EFF',
+    letterSpacing: 0.3,
+  },
   sectionCard: {
     marginHorizontal: 16,
     marginVertical: 8,
     backgroundColor: colors.surface,
+  },
+  emptyStateCard: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: colors.primary + '40',
+    elevation: 0,
+  },
+  emptyStateContent: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyStateIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyStateIcon: {
+    fontSize: 32,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   emptyStateText: {
     fontSize: 16,
@@ -1169,6 +1182,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 24,
+  },
+  emptyStateButton: {
+    borderRadius: 12,
+    elevation: 2,
+  },
+  emptyStateButtonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    paddingVertical: 4,
   },
 
   // Bottom spacer

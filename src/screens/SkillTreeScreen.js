@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
   SafeAreaView,
   Animated
 } from 'react-native';
-import { Modal, Portal, Button, Divider, Badge, IconButton } from 'react-native-paper';
+import { Modal, Portal } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import SkillNode from '../components/SkillNode';
 import programs from '../data/programs.json';
@@ -21,13 +22,13 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 // Dimensions responsives de l'arbre
 const NODE_SIZE = 80;
-const PADDING = 20;
+const PADDING = 40;
 // Calcul responsive : largeur disponible / 5 colonnes
-const COLUMN_WIDTH = Math.max(120, (screenWidth - PADDING * 2) / 5);
-// Hauteur adaptée pour 15 tiers (augmenté pour avoir plus d'espace)
-const ROW_HEIGHT = Math.max(140, COLUMN_WIDTH * 1.2);
-const TREE_WIDTH = 5 * COLUMN_WIDTH;
-const TREE_HEIGHT = 15 * ROW_HEIGHT; // Augmenté de 10 à 15
+const COLUMN_WIDTH = Math.max(180, (screenWidth - PADDING * 2) / 5);
+// Hauteur réduite pour rapprocher les blocs verticalement
+const ROW_HEIGHT = Math.max(140, COLUMN_WIDTH * 1.0);
+const TREE_WIDTH = 5 * COLUMN_WIDTH + PADDING * 2; // Inclut le padding des deux côtés
+const TREE_HEIGHT = 15 * ROW_HEIGHT + PADDING * 2; // Inclut le padding des deux côtés
 
 const SkillTreeScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -39,6 +40,10 @@ const SkillTreeScreen = ({ navigation }) => {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [animatedLines, setAnimatedLines] = useState(new Map()); // Map pour les animations de lignes
+  
+  // Refs pour le scroll horizontal
+  const horizontalScrollRef = useRef(null);
+  const verticalScrollRef = useRef(null);
   
   // Mode Admin - emails autorisés (actuellement désactivé)
   const ADMIN_EMAILS = []; // Vide pour désactiver le mode admin
@@ -132,6 +137,40 @@ const SkillTreeScreen = ({ navigation }) => {
       loadUserData();
     }
   }, [userId]);
+
+  // Centrage automatique sur la première compétence
+  useEffect(() => {
+    if (!loading && streetPrograms.length > 0 && horizontalScrollRef.current && verticalScrollRef.current) {
+      // Trouver "Fondations Débutant" ou la première compétence
+      const firstProgram = streetPrograms.find(p => p.id === 'beginner-foundation') || streetPrograms[0];
+      
+      if (firstProgram) {
+        const SKILLNODE_CONTAINER_WIDTH = 100;
+        
+        // Calculer la position du centre du nœud
+        const nodeX = firstProgram.position.x * COLUMN_WIDTH + (COLUMN_WIDTH - SKILLNODE_CONTAINER_WIDTH) / 2 + PADDING + (SKILLNODE_CONTAINER_WIDTH / 2);
+        const nodeY = firstProgram.position.y * ROW_HEIGHT + (ROW_HEIGHT - NODE_SIZE) / 2 + PADDING;
+        
+        // Centrer horizontalement et verticalement avec un délai pour que les ScrollViews soient montés
+        setTimeout(() => {
+          if (horizontalScrollRef.current) {
+            // Centrer le nœud au milieu de l'écran
+            const scrollX = nodeX - (screenWidth / 2);
+            horizontalScrollRef.current.scrollTo({
+              x: Math.max(0, scrollX),
+              animated: true
+            });
+          }
+          if (verticalScrollRef.current) {
+            verticalScrollRef.current.scrollTo({
+              y: Math.max(0, nodeY - 200),
+              animated: true
+            });
+          }
+        }, 100);
+      }
+    }
+  }, [loading, streetPrograms]);
 
   // Détermine l'état d'un programme
   const getProgramState = useCallback((program) => {
@@ -272,10 +311,9 @@ const SkillTreeScreen = ({ navigation }) => {
     const toContainerX = toProgram.position.x * COLUMN_WIDTH + (COLUMN_WIDTH - SKILLNODE_CONTAINER_WIDTH) / 2 + PADDING;
     const toContainerY = toProgram.position.y * ROW_HEIGHT + (ROW_HEIGHT - NODE_SIZE) / 2 + PADDING;
     
-    // Centre du nœud circulaire (80x80) dans le container (100 width)
-    // Le nœud est centré dans son container, donc offset de (100-80)/2 = 10px
-    // Ajustement de quelques pixels vers la droite pour un alignement parfait
-    const nodeOffset = (SKILLNODE_CONTAINER_WIDTH - NODE_SIZE) / 2 + 5; // +5px vers la droite
+    // Centre exact du nœud circulaire (80x80) dans le container (100 width)
+    // Le nœud est centré dans son container : offset de (100-80)/2 = 10px
+    const nodeOffset = (SKILLNODE_CONTAINER_WIDTH - NODE_SIZE) / 2;
     
     const fromCenterX = fromContainerX + nodeOffset + NODE_SIZE / 2;
     const fromCenterY = fromContainerY + SKILLNODE_MARGIN + NODE_SIZE / 2;
@@ -291,12 +329,13 @@ const SkillTreeScreen = ({ navigation }) => {
     return {
       position: 'absolute',
       left: fromCenterX,
-      top: fromCenterY - 1.5, // Centrer la ligne verticalement
+      top: fromCenterY - 2, // Centrer la ligne verticalement (height 4 / 2)
       width: distance,
-      backgroundColor: 'transparent', // Sera défini dans le rendu
-      transform: `rotate(${angle}deg)`,
+      height: 4,
+      backgroundColor: 'transparent',
+      transform: [{ rotate: `${angle}deg` }],
       transformOrigin: '0 50%',
-      // Z-index sera défini dans renderConnections
+      zIndex: 1,
     };
   }, []);
 
@@ -316,72 +355,76 @@ const SkillTreeScreen = ({ navigation }) => {
             // Détermine si la ligne mène à un nœud débloqué
             const isUnlocked = toState === 'UNLOCKED' || toState === 'IN_PROGRESS' || toState === 'COMPLETED';
             
-            let lineColor, opacity, height, shadowColor;
+            // Style de ligne selon l'état
+            const lineColor = program.color || '#4D9EFF';
+            const opacity = isUnlocked ? 0.9 : 0.3; // Lignes vers locked sont semi-transparentes
+            const gradientColors = isUnlocked 
+              ? ['#4D9EFF', '#7B61FF']  // Bleu-violet pour débloqué
+              : ['#555', '#444'];        // Gris pour verrouillé
             
-            if (isUnlocked) {
-              // Lignes vers nœuds UNLOCKED : couleur du programme source
-              lineColor = program.color || colors.primary;
-              opacity = 0.8;
-              height = 3;
-              shadowColor = program.color || colors.primary;
-            } else {
-              // Lignes vers nœuds LOCKED - Plus visibles
-              lineColor = '#666666';
-              opacity = 0.4; // Augmenté de 0.15 à 0.4
-              height = 2;
-              shadowColor = 'transparent';
-            }
-
-            // Style unifié pour toutes les lignes (pas de segments pour éviter les problèmes d'alignement)
+            // Style unifié pour toutes les lignes
             const lineId = `${program.id}-${unlockedId}`;
             const animatedOpacity = animatedLines.get(lineId);
             
             if (animatedOpacity && isUnlocked) {
-              // Ligne animée pour unlocked
+              // Ligne animée avec gradient (uniquement pour débloquées)
               connections.push(
                 <Animated.View
                   key={lineId}
                   style={[
                     lineStyle,
                     {
-                      height: height,
-                      backgroundColor: lineColor,
+                      overflow: 'hidden',
+                      borderRadius: 2,
                       opacity: animatedOpacity,
-                      zIndex: 1,
-                      borderRadius: height / 2,
-                      shadowColor: shadowColor,
+                    }
+                  ]}
+                >
+                  <LinearGradient
+                    colors={gradientColors}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      shadowColor: '#4D9EFF',
                       shadowOffset: { width: 0, height: 0 },
                       shadowOpacity: 0.6,
                       shadowRadius: 4,
                       elevation: 2,
-                    }
-                  ]}
-                />
+                    }}
+                  />
+                </Animated.View>
               );
             } else {
-              // Ligne statique (locked ou unlocked)
+              // Ligne statique avec gradient (wrapper View nécessaire pour transform)
               connections.push(
                 <View
                   key={lineId}
                   style={[
                     lineStyle,
                     {
-                      height: height,
-                      backgroundColor: lineColor,
+                      overflow: 'hidden',
+                      borderRadius: 2,
                       opacity: opacity,
-                      zIndex: 1,
-                      borderRadius: height / 2,
-                      // Glow seulement pour unlocked
-                      ...(isUnlocked && {
-                        shadowColor: shadowColor,
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowOpacity: 0.6,
-                        shadowRadius: 4,
-                        elevation: 2,
-                      })
                     }
                   ]}
-                />
+                >
+                  <LinearGradient
+                    colors={gradientColors}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      shadowColor: isUnlocked ? '#4D9EFF' : '#000',
+                      shadowOffset: { width: 0, height: 0 },
+                      shadowOpacity: isUnlocked ? 0.6 : 0.2,
+                      shadowRadius: isUnlocked ? 4 : 2,
+                      elevation: isUnlocked ? 2 : 1,
+                    }}
+                  />
+                </View>
               );
             }
           }
@@ -405,98 +448,81 @@ const SkillTreeScreen = ({ navigation }) => {
         <Modal 
           visible={modalVisible} 
           onDismiss={closeModal}
-          contentContainerStyle={[
-            styles.modalContainer,
-            { borderColor: selectedProgram.color }
-          ]}
+          contentContainerStyle={styles.modalContainer}
         >
-          {/* Header avec icône du programme */}
+          {/* Icône close en haut à droite */}
+          <TouchableOpacity 
+            onPress={closeModal}
+            style={styles.modalCloseButton}
+          >
+            <Text style={styles.modalCloseIcon}>✕</Text>
+          </TouchableOpacity>
+
+          {/* Header avec icône et titre */}
           <View style={styles.modalHeader}>
-            <Text style={styles.modalIcon}>{selectedProgram.icon}</Text>
-            <IconButton 
-              icon="close" 
-              size={24} 
-              onPress={closeModal}
-              style={styles.modalCloseButton}
-            />
-          </View>
-
-          {/* Titre et infos principales */}
-          <View style={styles.modalTitleSection}>
+            <View style={[styles.modalIconContainer, { borderColor: selectedProgram.color }]}>
+              <Text style={styles.modalIcon}>{selectedProgram.icon}</Text>
+            </View>
             <Text style={styles.modalTitle}>{selectedProgram.name}</Text>
-            <Badge 
-              style={[styles.difficultyBadge, { backgroundColor: selectedProgram.color }]}
-            >
-              {selectedProgram.difficulty}
-            </Badge>
+            <View style={[styles.difficultyBadge, { backgroundColor: selectedProgram.color }]}>
+              <Text style={styles.difficultyText}>{selectedProgram.difficulty}</Text>
+            </View>
           </View>
 
+          {/* Description */}
           <Text style={styles.modalDescription}>
             {selectedProgram.description}
           </Text>
 
-          <Divider style={styles.modalDivider} />
-
-          {/* Informations du programme */}
-          <View style={styles.modalInfoSection}>
-            <Text style={styles.modalSectionTitle}>📊 Informations</Text>
-            <View style={styles.modalInfoGrid}>
-              <View style={styles.modalInfoItem}>
-                <Text style={styles.modalInfoLabel}>Durée</Text>
-                <Text style={styles.modalInfoValue}>{selectedProgram.totalWeeks} semaines</Text>
-              </View>
-              <View style={styles.modalInfoItem}>
-                <Text style={styles.modalInfoLabel}>XP Reward</Text>
-                <Text style={styles.modalInfoValue}>{selectedProgram.xpReward} XP</Text>
-              </View>
-            </View>
+          {/* XP Reward - mis en avant */}
+          <View style={[styles.xpRewardContainer, { borderColor: selectedProgram.color }]}>
+            <Text style={styles.xpRewardLabel}>Récompense XP</Text>
+            <Text style={[styles.xpRewardValue, { color: selectedProgram.color }]}>
+              +{selectedProgram.xpReward} XP
+            </Text>
           </View>
 
-          <Divider style={styles.modalDivider} />
-
-          {/* Prérequis avec statuts */}
+          {/* Prérequis */}
           {prerequisites.length > 0 && (
             <View style={styles.modalSection}>
               <Text style={styles.modalSectionTitle}>🔒 Prérequis</Text>
               {prerequisites.map(prereq => (
-                <View key={prereq.id} style={styles.modalPrereqItem}>
-                  <Text style={styles.modalPrereqText}>• {prereq.name}</Text>
-                  <Badge 
-                    style={[
-                      styles.modalPrereqBadge,
-                      { backgroundColor: prereq.completed ? colors.success : colors.error }
-                    ]}
-                  >
+                <View key={prereq.id} style={styles.prerequisiteItem}>
+                  <View style={styles.prerequisiteLeft}>
+                    <View style={[
+                      styles.prerequisiteIndicator,
+                      { backgroundColor: prereq.completed ? '#4CAF50' : '#F44336' }
+                    ]} />
+                    <Text style={styles.prerequisiteText}>{prereq.name}</Text>
+                  </View>
+                  <Text style={styles.prerequisiteStatus}>
                     {prereq.completed ? '✓' : '✗'}
-                  </Badge>
+                  </Text>
                 </View>
               ))}
             </View>
           )}
 
-          {/* Compétences débloquées */}
+          {/* Débloque */}
           {unlockedPrograms.length > 0 && (
             <View style={styles.modalSection}>
               <Text style={styles.modalSectionTitle}>🔓 Débloque</Text>
               {unlockedPrograms.map(program => (
-                <Text key={program.id} style={styles.modalUnlockText}>
-                  • {program.name}
-                </Text>
+                <View key={program.id} style={styles.unlockItem}>
+                  <Text style={styles.unlockIcon}>→</Text>
+                  <Text style={styles.unlockText}>{program.name}</Text>
+                </View>
               ))}
             </View>
           )}
 
           {/* Bouton d'action */}
-          <View style={styles.modalActions}>
-            <Button
-              mode="contained"
-              onPress={navigateToDetailsFromModal}
-              style={[styles.modalButton, { backgroundColor: selectedProgram.color }]}
-              labelStyle={styles.modalButtonText}
-            >
-              Voir les détails
-            </Button>
-          </View>
+          <TouchableOpacity
+            onPress={navigateToDetailsFromModal}
+            style={[styles.modalButton, { backgroundColor: selectedProgram.color }]}
+          >
+            <Text style={styles.modalButtonText}>Commencer le programme</Text>
+          </TouchableOpacity>
 
         </Modal>
       </Portal>
@@ -516,18 +542,43 @@ const SkillTreeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>🏋️ Street Workout</Text>
-        <View style={styles.statsContainer}>
-          <Text style={styles.statsText}>
-            {userStats.totalCompleted}/{streetPrograms.length} compétences débloquées
-          </Text>
-          <Text style={styles.xpText}>
-            {userStats.totalXP} XP • Tier {userStats.currentTier}
-          </Text>
+      {/* Bouton retour en position absolute */}
+      <TouchableOpacity 
+        onPress={() => navigation.goBack()} 
+        style={styles.backButton}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
+      {/* Header avec gradient - style identique à SkillDetailScreen */}
+      <LinearGradient
+        colors={['#7B61FF', '#1A1A1A']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerIconContainer}>
+          <Text style={styles.headerIcon}>🏋️</Text>
         </View>
-      </View>
+        <Text style={styles.headerTitle}>Street Workout</Text>
+        <Text style={styles.headerDescription}>Arbre de progression</Text>
+        <View style={styles.badgesContainer}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeLabel}>Compétences</Text>
+            <Text style={styles.badgeValue}>
+              {userStats.totalCompleted}/{streetPrograms.length}
+            </Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeLabel}>XP Total</Text>
+            <Text style={styles.badgeValue}>{userStats.totalXP}</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeLabel}>Tier Max</Text>
+            <Text style={styles.badgeValue}>{userStats.currentTier}</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
       {/* Badge Admin */}
       {isAdmin && (
@@ -536,19 +587,21 @@ const SkillTreeScreen = ({ navigation }) => {
         </View>
       )}
 
-      {/* Arbre de compétences */}
+      {/* Arbre de compétences avec scroll horizontal amélioré */}
       <ScrollView
+        ref={horizontalScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.horizontalScroll}
+        decelerationRate="fast"
       >
         <ScrollView
-          showsVerticalScrollIndicator={true}
+          ref={verticalScrollRef}
+          showsVerticalScrollIndicator={false}
           scrollEnabled={true}
           contentContainerStyle={{ 
-            height: TREE_HEIGHT + PADDING * 2, 
-            paddingHorizontal: PADDING, 
-            paddingVertical: PADDING 
+            width: TREE_WIDTH,
+            height: TREE_HEIGHT
           }}
           style={styles.verticalScroll}
         >
@@ -628,29 +681,95 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
   header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  headerIcon: {
+    fontSize: 40,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.textPrimary,
+    color: '#FFFFFF',
+    marginBottom: 8,
     textAlign: 'center',
-    marginBottom: 8
   },
-  statsContainer: {
-    alignItems: 'center'
-  },
-  statsText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4
-  },
-  xpText: {
+  headerDescription: {
     fontSize: 14,
-    color: colors.textSecondary
+    color: '#AAAAAA',
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  badgeLabel: {
+    fontSize: 11,
+    color: '#AAAAAA',
+    marginBottom: 4,
+  },
+  badgeValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  backButtonText: {
+    fontSize: 28,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    paddingBottom: 5,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   horizontalScroll: {
     flex: 1,
@@ -721,110 +840,173 @@ const styles = StyleSheet.create({
   },
   // Styles pour la nouvelle modal Paper
   modalContainer: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#1A1A1A',
     margin: 20,
-    borderRadius: 16,
-    padding: 24,
-    maxHeight: screenHeight * 0.8,
-    borderWidth: 2,
+    borderRadius: 20,
+    padding: 0,
+    maxHeight: screenHeight * 0.85,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  modalCloseIcon: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 32,
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+  },
+  modalIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    backgroundColor: '#252525',
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   modalIcon: {
-    fontSize: 48,
-    textAlign: 'center',
-  },
-  modalCloseButton: {
-    margin: 0,
-    padding: 0,
-  },
-  modalTitleSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    fontSize: 40,
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: colors.text,
-    flex: 1,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   difficultyBadge: {
-    marginLeft: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  difficultyText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   modalDescription: {
-    fontSize: 16,
-    color: colors.textSecondary,
+    fontSize: 15,
+    color: '#AAAAAA',
     lineHeight: 22,
-    marginBottom: 16,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
-  modalDivider: {
-    marginVertical: 16,
+  xpRewardContainer: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  modalInfoSection: {
-    marginBottom: 8,
+  xpRewardLabel: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  xpRewardValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  modalSection: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   modalSectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: colors.text,
+    color: '#FFFFFF',
     marginBottom: 12,
   },
-  modalInfoGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalInfoItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  modalInfoLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  modalInfoValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  modalSection: {
-    marginBottom: 16,
-  },
-  modalPrereqItem: {
+  prerequisiteItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 12,
+    borderRadius: 8,
     marginBottom: 8,
   },
-  modalPrereqText: {
-    fontSize: 16,
-    color: colors.text,
+  prerequisiteLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  modalPrereqBadge: {
+  prerequisiteIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  prerequisiteText: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    flex: 1,
+  },
+  prerequisiteStatus: {
+    fontSize: 18,
+    color: '#FFFFFF',
     marginLeft: 12,
-    minWidth: 24,
   },
-  modalUnlockText: {
+  unlockItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  unlockIcon: {
     fontSize: 16,
-    color: colors.text,
-    marginBottom: 4,
+    color: '#4D9EFF',
+    marginRight: 12,
+    fontWeight: 'bold',
   },
-  modalActions: {
-    marginTop: 8,
+  unlockText: {
+    fontSize: 15,
+    color: '#FFFFFF',
   },
   modalButton: {
-    borderRadius: 8,
+    marginHorizontal: 24,
+    marginVertical: 24,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
   }
 });
 

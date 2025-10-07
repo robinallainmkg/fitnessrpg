@@ -6,24 +6,21 @@ import {
   BackHandler,
   ScrollView,
   Modal,
-  Platform
+  Platform,
+  TouchableOpacity,
+  Dimensions
 } from 'react-native';
-import {
-  Card,
-  TextInput,
-  Button,
-  ProgressBar,
-  Text,
-  Chip,
-  IconButton
-} from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useWorkout } from '../contexts/WorkoutContext';
 import Timer from '../components/Timer';
-import { colors } from '../theme/colors';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const WorkoutScreen = ({ route, navigation }) => {
   const { program, level } = route.params;
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   
   const {
     workoutData,
@@ -40,13 +37,15 @@ const WorkoutScreen = ({ route, navigation }) => {
     getProgressPercentage
   } = useWorkout();
 
-  const [inputValue, setInputValue] = useState('');
+  const [reps, setReps] = useState(0);
+
+  // Fonctions pour le compteur
+  const increment = () => setReps(prev => prev + 1);
+  const decrement = () => setReps(prev => Math.max(0, prev - 1));
 
   useEffect(() => {
-    // Démarrer la séance
     startWorkout(program, level);
 
-    // Gérer le bouton retour (seulement sur Android)
     let backHandler;
     if (Platform.OS === 'android') {
       backHandler = BackHandler.addEventListener(
@@ -63,33 +62,18 @@ const WorkoutScreen = ({ route, navigation }) => {
   }, []);
 
   const handleBackPress = () => {
-    Alert.alert(
-      'Quitter la séance ?',
-      'Votre progression sera perdue si vous quittez maintenant.',
-      [
-        { text: 'Continuer', style: 'cancel' },
-        { 
-          text: 'Quitter', 
-          style: 'destructive',
-          onPress: () => {
-            resetWorkout();
-            navigation.goBack();
-          }
-        }
-      ]
-    );
+    showAbandonAlert();
     return true;
   };
 
   const handleValidateSet = () => {
-    const value = parseInt(inputValue);
-    if (isNaN(value) || value < 0) {
-      Alert.alert('Erreur', 'Veuillez entrer une valeur valide');
+    if (reps === 0) {
+      Alert.alert('Attention', 'Veuillez entrer une valeur supérieure à 0');
       return;
     }
 
-    recordSet(value);
-    setInputValue('');
+    recordSet(reps);
+    setReps(0);
   };
 
   const handleSkipRest = () => {
@@ -100,44 +84,18 @@ const WorkoutScreen = ({ route, navigation }) => {
     // Le timer se charge automatiquement de passer à l'état suivant
   };
 
-  // État pour la modal d'abandon
-  const [showAbandonDialog, setShowAbandonDialog] = useState(false);
-
-  // Fonction pour afficher l'alerte d'abandon
   const showAbandonAlert = () => {
-    console.log('🚨 showAbandonAlert appelé');
     setShowAbandonDialog(true);
   };
 
-  // Fonction pour confirmer l'abandon
   const confirmAbandon = () => {
-    console.log('✅ Abandon confirmé');
     setShowAbandonDialog(false);
-    handleAbandon();
-  };
-
-  // Fonction pour annuler l'abandon
-  const cancelAbandon = () => {
-    console.log('❌ Abandon annulé');
-    setShowAbandonDialog(false);
-  };
-
-  // Fonction pour gérer l'abandon de la séance
-  const handleAbandon = () => {
-    console.log('🔥 handleAbandon appelé - Début de l\'abandon');
-    
-    // Reset du contexte workout
-    console.log('🔄 Appel de resetWorkout()');
     resetWorkout();
-    
-    // Navigation vers l'écran d'accueil
-    console.log('🏠 Navigation vers Home');
     navigation.navigate('Home');
-    
-    console.log('✅ handleAbandon terminé');
-    
-    // TODO: Optionnel - sauvegarder une "incomplete session" dans Firestore
-    // avec flag abandoned: true pour les statistiques futures
+  };
+
+  const cancelAbandon = () => {
+    setShowAbandonDialog(false);
   };
 
   // Redirection vers le résumé quand la séance est terminée
@@ -151,65 +109,57 @@ const WorkoutScreen = ({ route, navigation }) => {
     }
   }, [currentExerciseIndex, workoutData]);
 
-  // Configuration du bouton "Abandonner" dans le header
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <IconButton
-          icon="close-circle-outline"
-          iconColor="#F44336"
-          size={24}
-          style={{ opacity: 0.7 }}
-          onPress={showAbandonAlert}
-        />
-      ),
-    });
-  }, [navigation]);
-
   if (!workoutData) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Préparation de votre séance...</Text>
-      </View>
+      <LinearGradient
+        colors={['#0F172A', '#1E293B', '#0F172A']}
+        style={styles.container}
+      >
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Préparation de votre séance...</Text>
+        </View>
+      </LinearGradient>
     );
   }
 
   const currentExercise = getCurrentExercise();
   const progress = getProgressPercentage();
+  const totalExercises = workoutData.exercises.length;
+  const sessionProgress = (currentExerciseIndex / totalExercises) * 100;
 
-  // Vérification de sécurité : si pas d'exercice actuel, retourner à l'écran précédent
   if (!currentExercise) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Aucun exercice trouvé...</Text>
-        <Button 
-          mode="contained" 
-          onPress={() => navigation.goBack()}
-          style={{ marginTop: 16 }}
-        >
-          Retour
-        </Button>
-      </View>
+      <LinearGradient
+        colors={['#0F172A', '#1E293B', '#0F172A']}
+        style={styles.container}
+      >
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Aucun exercice trouvé...</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>Retour</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
     );
   }
 
+  // ÉCRAN DE REPOS
   if (isResting) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Temps de repos</Text>
-          <ProgressBar 
-            progress={progress / 100}
-            color={colors.primary}
-            style={styles.progressBar}
-          />
-          <Text style={styles.progressText}>
-            {Math.round(progress)}% complété
-          </Text>
-        </View>
+      <LinearGradient
+        colors={['#0F172A', '#1E293B', '#0F172A']}
+        style={styles.container}
+      >
+        {/* Bouton Annuler (icône seule) */}
+        <TouchableOpacity 
+          style={styles.abandonButton}
+          onPress={showAbandonAlert}
+        >
+          <Text style={styles.abandonIcon}>✕</Text>
+        </TouchableOpacity>
 
         <View style={styles.restContent}>
-          <Text style={styles.restTitle}>💤 Récupération</Text>
+          <Text style={styles.restTitle}>⚡ Récupération active</Text>
           <Text style={styles.restSubtitle}>
             Repos : {Math.floor(getCurrentExercise()?.rest / 60)}:{(getCurrentExercise()?.rest % 60).toString().padStart(2, '0')}
           </Text>
@@ -220,146 +170,204 @@ const WorkoutScreen = ({ route, navigation }) => {
             onSkip={handleSkipRest}
           />
 
-          <View style={styles.nextExerciseInfo}>
-            <Text style={styles.nextExerciseLabel}>Prochaine série :</Text>
+          <LinearGradient
+            colors={['rgba(77, 158, 255, 0.15)', 'rgba(123, 97, 255, 0.15)']}
+            style={styles.nextExerciseInfo}
+          >
+            <Text style={styles.nextExerciseLabel}>⏭️ Prochaine série</Text>
             <Text style={styles.nextExerciseName}>
-              {currentExercise?.name} - Série {getCurrentSetNumber()}
+              {currentExercise?.name}
             </Text>
-            <Text style={styles.nextExerciseTarget}>
-              Objectif : {currentExercise?.target} {currentExercise?.type === 'time' ? 'secondes' : 'répétitions'}
+            <Text style={styles.nextExerciseSubtitle}>
+              Série {getCurrentSetNumber()} / {currentExercise?.sets}
             </Text>
-          </View>
+            <View style={styles.nextExerciseTargetContainer}>
+              <Text style={styles.nextExerciseTargetLabel}>🎯 Objectif</Text>
+              <Text style={styles.nextExerciseTarget}>
+                {currentExercise?.target} {currentExercise?.type === 'time' ? 'sec' : 'reps'}
+              </Text>
+            </View>
+          </LinearGradient>
         </View>
-      </View>
+
+        {/* Modal Abandon */}
+        <Modal
+          visible={showAbandonDialog}
+          transparent
+          animationType="fade"
+          onRequestClose={cancelAbandon}
+        >
+          <View style={styles.abandonModalOverlay}>
+            <LinearGradient
+              colors={['#1E293B', '#0F172A']}
+              style={styles.abandonModalContent}
+            >
+              <Text style={styles.abandonModalTitle}>
+                ⚠️ Abandonner la séance ?
+              </Text>
+              <Text style={styles.abandonModalText}>
+                Tu vas perdre toute ta progression actuelle. Cette action est irréversible.
+              </Text>
+              <View style={styles.abandonModalActions}>
+                <TouchableOpacity onPress={cancelAbandon} style={styles.abandonCancelButton}>
+                  <Text style={styles.abandonCancelText}>Annuler</Text>
+                </TouchableOpacity>
+                <LinearGradient
+                  colors={['#F44336', '#D32F2F']}
+                  style={styles.abandonConfirmButton}
+                >
+                  <TouchableOpacity onPress={confirmAbandon} style={styles.abandonConfirmTouch}>
+                    <Text style={styles.abandonConfirmText}>Oui, abandonner</Text>
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+            </LinearGradient>
+          </View>
+        </Modal>
+      </LinearGradient>
     );
   }
 
+  // ÉCRAN PRINCIPAL D'ENTRAÎNEMENT
   return (
-    <View style={styles.container}>
-      {/* Header avec progression */}
-      <View style={styles.header}>
-        <Text style={styles.title}>{level.name}</Text>
-        <ProgressBar 
-          progress={progress / 100}
-          color={colors.primary}
-          style={styles.progressBar}
-        />
-        <Text style={styles.progressText}>
-          {Math.round(progress)}% complété
-        </Text>
-      </View>
-
-      {/* Exercice actuel */}
-      <Card style={styles.exerciseCard}>
-        <Card.Content style={styles.exerciseContent}>
-          <View style={styles.exerciseHeader}>
-            <View style={styles.exerciseTitleContainer}>
-              <Text style={styles.exerciseName}>
-                {currentExercise?.name}
-              </Text>
-              <Text style={styles.exerciseDescription}>
-                {currentExercise?.description}
-              </Text>
+    <LinearGradient
+      colors={['#0F172A', '#1E293B', '#0F172A']}
+      style={styles.container}
+    >
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Rectangle résumé de la séance */}
+        <View style={styles.sessionSummaryCard}>
+          {/* En-tête avec Programme et Bouton Annuler */}
+          <View style={styles.sessionHeader}>
+            <View style={styles.programInfo}>
+              <Text style={styles.programIcon}>{program.icon || '🏋️'}</Text>
+              <View style={styles.programTexts}>
+                <Text style={styles.programLabel}>{program.category || 'Programme'}</Text>
+                <Text style={styles.skillName}>{program.name}</Text>
+              </View>
             </View>
-            <Chip 
-              mode="flat"
-              style={styles.rpeChip}
-              textStyle={styles.rpeChipText}
+            
+            <TouchableOpacity 
+              style={styles.abandonButtonInline}
+              onPress={showAbandonAlert}
             >
-              RPE {currentExercise?.rpe || '7/10'}
-            </Chip>
+              <Text style={styles.abandonIcon}>✕</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Tips */}
-          {currentExercise?.tips && (
-            <Card style={styles.tipsCard}>
-              <Card.Content style={styles.tipsContent}>
-                <Text style={styles.tipsText}>
-                  {currentExercise.tips}
-                </Text>
-              </Card.Content>
-            </Card>
+          {/* Niveau */}
+          <Text style={styles.levelName}>{level.name}</Text>
+
+          {/* Exercice et Progress Bar */}
+          <View style={styles.progressSection}>
+            <Text style={styles.exerciseCounter}>
+              Exercice {currentExerciseIndex + 1}/{totalExercises}
+            </Text>
+            
+            <View style={styles.progressBar}>
+              <LinearGradient
+                colors={['#4D9EFF', '#7B61FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.progressFill, { width: `${progress}%` }]}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Section Exercice actuel */}
+        <View style={styles.exerciseCard}>
+          <Text style={styles.exerciseName}>{currentExercise.name}</Text>
+          
+          {/* Tip en évidence */}
+          {currentExercise.tips && (
+            <View style={styles.tipBox}>
+              <Text style={styles.tipLabel}>💡</Text>
+              <Text style={styles.tipText}>{currentExercise.tips.replace('💡 ', '')}</Text>
+            </View>
           )}
-
-          <View style={styles.seriesInfo}>
-            <Text style={styles.seriesLabel}>
-              Série {getCurrentSetNumber()}/{currentExercise?.sets}
-            </Text>
-            <Text style={styles.targetValue}>
-              Objectif : {currentExercise?.target} {currentExercise?.type === 'time' ? 'sec' : 'reps'}
-            </Text>
+          
+          {/* Description condensée */}
+          <Text style={styles.exerciseDescription} numberOfLines={2}>
+            {currentExercise.description}
+          </Text>
+          
+          <TouchableOpacity onPress={() => setShowDescriptionModal(true)}>
+            <Text style={styles.expandButton}>Voir description complète →</Text>
+          </TouchableOpacity>
+          
+          {/* Info série */}
+          <View style={styles.setInfo}>
+            <Text style={styles.setLabel}>Série {getCurrentSetNumber()}/{currentExercise.sets}</Text>
+            <View style={styles.setDetails}>
+              <View style={styles.setDetailItem}>
+                <Text style={styles.setDetailText}>Objectif : {currentExercise.target} {currentExercise.type === 'time' ? 'sec' : 'reps'}</Text>
+              </View>
+              <View style={styles.setDetailItem}>
+                <Text style={styles.setDetailText}>{currentExercise.rpe || '7/10'}</Text>
+              </View>
+              <View style={styles.setDetailItem}>
+                <Text style={styles.setDetailText}>Repos : {Math.floor(currentExercise.rest / 60)}:{(currentExercise.rest % 60).toString().padStart(2, '0')}</Text>
+              </View>
+            </View>
           </View>
-
-          {/* Bouton voir description */}
-          <Button
-            mode="outlined"
-            onPress={() => setShowDescriptionModal(true)}
-            style={styles.descriptionButton}
-            contentStyle={styles.descriptionButtonContent}
+          
+          {/* Instruction */}
+          <LinearGradient
+            colors={['rgba(77, 158, 255, 0.15)', 'rgba(123, 97, 255, 0.15)']}
+            style={styles.instruction}
           >
-            Voir la description complète
-          </Button>
-
-          {/* Instructions spécifiques selon le type */}
-          <View style={styles.instructionContainer}>
             <Text style={styles.instructionText}>
-              {currentExercise?.type === 'time' 
-                ? '⏱️ Maintenez la position pendant le temps indiqué'
-                : '🔥 Effectuez le maximum de répétitions possible'
+              {currentExercise.type === 'time' 
+                ? '⏱️ Maintiens la position le plus longtemps possible'
+                : '💎 Effectue le maximum de répétitions possible'
               }
             </Text>
-          </View>
-        </Card.Content>
-      </Card>
+          </LinearGradient>
+        </View>
 
-      {/* Saisie */}
-      <Card style={styles.inputCard}>
-        <Card.Content style={styles.inputContent}>
+        {/* Section Input utilisateur */}
+        <View style={styles.inputCard}>
           <Text style={styles.inputLabel}>
-            {currentExercise?.type === 'time' 
-              ? 'Combien de secondes avez-vous tenu ?'
-              : 'Combien de répétitions avez-vous réalisées ?'
+            {currentExercise.type === 'time' 
+              ? '⏱️ Combien de secondes as-tu tenu ?'
+              : '💪 Combien de répétitions as-tu réalisées ?'
             }
           </Text>
           
-          <TextInput
-            value={inputValue}
-            onChangeText={setInputValue}
-            mode="outlined"
-            keyboardType="numeric"
-            placeholder="0"
-            style={styles.input}
-            contentStyle={styles.inputText}
-            theme={{
-              colors: {
-                primary: colors.primary,
-                outline: colors.border,
-                background: colors.surface
-              }
-            }}
-          />
-
-          <Button
-            mode="contained"
-            onPress={handleValidateSet}
-            disabled={!inputValue}
-            style={[
-              styles.validateButton,
-              { backgroundColor: inputValue ? colors.primary : colors.textSecondary }
-            ]}
-            contentStyle={styles.validateButtonContent}
+          <View style={styles.counterContainer}>
+            <TouchableOpacity onPress={decrement} style={styles.counterButton}>
+              <Text style={styles.counterButtonText}>−</Text>
+            </TouchableOpacity>
+            
+            <Text style={styles.counterValue}>{reps}</Text>
+            
+            <TouchableOpacity onPress={increment} style={styles.counterButton}>
+              <Text style={styles.counterButtonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <LinearGradient
+            colors={reps > 0 ? ['#4D9EFF', '#7B61FF'] : ['#334155', '#1E293B']}
+            style={styles.validateButton}
           >
-            Valider la série
-          </Button>
-        </Card.Content>
-      </Card>
+            <TouchableOpacity 
+              onPress={handleValidateSet}
+              disabled={reps === 0}
+              style={styles.validateButtonTouch}
+            >
+              <Text style={[styles.validateText, { opacity: reps > 0 ? 1 : 0.5 }]}>✓ Valider la série</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
 
-      {/* Info exercices restants */}
-      <View style={styles.remainingInfo}>
-        <Text style={styles.remainingText}>
-          Exercice {currentExerciseIndex + 1}/{workoutData.exercises.length}
-        </Text>
-      </View>
+        {/* Espacement bottom */}
+        <View style={{ height: 40 }} />
+      </ScrollView>
 
       {/* Modal de description */}
       <Modal
@@ -369,63 +377,58 @@ const WorkoutScreen = ({ route, navigation }) => {
         onRequestClose={() => setShowDescriptionModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            {currentExercise && (
-              <>
-                <Text style={styles.modalTitle}>
-                  {currentExercise.name}
-                </Text>
-                <ScrollView style={styles.modalContent}>
-                  <Text style={styles.modalDescription}>
-                    {currentExercise.description}
-                  </Text>
-                  
-                  {currentExercise.tips && (
-                    <View style={styles.modalTipsContainer}>
-                      <Text style={styles.modalTipsTitle}>💡 Conseils</Text>
-                      <Text style={styles.modalTips}>
-                        {currentExercise.tips.replace('💡 ', '')}
-                      </Text>
-                    </View>
-                  )}
-                  
-                  <View style={styles.modalRpeContainer}>
-                    <Text style={styles.modalRpeTitle}>Intensité recommandée</Text>
-                    <Chip 
-                      mode="flat"
-                      style={styles.modalRpeChip}
-                      textStyle={styles.modalRpeText}
-                    >
-                      {currentExercise.rpe || 'RPE 7/10'}
-                    </Chip>
-                  </View>
-                </ScrollView>
-                <Button 
-                  mode="contained"
-                  onPress={() => setShowDescriptionModal(false)}
-                  style={styles.modalCloseButton}
+          <LinearGradient
+            colors={['#1E293B', '#0F172A']}
+            style={styles.modalContainer}
+          >
+            <Text style={styles.modalTitle}>
+              🔥 {currentExercise.name}
+            </Text>
+            <ScrollView style={styles.modalContent}>
+              <Text style={styles.modalDescription}>
+                {currentExercise.description}
+              </Text>
+              
+              {currentExercise.tips && (
+                <LinearGradient
+                  colors={['#FFD700', '#FFA500']}
+                  style={styles.modalTipsContainer}
                 >
-                  Fermer
-                </Button>
-              </>
-            )}
-          </View>
+                  <Text style={styles.modalTipsTitle}>💡 Conseils Pro</Text>
+                  <Text style={styles.modalTips}>
+                    {currentExercise.tips.replace('💡 ', '')}
+                  </Text>
+                </LinearGradient>
+              )}
+              
+              <View style={styles.modalRpeContainer}>
+                <Text style={styles.modalRpeTitle}>⚡ Intensité recommandée</Text>
+                <LinearGradient
+                  colors={['#FF6B6B', '#FF8E53']}
+                  style={styles.modalRpeChip}
+                >
+                  <Text style={styles.modalRpeText}>
+                    {currentExercise.rpe || 'RPE 7/10'}
+                  </Text>
+                </LinearGradient>
+              </View>
+            </ScrollView>
+            <LinearGradient
+              colors={['#4D9EFF', '#7B61FF']}
+              style={styles.modalCloseButtonGradient}
+            >
+              <TouchableOpacity 
+                onPress={() => setShowDescriptionModal(false)}
+                style={styles.modalCloseButtonTouch}
+              >
+                <Text style={styles.modalCloseButtonLabel}>Fermer</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </LinearGradient>
         </View>
       </Modal>
 
-      {/* Bouton abandonner en bas (alternative au header) */}
-      <View style={styles.abandonButtonContainer}>
-        <Button
-          mode="text"
-          textColor="#F44336"
-          onPress={showAbandonAlert}
-          style={styles.abandonButton}
-        >
-          Abandonner la séance
-        </Button>
-      </View>
-
-      {/* Modal d'abandon (compatible web) */}
+      {/* Modal Abandon */}
       <Modal
         visible={showAbandonDialog}
         transparent
@@ -433,7 +436,10 @@ const WorkoutScreen = ({ route, navigation }) => {
         onRequestClose={cancelAbandon}
       >
         <View style={styles.abandonModalOverlay}>
-          <View style={styles.abandonModalContent}>
+          <LinearGradient
+            colors={['#1E293B', '#0F172A']}
+            style={styles.abandonModalContent}
+          >
             <Text style={styles.abandonModalTitle}>
               ⚠️ Abandonner la séance ?
             </Text>
@@ -441,284 +447,427 @@ const WorkoutScreen = ({ route, navigation }) => {
               Tu vas perdre toute ta progression actuelle. Cette action est irréversible.
             </Text>
             <View style={styles.abandonModalActions}>
-              <Button 
-                mode="outlined" 
-                onPress={cancelAbandon}
-                style={styles.abandonModalButton}
+              <TouchableOpacity onPress={cancelAbandon} style={styles.abandonCancelButton}>
+                <Text style={styles.abandonCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <LinearGradient
+                colors={['#F44336', '#D32F2F']}
+                style={styles.abandonConfirmButton}
               >
-                Annuler
-              </Button>
-              <Button 
-                mode="contained"
-                onPress={confirmAbandon}
-                buttonColor="#F44336"
-                style={styles.abandonModalButton}
-              >
-                Oui, abandonner
-              </Button>
+                <TouchableOpacity onPress={confirmAbandon} style={styles.abandonConfirmTouch}>
+                  <Text style={styles.abandonConfirmText}>Oui, abandonner</Text>
+                </TouchableOpacity>
+              </LinearGradient>
             </View>
-          </View>
+          </LinearGradient>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: 16,
   },
+  
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.border,
-    marginBottom: 8,
-  },
-  progressText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  exerciseCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 20,
-    elevation: 4,
-  },
-  exerciseContent: {
     padding: 20,
   },
-  exerciseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  loadingText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 20,
   },
-  exerciseName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
+  backButton: {
+    backgroundColor: '#4D9EFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  // ScrollView
+  scrollView: {
     flex: 1,
   },
-  setChip: {
-    backgroundColor: colors.primary + '20',
+  scrollContent: {
+    paddingBottom: 20,
   },
-  setChipText: {
-    color: colors.primary,
-    fontWeight: 'bold',
+  
+  // Rectangle résumé de la séance
+  sessionSummaryCard: {
+    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    borderRadius: 20,
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.3)',
   },
-  exerciseDescription: {
-    fontSize: 16,
-    color: colors.textSecondary,
+  sessionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 16,
-    lineHeight: 22,
   },
-  targetContainer: {
+  programInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: colors.card,
-    borderRadius: 8,
+    flex: 1,
   },
-  targetLabel: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginRight: 8,
+  programIcon: {
+    fontSize: 28,
+    marginRight: 12,
   },
-  targetValue: {
+  programTexts: {
+    flex: 1,
+  },
+  programLabel: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  skillName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.warning,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  instructionContainer: {
+  abandonButtonInline: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  abandonIcon: {
+    fontSize: 18,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  levelName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 16,
+  },
+  progressSection: {
+    gap: 8,
+  },
+  exerciseCounter: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#CBD5E1',
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: '#1E293B',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  
+  // Exercise Card
+  exerciseCard: {
+    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(123, 97, 255, 0.2)',
+  },
+  exerciseName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    lineHeight: 28,
+  },
+  
+  // Tip Box
+  tipBox: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+    borderLeftWidth: 3,
+    borderLeftColor: '#FFC107',
     padding: 12,
-    backgroundColor: colors.primary + '10',
     borderRadius: 8,
+    marginVertical: 12,
+    gap: 8,
+  },
+  tipLabel: {
+    fontSize: 16,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#FFC107',
+    fontWeight: '500',
+    lineHeight: 20,
+  },
+  
+  exerciseDescription: {
+    fontSize: 14,
+    color: '#CBD5E1',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  expandButton: {
+    fontSize: 14,
+    color: '#4D9EFF',
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  
+  // Set Info
+  setInfo: {
+    marginBottom: 16,
+  },
+  setLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  setDetails: {
+    flexDirection: 'row',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  setDetailItem: {
+    backgroundColor: 'rgba(77, 158, 255, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.2)',
+  },
+  setDetailText: {
+    fontSize: 13,
+    color: '#4D9EFF',
+    fontWeight: '500',
+  },
+  
+  // Instruction
+  instruction: {
+    padding: 14,
+    borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
+    borderLeftColor: '#4D9EFF',
   },
   instructionText: {
     fontSize: 14,
-    color: colors.text,
-    fontStyle: 'italic',
+    color: '#FFFFFF',
+    fontWeight: '500',
+    lineHeight: 20,
   },
+  
+  // Input Card
   inputCard: {
-    backgroundColor: colors.surface,
-    marginBottom: 20,
-    elevation: 4,
-  },
-  inputContent: {
-    padding: 20,
-    alignItems: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.5)',
+    borderRadius: 16,
+    padding: 24,
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.2)',
   },
   inputLabel: {
     fontSize: 18,
-    color: colors.text,
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
     fontWeight: '600',
   },
-  input: {
-    width: 150,
-    marginBottom: 20,
-    backgroundColor: colors.surface,
+  
+  // Counter
+  counterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+    marginBottom: 24,
   },
-  inputText: {
-    fontSize: 24,
+  counterButton: {
+    width: 56,
+    height: 56,
+    backgroundColor: 'rgba(77, 158, 255, 0.2)',
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#4D9EFF',
+  },
+  counterButtonText: {
+    fontSize: 32,
+    color: '#4D9EFF',
+    fontWeight: '600',
+  },
+  counterValue: {
+    fontSize: 56,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    minWidth: 120,
     textAlign: 'center',
-    fontWeight: 'bold',
   },
+  
+  // Validate Button
   validateButton: {
-    minWidth: 200,
-    borderRadius: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  validateButtonContent: {
-    paddingVertical: 12,
-  },
-  remainingInfo: {
+  validateButtonTouch: {
+    paddingVertical: 16,
     alignItems: 'center',
   },
-  remainingText: {
-    fontSize: 14,
-    color: colors.textSecondary,
+  validateText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
+  
+  // Rest Content
   restContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   restTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#FFFFFF',
     marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   restSubtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.8)',
     marginBottom: 40,
     textAlign: 'center',
+    fontWeight: '600',
   },
   nextExerciseInfo: {
     marginTop: 40,
-    padding: 20,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
+    padding: 24,
+    borderRadius: 16,
     alignItems: 'center',
-    minWidth: 250,
+    minWidth: 280,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.3)',
   },
   nextExerciseLabel: {
     fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 12,
+    fontWeight: '600',
   },
   nextExerciseName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  nextExerciseTarget: {
-    fontSize: 14,
-    color: colors.warning,
-    textAlign: 'center',
-  },
-  // Nouveaux styles
-  exerciseTitleContainer: {
-    flex: 1,
-    marginRight: 12,
-  },
-  rpeChip: {
-    backgroundColor: colors.primary,
-  },
-  rpeChipText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  tipsCard: {
-    backgroundColor: colors.warning,
-    marginVertical: 12,
-  },
-  tipsContent: {
-    padding: 12,
-  },
-  tipsText: {
-    fontSize: 14,
-    color: colors.background,
-    fontWeight: '500',
-  },
-  seriesInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 12,
-  },
-  seriesLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  descriptionButton: {
-    marginVertical: 8,
-    borderColor: colors.primary,
-  },
-  descriptionButtonContent: {
-    height: 40,
-  },
-  // Styles du modal
-  descriptionModal: {
-    backgroundColor: colors.surface,
-  },
-  modalTitle: {
-    color: colors.text,
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  nextExerciseSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 16,
+  },
+  nextExerciseTargetContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  nextExerciseTargetLabel: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  nextExerciseTarget: {
+    fontSize: 16,
+    color: '#FFD700',
+    fontWeight: 'bold',
+  },
+  
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    borderRadius: 20,
+    padding: 24,
+    maxHeight: '80%',
+    width: '100%',
+    maxWidth: 420,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.3)',
+  },
+  modalTitle: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   modalContent: {
     maxHeight: 400,
+    marginBottom: 20,
   },
   modalDescription: {
     fontSize: 16,
-    color: colors.text,
+    color: 'rgba(255, 255, 255, 0.9)',
     marginBottom: 16,
     lineHeight: 24,
   },
   modalTipsContainer: {
-    backgroundColor: colors.warning,
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 16,
   },
   modalTipsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: colors.background,
+    color: '#0F172A',
     marginBottom: 8,
   },
   modalTips: {
     fontSize: 14,
-    color: colors.background,
+    color: '#0F172A',
     lineHeight: 20,
+    fontWeight: '500',
   },
   modalRpeContainer: {
     alignItems: 'center',
@@ -726,86 +875,94 @@ const styles = StyleSheet.create({
   },
   modalRpeTitle: {
     fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginBottom: 12,
+    fontWeight: '600',
   },
   modalRpeChip: {
-    backgroundColor: colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   modalRpeText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontWeight: 'bold',
+    fontSize: 14,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContainer: {
-    backgroundColor: colors.surface,
+  modalCloseButtonGradient: {
     borderRadius: 12,
-    padding: 20,
-    maxHeight: '80%',
-    width: '100%',
-    maxWidth: 400,
+    overflow: 'hidden',
   },
-  modalCloseButton: {
-    marginTop: 16,
-  },
-  // Styles pour le bouton "Abandonner"
-  abandonButtonContainer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+  modalCloseButtonTouch: {
+    paddingVertical: 14,
     alignItems: 'center',
   },
-  abandonButton: {
-    opacity: 0.7,
+  modalCloseButtonLabel: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
-  // Styles pour la modal d'abandon
+  
+  // Abandon Modal
   abandonModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   abandonModalContent: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 24,
-    minWidth: 300,
+    borderRadius: 20,
+    padding: 28,
+    minWidth: 320,
     maxWidth: '90%',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 67, 54, 0.3)',
   },
   abandonModalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
   },
   abandonModalText: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 24,
+    marginBottom: 28,
   },
   abandonModalActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 12,
   },
-  abandonModalButton: {
+  abandonCancelButton: {
     flex: 1,
+    borderWidth: 1.5,
+    borderColor: '#4D9EFF',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  abandonCancelText: {
+    color: '#4D9EFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  abandonConfirmButton: {
+    flex: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  abandonConfirmTouch: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  abandonConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 

@@ -1,219 +1,429 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-console.log('🔥 AUTHCONTEXT: Mode Développement avec Persistence AsyncStorage');
+export const AuthContext = createContext();
 
-const AuthContext = createContext();
+// 🚀 Optimisations pour APK Production
+const IS_DEV = __DEV__;
+const log = (...args) => IS_DEV && console.log(...args);
+const logError = (...args) => console.error(...args);
 
-// Clés de stockage
-const STORAGE_KEY = '@user_session';
-const USER_DATA_KEY = '@user_data';
+// Batch AsyncStorage operations
+const batchAsyncStorage = {
+  async setMultiple(items) {
+    return AsyncStorage.multiSet(items);
+  },
+  async removeMultiple(keys) {
+    return AsyncStorage.multiRemove(keys);
+  }
+};
 
-// Simulateur Firebase avec vraie persistence
-const DevAuthService = {
-  // Sauvegarder la session
-  saveSession: async (user) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-      console.log('💾 Session sauvegardée dans AsyncStorage');
-    } catch (error) {
-      console.error('❌ Erreur sauvegarde session:', error);
+// Créer document Firestore de manière non-bloquante
+const createUserDocumentAsync = async (userId, email) => {
+  try {
+    await firestore()
+      .collection('users')
+      .doc(userId)
+      .set({
+        email,
+        totalXP: 0,
+        level: 1,
+        completedPrograms: [],
+        userProgress: {},
+        streak: 0,
+        lastWorkoutDate: null,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      });
+    log('✅ Document utilisateur créé');
+  } catch (error) {
+    logError('⚠️ Erreur création document:', error.code);
+    // Le document sera créé au prochain login si échec
+  }
+};
+
+// Vérifier et créer le document si absent
+const ensureUserDocument = async (userId, email) => {
+  try {
+    const doc = await firestore()
+      .collection('users')
+      .doc(userId)
+      .get();
+    
+    if (!doc.exists) {
+      log('📝 Document utilisateur absent, création...');
+      await createUserDocumentAsync(userId, email);
     }
-  },
-
-  // Charger la session
-  loadSession: async () => {
-    try {
-      const savedUser = await AsyncStorage.getItem(STORAGE_KEY);
-      if (savedUser) {
-        const user = JSON.parse(savedUser);
-        console.log('✅ Session restaurée:', user.email);
-        return user;
-      }
-      return null;
-    } catch (error) {
-      console.error('❌ Erreur chargement session:', error);
-      return null;
-    }
-  },
-
-  // Supprimer la session
-  clearSession: async () => {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
-      await AsyncStorage.removeItem(USER_DATA_KEY);
-      console.log('🗑️ Session supprimée');
-    } catch (error) {
-      console.error('❌ Erreur suppression session:', error);
-    }
-  },
-
-  // Sauvegarder données utilisateur
-  saveUserData: async (userData) => {
-    try {
-      await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
-      console.log('💾 Données utilisateur sauvegardées');
-    } catch (error) {
-      console.error('❌ Erreur sauvegarde données:', error);
-    }
-  },
-
-  // Login simulé
-  login: async (email, password) => {
-    console.log('🔄 Login développement:', email);
-    
-    // Simuler délai réseau
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const user = {
-      uid: 'dev-user-' + Date.now(),
-      email: email,
-      emailVerified: true,
-      createdAt: new Date().toISOString()
-    };
-
-    await DevAuthService.saveSession(user);
-    
-    // Créer données utilisateur par défaut
-    const userData = {
-      email: user.email,
-      totalXP: 0,
-      level: 1,
-      completedPrograms: [],
-      userProgress: {},
-      streak: 0,
-      lastWorkoutDate: null,
-      createdAt: new Date().toISOString(),
-    };
-    
-    await DevAuthService.saveUserData(userData);
-    
-    return user;
-  },
-
-  // Signup simulé
-  signup: async (email, password) => {
-    console.log('🔄 Signup développement:', email);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return await DevAuthService.login(email, password);
+  } catch (error) {
+    logError('⚠️ Erreur vérification document:', error.code);
   }
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestData, setGuestData] = useState(null);
+  const [initializing, setInitializing] = useState(true);
 
-  // Charger la session au démarrage
   useEffect(() => {
-    const initializeAuth = async () => {
-      console.log('🔄 Initialisation Auth avec persistence...');
+    log('🔄 Initialisation Firebase Auth');
+    
+    // Auth State Listener
+    const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        log('✅ Utilisateur connecté:', firebaseUser.email);
+        setUser(firebaseUser);
+        setIsGuest(false);
+        
+        // Vérifier que le document Firestore existe
+        ensureUserDocument(firebaseUser.uid, firebaseUser.email);
+      } else {
+        log('ℹ️ Aucun utilisateur connecté');
+        setUser(null);
+      }
       
-      try {
-        const savedUser = await DevAuthService.loadSession();
-        if (savedUser) {
-          setUser(savedUser);
-          console.log('✅ Utilisateur connecté automatiquement:', savedUser.email);
-        } else {
-          console.log('ℹ️ Aucune session sauvegardée');
-        }
-      } catch (error) {
-        console.error('❌ Erreur initialisation:', error);
-      } finally {
+      if (initializing) {
+        setInitializing(false);
         setLoading(false);
       }
-    };
+    });
 
-    initializeAuth();
+    // Charger le mode guest au démarrage
+    const loadGuestMode = async () => {
+      try {
+        const [[, guestMode], [, savedGuestData]] = await AsyncStorage.multiGet([
+          '@fitnessrpg:guest_mode',
+          '@fitnessrpg:guest_data'
+        ]);
+        
+        if (guestMode === 'true') {
+          log('👤 Mode invité actif');
+          setIsGuest(true);
+          if (savedGuestData) {
+            setGuestData(JSON.parse(savedGuestData));
+          }
+        }
+      } catch (error) {
+        logError('❌ Erreur chargement guest mode:', error);
+      }
+    };
+    
+    loadGuestMode();
+
+    return unsubscribe;
   }, []);
 
   const signup = async (email, password) => {
     try {
-      setLoading(true);
-      console.log('🔄 Inscription:', email);
+      log('📝 Inscription:', email);
       
-      const newUser = await DevAuthService.signup(email, password);
-      setUser(newUser);
+      // Validation
+      if (!email || !password) {
+        return { 
+          success: false, 
+          error: 'Email et mot de passe requis',
+          code: 'validation/missing-fields'
+        };
+      }
+      
+      // Étape 1: D'abord nettoyer le mode invité
+      await batchAsyncStorage.removeMultiple([
+        '@fitnessrpg:guest_mode',
+        '@fitnessrpg:guest_data'
+      ]);
+      
+      // Étape 2: Mettre à jour l'état local IMMÉDIATEMENT
+      setIsGuest(false);
+      setGuestData(null);
+      
+      // Étape 3: Signup Firebase en parallèle avec AsyncStorage
+      const [userCredential] = await Promise.all([
+        auth().createUserWithEmailAndPassword(email, password),
+        batchAsyncStorage.setMultiple([
+          ['@fitnessrpg:onboarding_completed', 'true']
+        ])
+      ]);
+      
+      const newUser = userCredential.user;
+      
+      // Créer le document Firestore (non-bloquant)
+      createUserDocumentAsync(newUser.uid, newUser.email);
+      
+      log('✅ Inscription réussie');
       
       return { success: true, user: newUser };
+      
     } catch (error) {
-      console.error('❌ Erreur inscription:', error);
-      return { success: false, error: 'Erreur lors de l\'inscription' };
-    } finally {
-      setLoading(false);
+      logError('❌ Erreur inscription:', error);
+      
+      const errorMap = {
+        'auth/email-already-in-use': 'Cet email est déjà utilisé',
+        'auth/invalid-email': 'Email invalide',
+        'auth/weak-password': 'Mot de passe trop faible (min. 6 caractères)',
+        'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion.',
+        'auth/too-many-requests': 'Trop de tentatives. Réessayez plus tard.',
+      };
+      
+      return { 
+        success: false, 
+        error: errorMap[error.code] || 'Erreur lors de l\'inscription',
+        code: error.code 
+      };
     }
   };
 
   const login = async (email, password) => {
     try {
-      setLoading(true);
-      console.log('🔄 Connexion:', email);
+      log('🔄 Connexion:', email);
       
-      const loggedUser = await DevAuthService.login(email, password);
-      setUser(loggedUser);
+      // Validation
+      if (!email || !password) {
+        return { 
+          success: false, 
+          error: 'Email et mot de passe requis',
+          code: 'validation/missing-fields'
+        };
+      }
+      
+      // Étape 1: D'abord nettoyer le mode invité
+      await batchAsyncStorage.removeMultiple([
+        '@fitnessrpg:guest_mode',
+        '@fitnessrpg:guest_data'
+      ]);
+      
+      // Étape 2: Mettre à jour l'état local IMMÉDIATEMENT
+      setIsGuest(false);
+      setGuestData(null);
+      
+      // Étape 3: Login Firebase en parallèle avec AsyncStorage
+      const [userCredential] = await Promise.all([
+        auth().signInWithEmailAndPassword(email, password),
+        batchAsyncStorage.setMultiple([
+          ['@fitnessrpg:onboarding_completed', 'true']
+        ])
+      ]);
+      
+      const loggedUser = userCredential.user;
+      
+      // Vérifier le document Firestore (non-bloquant)
+      ensureUserDocument(loggedUser.uid, loggedUser.email);
+      
+      log('✅ Connexion réussie');
       
       return { success: true, user: loggedUser };
+      
     } catch (error) {
-      console.error('❌ Erreur connexion:', error);
-      return { success: false, error: 'Erreur lors de la connexion' };
-    } finally {
-      setLoading(false);
+      logError('❌ Erreur connexion:', error);
+      
+      const errorMap = {
+        'auth/user-not-found': 'Aucun compte avec cet email',
+        'auth/wrong-password': 'Mot de passe incorrect',
+        'auth/invalid-email': 'Email invalide',
+        'auth/user-disabled': 'Ce compte a été désactivé',
+        'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion.',
+        'auth/too-many-requests': 'Trop de tentatives. Réessayez plus tard.',
+        'auth/invalid-credential': 'Identifiants invalides',
+      };
+      
+      return { 
+        success: false, 
+        error: errorMap[error.code] || 'Erreur lors de la connexion',
+        code: error.code 
+      };
     }
   };
 
   const logout = async () => {
     try {
-      console.log('🔄 Déconnexion');
-      await DevAuthService.clearSession();
+      setLoading(true);
+      log('🔄 Déconnexion...');
+      
+      const promises = [
+        batchAsyncStorage.removeMultiple([
+          '@fitnessrpg:onboarding_completed',
+          '@fitnessrpg:guest_mode',
+          '@fitnessrpg:guest_data',
+          '@fitnessrpg:guest_programs',
+          '@fitnessrpg:tree_tooltip_shown'
+        ])
+      ];
+      
+      if (user) {
+        promises.push(auth().signOut());
+      }
+      
+      await Promise.all(promises);
+      
+      // Reset états
       setUser(null);
+      setIsGuest(false);
+      setGuestData(null);
+      
+      log('✅ Déconnexion réussie');
+      
       return { success: true };
     } catch (error) {
-      console.error('❌ Erreur déconnexion:', error);
-      return { success: false, error: 'Erreur lors de la déconnexion' };
+      logError('❌ Erreur déconnexion:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
     }
   };
 
   const resetUserData = async () => {
     try {
-      if (!user) {
-        return { success: false, error: 'Aucun utilisateur connecté' };
+      log('🔄 Réinitialisation données utilisateur...');
+      
+      const promises = [
+        batchAsyncStorage.removeMultiple([
+          '@fitnessrpg:tree_tooltip_shown',
+          '@fitnessrpg:onboarding_completed',
+          '@fitnessrpg:guest_mode',
+          '@fitnessrpg:guest_data',
+          '@fitnessrpg:guest_programs'
+        ])
+      ];
+      
+      // Supprimer le document Firestore si utilisateur Firebase
+      if (user && !isGuest) {
+        promises.push(
+          firestore()
+            .collection('users')
+            .doc(user.uid)
+            .delete()
+        );
       }
       
-      console.log('🔄 RESET: Réinitialisation complète du compte utilisateur');
+      await Promise.all(promises);
       
-      // Supprimer complètement le document utilisateur dans Firestore
-      const { deleteDoc, doc } = await import('firebase/firestore');
-      const { db } = await import('../services/firebase');
-      
-      const userRef = doc(db, 'users', user.uid);
-      await deleteDoc(userRef);
-      
-      // Supprimer aussi le flag tooltip pour permettre l'onboarding
-      const AsyncStorage = await import('@react-native-async-storage/async-storage');
-      await AsyncStorage.default.removeItem('@fitnessrpg:tree_tooltip_shown');
-      
-      console.log('✅ RESET: Document utilisateur supprimé de Firestore');
-      console.log('✅ RESET: Flag tooltip supprimé');
+      log('✅ Données réinitialisées');
       
       return { success: true };
     } catch (error) {
-      console.error('❌ Erreur reset:', error);
-      return { success: false, error: 'Erreur lors de la réinitialisation: ' + error.message };
+      logError('❌ Erreur reset:', error);
+      return { success: false, error: error.message };
     }
   };
 
-  const value = {
-    user,
-    loading,
-    signup,
-    login,
-    logout,
-    resetUserData
+  const setGuestMode = async () => {
+    try {
+      log('👤 Activation mode invité');
+      setIsGuest(true);
+      await AsyncStorage.setItem('@fitnessrpg:guest_mode', 'true');
+      return { success: true };
+    } catch (error) {
+      logError('❌ Erreur mode invité:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const saveGuestData = async (data) => {
+    try {
+      setGuestData(data);
+      await AsyncStorage.setItem('@fitnessrpg:guest_data', JSON.stringify(data));
+      return { success: true };
+    } catch (error) {
+      logError('❌ Erreur sauvegarde guest:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const convertGuestToUser = async (email, password) => {
+    try {
+      log('🔄 Conversion invité → utilisateur:', email);
+      
+      // Validation
+      if (!email || !password) {
+        return { 
+          success: false, 
+          error: 'Email et mot de passe requis',
+          code: 'validation/missing-fields'
+        };
+      }
+      
+      // Créer le compte en parallèle avec AsyncStorage
+      const [userCredential] = await Promise.all([
+        auth().createUserWithEmailAndPassword(email, password),
+        AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true')
+      ]);
+      
+      const newUser = userCredential.user;
+      
+      // Migrer les données du guest (non-bloquant)
+      const guestDataToMigrate = guestData || {};
+      firestore()
+        .collection('users')
+        .doc(newUser.uid)
+        .set({
+          email: newUser.email,
+          totalXP: 0,
+          level: 1,
+          completedPrograms: [],
+          userProgress: {},
+          streak: 0,
+          lastWorkoutDate: null,
+          createdAt: firestore.FieldValue.serverTimestamp(),
+          ...guestDataToMigrate,
+        })
+        .catch((error) => {
+          logError('⚠️ Migration sera complétée plus tard:', error.code);
+        });
+      
+      // Nettoyer le guest mode
+      await batchAsyncStorage.removeMultiple([
+        '@fitnessrpg:guest_mode',
+        '@fitnessrpg:guest_data'
+      ]);
+      
+      setIsGuest(false);
+      setGuestData(null);
+      
+      log('✅ Conversion réussie');
+      
+      return { success: true, user: newUser };
+      
+    } catch (error) {
+      logError('❌ Erreur conversion:', error);
+      
+      const errorMap = {
+        'auth/email-already-in-use': 'Cet email est déjà utilisé',
+        'auth/invalid-email': 'Email invalide',
+        'auth/weak-password': 'Mot de passe trop faible (min. 6 caractères)',
+        'auth/network-request-failed': 'Erreur réseau. Vérifiez votre connexion.',
+      };
+      
+      return { 
+        success: false, 
+        error: errorMap[error.code] || 'Erreur lors de la création du compte',
+        code: error.code 
+      };
+    }
+  };
+
+  // Méthode pour réessayer la création du document si échec initial
+  const retryCreateUserDocument = async () => {
+    if (user && !isGuest) {
+      await ensureUserDocument(user.uid, user.email);
+    }
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading: loading || initializing, 
+      isGuest,
+      guestData,
+      signup, 
+      login, 
+      logout, 
+      resetUserData,
+      setGuestMode,
+      saveGuestData,
+      convertGuestToUser,
+      retryCreateUserDocument
+    }}>
       {children}
     </AuthContext.Provider>
   );

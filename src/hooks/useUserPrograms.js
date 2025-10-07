@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import { getWithRetry } from '../utils/firestoreRetry';
 import programs from '../data/programs.json';
 
 /**
- * Hook pour gérer les données des programmes utilisateur
+ * Hook pour gérer les données des  useEffect(() => {
+    const user = auth().currentUser;
+    if (user) {
+      fetchUserCategories();
+    } else {
+      setLoading(false);
+      setCategories([]);
+    }
+  }, []); // On garde [] car fetchUserCategories vérifie déjà auth().currentUseres utilisateur
  * Combine les programmes disponibles avec la progression utilisateur
  * 
  * @returns {Object} {
@@ -24,15 +33,16 @@ export const useUserPrograms = () => {
       setLoading(true);
       setError(null);
 
-      const user = auth.currentUser;
+      const user = auth().currentUser;
       if (!user) {
         setUserPrograms([]);
         setLoading(false);
         return;
       }
 
-      // Récupérer les données utilisateur
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      // Récupérer les données utilisateur avec retry
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userDoc = await getWithRetry(userRef);
       const userData = userDoc.exists() ? userDoc.data() : {};
       const userProgramsData = userData.programs || {};
 
@@ -104,8 +114,21 @@ export const useUserPrograms = () => {
   };
 
   useEffect(() => {
-    fetchUserPrograms();
-  }, []);
+    const startTime = Date.now();
+    const user = auth().currentUser;
+    console.log(`[useUserPrograms] useEffect triggered - User: ${user ? user.email : 'null'}`);
+    
+    if (user) {
+      console.log(`[useUserPrograms] Starting fetchUserPrograms...`);
+      fetchUserPrograms().then(() => {
+        console.log(`[useUserPrograms] ✅ Completed in ${Date.now() - startTime}ms`);
+      });
+    } else {
+      setLoading(false);
+      setUserPrograms([]);
+      console.log(`[useUserPrograms] ✅ No user - skipped (${Date.now() - startTime}ms)`);
+    }
+  }, []); // On garde [] car fetchUserPrograms vérifie déjà auth().currentUser
 
   return {
     userPrograms,
@@ -202,6 +225,119 @@ export const useUserProgramsByCategory = () => {
 };
 
 /**
+ * Hook pour obtenir les catégories complètes avec progression agrégée
+ * Retourne les catégories (ex: "Street Workout") avec leur progression totale
+ * 
+ * @returns {Object} { categories: Array, loading: boolean, error: string|null }
+ */
+export const useUserCategories = () => {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchUserCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const user = auth().currentUser;
+      if (!user) {
+        setCategories([]);
+        setLoading(false);
+        return;
+      }
+
+      // Récupérer les données utilisateur avec retry
+      const userRef = firestore().collection('users').doc(user.uid);
+      const userDoc = await getWithRetry(userRef);
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      const userProgramsData = userData.programs || {};
+
+      // Créer la liste des catégories avec progression
+      const categoriesWithProgress = programs.categories.map(category => {
+        // Calculer la progression agrégée pour tous les skills de cette catégorie
+        let totalXP = 0;
+        let totalCompletedSkills = 0;
+        let totalSkills = category.programs?.length || 0;
+        let maxLevel = 0;
+
+        category.programs.forEach(program => {
+          const userProgress = userProgramsData[program.id];
+          if (userProgress) {
+            totalXP += userProgress.xp || 0;
+            totalCompletedSkills += userProgress.completedSkills || 0;
+            maxLevel = Math.max(maxLevel, userProgress.level || 0);
+          }
+        });
+
+        const progressPercentage = totalSkills > 0 
+          ? Math.round((totalCompletedSkills / totalSkills) * 100) 
+          : 0;
+
+        return {
+          program: category, // La catégorie complète avec tous ses programmes
+          progress: {
+            xp: totalXP,
+            level: maxLevel,
+            completedSkills: totalCompletedSkills,
+            totalSkills
+          },
+          progressPercentage,
+          isStarted: totalCompletedSkills > 0,
+          isCompleted: totalCompletedSkills === totalSkills && totalSkills > 0,
+        };
+      });
+
+      // Trier par progression décroissante
+      categoriesWithProgress.sort((a, b) => {
+        // Catégories commencées en premier
+        if (a.isStarted && !b.isStarted) return -1;
+        if (!a.isStarted && b.isStarted) return 1;
+        
+        // Puis par XP décroissant
+        if (a.progress.xp !== b.progress.xp) {
+          return b.progress.xp - a.progress.xp;
+        }
+        
+        // Puis par nom alphabétique
+        return a.program.name.localeCompare(b.program.name);
+      });
+
+      setCategories(categoriesWithProgress);
+    } catch (err) {
+      console.error('Erreur lors du chargement des catégories utilisateur:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const startTime = Date.now();
+    const user = auth().currentUser;
+    console.log(`[useUserCategories] useEffect triggered - User: ${user ? user.email : 'null'}`);
+    
+    if (user) {
+      console.log(`[useUserCategories] Starting fetchUserCategories...`);
+      fetchUserCategories().then(() => {
+        console.log(`[useUserCategories] ✅ Completed in ${Date.now() - startTime}ms`);
+      });
+    } else {
+      setLoading(false);
+      setCategories([]);
+      console.log(`[useUserCategories] ✅ No user - skipped (${Date.now() - startTime}ms)`);
+    }
+  }, []);
+
+  return {
+    categories,
+    loading,
+    error,
+    refetch: fetchUserCategories
+  };
+};
+
+/**
  * Hook pour les programmes recommandés (non commencés avec potentiel)
  * 
  * @param {number} limit - Nombre de recommandations (défaut: 3)
@@ -216,6 +352,26 @@ export const useRecommendedPrograms = (limit = 3) => {
 
   return {
     recommendedPrograms: recommended,
+    loading,
+    error
+  };
+};
+
+/**
+ * Hook pour les catégories recommandées (non commencées)
+ * 
+ * @param {number} limit - Nombre de catégories recommandées à retourner
+ * @returns {Object} { recommendedCategories, loading, error }
+ */
+export const useRecommendedCategories = (limit = 3) => {
+  const { categories, loading, error } = useUserCategories();
+
+  const recommended = categories
+    .filter(cat => !cat.isStarted) // Non commencées
+    .slice(0, limit);
+
+  return {
+    recommendedCategories: recommended,
     loading,
     error
   };

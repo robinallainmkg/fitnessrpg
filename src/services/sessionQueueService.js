@@ -1,5 +1,5 @@
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from './firebase';
+import firestore from '@react-native-firebase/firestore';
+import { getWithRetry } from '../utils/firestoreRetry';
 import programs from '../data/programs.json';
 
 /**
@@ -169,8 +169,8 @@ export const generateAvailableSessions = (programId, userProgress = {}, maxSessi
  */
 export const getUserSessionQueue = async (userId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await getWithRetry(userRef);
     
     if (!userDoc.exists()) {
       console.warn('Utilisateur non trouvé');
@@ -225,8 +225,8 @@ export const getUserSessionQueue = async (userId) => {
  */
 export const getCompletedSessions = async (userId, limit = 3) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await getWithRetry(userRef);
     
     if (!userDoc.exists()) {
       return [];
@@ -254,8 +254,8 @@ export const getCompletedSessions = async (userId, limit = 3) => {
  */
 export const activateProgram = async (userId, programId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    const userDocRef = firestore().collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
     
     if (!userDoc.exists()) {
       throw new Error('Utilisateur non trouvé');
@@ -276,8 +276,8 @@ export const activateProgram = async (userId, programId) => {
     }
 
     // Ajouter le programme aux programmes actifs
-    await updateDoc(userDocRef, {
-      activePrograms: arrayUnion(programId),
+    await userDocRef.update({
+      activePrograms: firestore.FieldValue.arrayUnion(programId),
       // Initialiser la progression si elle n'existe pas
       [`programs.${programId}`]: userData.programs?.[programId] || {
         xp: 0,
@@ -304,8 +304,8 @@ export const activateProgram = async (userId, programId) => {
  */
 export const deactivateProgram = async (userId, programId) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    const userDocRef = firestore().collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
     
     if (!userDoc.exists()) {
       throw new Error('Utilisateur non trouvé');
@@ -317,7 +317,7 @@ export const deactivateProgram = async (userId, programId) => {
     // Retirer le programme des programmes actifs
     const updatedActivePrograms = activePrograms.filter(id => id !== programId);
     
-    await updateDoc(userDocRef, {
+    await userDocRef.update({
       activePrograms: updatedActivePrograms
     });
 
@@ -339,8 +339,8 @@ export const deactivateProgram = async (userId, programId) => {
  */
 export const completeSession = async (userId, session, sessionData) => {
   try {
-    const userDocRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userDocRef);
+    const userDocRef = firestore().collection('users').doc(userId);
+    const userDoc = await userDocRef.get();
     
     if (!userDoc.exists()) {
       throw new Error('Utilisateur non trouvé');
@@ -390,7 +390,7 @@ export const completeSession = async (userId, session, sessionData) => {
     programData.lastSession = new Date().toISOString();
 
     // Sauvegarder dans Firestore
-    await updateDoc(userDocRef, {
+    await userDocRef.update({
       [`programs.${programId}`]: programData,
       lastSessionDate: new Date(),
       lastActivity: new Date(),

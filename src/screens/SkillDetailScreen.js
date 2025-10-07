@@ -4,17 +4,13 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  TouchableOpacity
+  TouchableOpacity,
+  SafeAreaView
 } from 'react-native';
 import {
-  Card,
   Text,
-  Button,
-  Chip,
-  List,
-  Badge,
-  Surface
 } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/colors';
 import programsData from '../data/programs.json';
 
@@ -161,7 +157,7 @@ const SkillDetailScreen = ({ route, navigation }) => {
               {exerciseIndex + 1}. {exercise.name}
             </Text>
             <Text style={styles.exerciseTargets}>
-              {exercise.sets} × {exercise.target} {exercise.type === 'time' ? 's' : 'reps'}
+              {exercise.sets} séries × {exercise.target} {exercise.type === 'time' ? 's' : 'reps'}
             </Text>
           </View>
           <Text style={styles.expandIcon}>
@@ -176,28 +172,24 @@ const SkillDetailScreen = ({ route, navigation }) => {
             </Text>
             
             <View style={styles.exerciseSpecs}>
-              <Badge style={[styles.specBadge, { backgroundColor: colors.info + '30' }]}>
-                <Text style={styles.specText}>
-                  {exercise.rest}s repos
-                </Text>
-              </Badge>
-              <Badge style={[styles.specBadge, { backgroundColor: colors.warning + '30' }]}>
-                <Text style={styles.specText}>
-                  {exercise.rpe}
-                </Text>
-              </Badge>
+              <View style={styles.specBadge}>
+                <Text style={styles.specText}>⏱ {exercise.rest}s repos</Text>
+              </View>
+              <View style={styles.specBadge}>
+                <Text style={styles.specText}>💪 {exercise.rpe}</Text>
+              </View>
             </View>
 
             {exercise.tips && (
               <View style={styles.tipsContainer}>
-                <Text style={styles.tipsTitle}>💡 Conseil :</Text>
+                <Text style={styles.tipsTitle}>💡 Conseil</Text>
                 <Text style={styles.tipsText}>{exercise.tips}</Text>
               </View>
             )}
 
             {exercise.safety && (
               <View style={styles.safetyContainer}>
-                <Text style={styles.safetyTitle}>⚠️ Sécurité :</Text>
+                <Text style={styles.safetyTitle}>⚠️ Sécurité</Text>
                 <Text style={styles.safetyText}>{exercise.safety}</Text>
               </View>
             )}
@@ -215,7 +207,7 @@ const SkillDetailScreen = ({ route, navigation }) => {
     const isCurrentLevel = level.id === currentLevel && !isSkillLocked;
 
     return (
-      <Card 
+      <View 
         key={level.id} 
         style={[
           styles.levelCard,
@@ -237,12 +229,9 @@ const SkillDetailScreen = ({ route, navigation }) => {
               )}
             </View>
             {isCurrentLevel && (
-              <Chip 
-                style={styles.currentChip}
-                textStyle={styles.currentChipText}
-              >
-                Actuel
-              </Chip>
+              <View style={styles.currentChip}>
+                <Text style={styles.currentChipText}>Actuel</Text>
+              </View>
             )}
           </View>
           <Text style={styles.expandIcon}>
@@ -262,26 +251,25 @@ const SkillDetailScreen = ({ route, navigation }) => {
               renderExercise(exercise, index, level.id)
             )}
 
-            <View style={styles.levelActions}>
-              <Button
-                mode={getButtonMode(status)}
-                onPress={() => navigateToWorkout(level)}
-                disabled={status === 'locked'}
-                style={[
-                  styles.levelButton,
-                  status === 'available' && styles.availableButton
-                ]}
-                labelStyle={[
-                  styles.levelButtonText,
-                  status === 'available' && styles.availableButtonText
-                ]}
-              >
+            <TouchableOpacity
+              onPress={() => navigateToWorkout(level)}
+              disabled={status === 'locked'}
+              style={[
+                styles.levelButton,
+                status === 'available' && styles.availableButton,
+                status === 'locked' && styles.lockedButton
+              ]}
+            >
+              <Text style={[
+                styles.levelButtonText,
+                status === 'available' && styles.availableButtonText
+              ]}>
                 {getButtonText(level, status)}
-              </Button>
-            </View>
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
-      </Card>
+      </View>
     );
   };
 
@@ -294,113 +282,185 @@ const SkillDetailScreen = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <Surface style={styles.headerSurface}>
-        <View style={styles.header}>
+    <SafeAreaView style={styles.container}>
+      {/* Bouton retour en position absolute */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.backButtonText}>←</Text>
+      </TouchableOpacity>
+
+      {/* Header avec gradient et icône - FIXE en haut */}
+      <LinearGradient
+        colors={[skill.color || '#4D9EFF', '#1A1A1A']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.headerIconContainer}>
           <Text style={styles.headerIcon}>{skill.icon}</Text>
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>{skill.name}</Text>
-            <Text style={styles.headerDescription}>{skill.description}</Text>
-            <Text style={styles.headerDifficulty}>
-              {skill.difficulty} • {skill.totalWeeks} semaines • {skill.xpReward} XP
-            </Text>
+        </View>
+        <Text style={styles.headerTitle}>{skill.name}</Text>
+        <Text style={styles.headerDescription}>{skill.description}</Text>
+        
+        {/* Badges */}
+        <View style={styles.badgesContainer}>
+          <View style={[styles.badge, { backgroundColor: skill.color || '#4D9EFF' }]}>
+            <Text style={styles.badgeText}>{skill.difficulty}</Text>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>+{skill.xpReward} XP</Text>
           </View>
         </View>
-      </Surface>
+      </LinearGradient>
 
-      {/* État verrouillé */}
-      {isSkillLocked && (
-        <Card style={styles.lockedCard}>
-          <Card.Content style={styles.lockedContent}>
+      {/* Contenu scrollable */}
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* État verrouillé */}
+        {isSkillLocked && (
+          <View style={styles.lockedCard}>
             <Text style={styles.lockedIcon}>🔒</Text>
             <Text style={styles.lockedTitle}>Compétence verrouillée</Text>
             <Text style={styles.lockedText}>
               Complétez les prérequis pour débloquer cette compétence
             </Text>
-          </Card.Content>
-        </Card>
-      )}
-
-      {/* Section des niveaux */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Niveaux de progression</Text>
-        {!isSkillLocked && skill.levels && (
-          <Text style={styles.sectionSubtitle}>
-            Niveau actuel : {currentLevel}/{skill.levels.length}
-          </Text>
+          </View>
         )}
-      </View>
 
-      {/* Liste des niveaux */}
-      <ScrollView 
-        ref={scrollViewRef}
-        style={styles.levelsContainer}
-        showsVerticalScrollIndicator={false}
-      >
+        {/* Progression */}
+        {!isSkillLocked && skill.levels && (
+          <View style={styles.progressSection}>
+            <Text style={styles.progressLabel}>Progression</Text>
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBarBg}>
+                <View 
+                  style={[
+                    styles.progressBarFill, 
+                    { 
+                      width: `${(currentLevel / skill.levels.length) * 100}%`,
+                      backgroundColor: skill.color || '#4D9EFF'
+                    }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.progressText}>
+                Niveau {currentLevel}/{skill.levels.length}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Section titre niveaux */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>📚 Niveaux</Text>
+        </View>
+
+        {/* Liste des niveaux */}
         {skill.levels && skill.levels.map(level => renderLevel(level))}
         
         <View style={styles.bottomSpacing} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#0A0A0A',
   },
-  errorContainer: {
-    flex: 1,
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    zIndex: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  errorText: {
-    fontSize: 18,
-    color: colors.textSecondary,
+  backButtonText: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    paddingBottom: 5,
   },
-  headerSurface: {
-    elevation: 4,
-    backgroundColor: colors.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-  },
-  headerIcon: {
-    fontSize: 64,
-    marginRight: 16,
-  },
-  headerInfo: {
+  scrollView: {
     flex: 1,
   },
+  header: {
+    paddingTop: 60,
+    paddingRight: 24,
+    paddingBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  headerIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  headerIcon: {
+    fontSize: 40,
+  },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 4,
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   headerDescription: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: 8,
-  },
-  headerDifficulty: {
     fontSize: 14,
-    color: colors.primary,
+    color: '#AAAAAA',
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  badge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  badgeText: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#FFFFFF',
   },
   lockedCard: {
-    margin: 16,
-    backgroundColor: colors.surface,
-  },
-  lockedContent: {
-    alignItems: 'center',
+    marginHorizontal: 16,
+    marginVertical: 16,
+    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+    borderRadius: 16,
     padding: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(244, 67, 54, 0.3)',
   },
   lockedIcon: {
     fontSize: 48,
@@ -409,107 +469,135 @@ const styles = StyleSheet.create({
   lockedTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   lockedText: {
-    fontSize: 16,
-    color: colors.textSecondary,
+    fontSize: 15,
+    color: '#AAAAAA',
     textAlign: 'center',
     lineHeight: 22,
   },
+  progressSection: {
+    marginHorizontal: 16,
+    marginVertical: 16,
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+  },
+  progressLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 12,
+  },
+  progressBarContainer: {
+    gap: 8,
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    color: '#AAAAAA',
+    textAlign: 'right',
+  },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingVertical: 16,
+    marginTop: 8,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  levelsContainer: {
-    flex: 1,
-    padding: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   levelCard: {
-    marginBottom: 16,
-    backgroundColor: colors.surface,
-    elevation: 2,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333',
   },
   currentLevelCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
+    borderColor: '#4D9EFF',
+    borderWidth: 2,
   },
   levelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   levelTitleContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    gap: 12,
   },
   levelStatus: {
     fontSize: 24,
-    marginRight: 12,
   },
   levelInfo: {
     flex: 1,
   },
   levelTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   levelSubtitle: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: '#AAAAAA',
   },
   currentChip: {
-    backgroundColor: colors.primary,
-    marginLeft: 8,
+    backgroundColor: '#4D9EFF',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   currentChipText: {
-    color: 'white',
     fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   expandIcon: {
     fontSize: 16,
-    color: colors.textSecondary,
-    marginLeft: 8,
+    color: '#AAAAAA',
+    marginLeft: 12,
   },
   levelContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
+    padding: 16,
   },
   levelDetails: {
     marginBottom: 16,
   },
   levelDescription: {
     fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 12,
+    color: '#AAAAAA',
   },
   exerciseContainer: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    padding: 12,
     marginBottom: 8,
-    overflow: 'hidden',
   },
   exerciseHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
   },
   exerciseInfo: {
     flex: 1,
@@ -517,20 +605,22 @@ const styles = StyleSheet.create({
   exerciseName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
   exerciseTargets: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: '#4D9EFF',
   },
   exerciseDetails: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
   },
   exerciseDescription: {
     fontSize: 14,
-    color: colors.text,
+    color: '#AAAAAA',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -540,63 +630,86 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   specBadge: {
-    borderRadius: 12,
+    backgroundColor: 'rgba(77, 158, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   specText: {
-    fontSize: 12,
-    color: colors.text,
+    fontSize: 13,
+    color: '#FFFFFF',
   },
   tipsContainer: {
-    backgroundColor: colors.info + '20',
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50',
   },
   tipsTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.info,
+    color: '#4CAF50',
     marginBottom: 4,
   },
   tipsText: {
-    fontSize: 14,
-    color: colors.text,
+    fontSize: 13,
+    color: '#AAAAAA',
     lineHeight: 18,
   },
   safetyContainer: {
-    backgroundColor: colors.warning + '20',
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
     padding: 12,
     borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF9800',
   },
   safetyTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.warning,
+    color: '#FF9800',
     marginBottom: 4,
   },
   safetyText: {
-    fontSize: 14,
-    color: colors.text,
+    fontSize: 13,
+    color: '#AAAAAA',
     lineHeight: 18,
   },
-  levelActions: {
-    marginTop: 16,
-  },
   levelButton: {
-    borderRadius: 8,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#333',
+    alignItems: 'center',
   },
   availableButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#4D9EFF',
+  },
+  lockedButton: {
+    backgroundColor: '#222',
+    opacity: 0.5,
   },
   levelButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#AAAAAA',
   },
   availableButtonText: {
-    color: 'white',
+    color: '#FFFFFF',
   },
   bottomSpacing: {
-    height: 32,
+    height: 40,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#0A0A0A',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#AAAAAA',
   },
 });
 
