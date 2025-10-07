@@ -5,6 +5,7 @@ ios/
 
 # Build outputs
 android/app/build/
+android/app/.cxx/
 
 # Expo
 .expo/
