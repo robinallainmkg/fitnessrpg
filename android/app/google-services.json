@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "195554523219",
+    "project_id": "hybridrpg-53f62",
+    "storage_bucket": "hybridrpg-53f62.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:195554523219:android:a72f6b1374f566ce926ea6",
+        "android_client_info": {
+          "package_name": "com.fitnessrpg.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9Det6lAcSWipNyhxGabOYF8PDRBBo8os"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
