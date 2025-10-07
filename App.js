@@ -27,6 +27,7 @@ import ProgramsScreen from './src/screens/ProgramsScreen';
 import SkillTreeScreen from './src/screens/SkillTreeScreen';
 import SkillDetailScreen from './src/screens/SkillDetailScreen';
 import WorkoutScreen from './src/screens/WorkoutScreen';
+import WorkoutPreviewScreen from './src/screens/WorkoutPreviewScreen';
 import WorkoutSummaryScreen from './src/screens/WorkoutSummaryScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -286,6 +287,13 @@ const AppNavigator = () => {
           options={{ 
             headerShown: false,
             gestureEnabled: false,
+          }}
+        />
+        <Stack.Screen
+          name="WorkoutPreview"
+          component={WorkoutPreviewScreen}
+          options={{
+            headerShown: false
           }}
         />
         <Stack.Screen

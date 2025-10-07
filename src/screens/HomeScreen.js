@@ -28,6 +28,7 @@ import LoadingProgramCard from '../components/LoadingProgramCard';
 import TreeTooltipOverlay from '../components/onboarding/TreeTooltipOverlay';
 import ActiveProgramCard from '../components/ActiveProgramCard';
 import SessionQueueCard from '../components/SessionQueueCard';
+import MissionCard from '../components/MissionCard';
 import { useUserPrograms, useUserCategories } from '../hooks/useUserPrograms';
 import { getUserSessionQueue } from '../services/sessionQueueService';
 import programs from '../data/programs.json';
@@ -478,6 +479,47 @@ const HomeScreen = ({ navigation, route }) => {
     });
   };
 
+  const handlePreviewSession = (session) => {
+    console.log('👁️ Aperçu de la séance:', session);
+
+    // Trouver le programme complet dans programs.json
+    const category = programs.categories.find(cat => cat.id === session.programId);
+    if (!category) {
+      Alert.alert('Erreur', 'Programme non trouvé');
+      return;
+    }
+
+    // Trouver la compétence (skill) dans le programme
+    const skill = category.programs.find(p => p.id === session.skillId);
+    if (!skill) {
+      Alert.alert('Erreur', 'Compétence non trouvée');
+      return;
+    }
+
+    // Trouver le niveau dans la compétence
+    const levelIndex = session.levelNumber - 1; // levelNumber est 1-based
+    const level = skill.levels[levelIndex];
+    if (!level) {
+      Alert.alert('Erreur', 'Niveau non trouvé');
+      return;
+    }
+
+    // Transformer en objet workout pour WorkoutPreviewScreen
+    const workout = {
+      id: level.id,
+      name: `${skill.name} - ${level.name}`,
+      subtitle: level.subtitle || '',
+      description: skill.description || `Entraînement ${skill.name} niveau ${level.id}`,
+      difficulty: skill.difficulty || 'Intermédiaire',
+      estimatedDuration: null, // Sera calculé dans WorkoutPreviewScreen
+      xpReward: level.xpReward || 100,
+      exercises: level.exercises || [],
+    };
+
+    // Naviguer vers l'aperçu
+    navigation.navigate('WorkoutPreview', { workout });
+  };
+
   const handleViewActiveProgram = (programId) => {
     // Naviguer vers la vue détaillée du programme (arbre de compétences)
     navigation.navigate('SkillTree', { programId });
@@ -763,9 +805,10 @@ const HomeScreen = ({ navigation, route }) => {
               </Text>
             </View>
             {sessionQueue.slice(0, 5).map(session => (
-              <SessionQueueCard
+              <MissionCard
                 key={session.id}
                 session={session}
+                onPreview={() => handlePreviewSession(session)}
                 onStart={() => handleStartSession(session)}
                 disabled={session.status === 'completed'}
               />

@@ -1,7 +1,11 @@
 node_modules
 
 # Native builds (managed by Expo Prebuild)
+android/
 ios/
+
+# Build outputs
+android/app/build/
 
 # Expo
 .expo/
