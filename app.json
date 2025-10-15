@@ -6,17 +6,23 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
-      "**/*"
+      "assets/**/*"
     ],
     "plugins": [
       "expo-font",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "@react-native-firebase/firestore",
       [
         "expo-build-properties",
         {
           "android": {
             "compileSdkVersion": 36,
             "targetSdkVersion": 36,
-            "buildToolsVersion": "36.0.0"
+            "buildToolsVersion": "36.0.0",
+            "minSdkVersion": 24,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
           }
         }
       ]
@@ -27,7 +33,9 @@
       }
     },
     "android": {
-      "package": "com.fitnessrpg.app"
+      "package": "com.fitnessrpg.app",
+      "versionCode": 12,
+      "enableDangerousExperimentalLeanBuilds": true
     }
   }
 }
