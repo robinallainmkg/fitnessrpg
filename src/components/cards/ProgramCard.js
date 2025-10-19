@@ -9,15 +9,15 @@ import { StatusBadge } from '../badges';
 import { getProgramColor } from '../../theme/colors';
 
 /**
- * 📚 ProgramCard - Carte programme simplifié et épuré
+ * 📚 ProgramCard - Carte programme avec image de fond
  * 
  * Design features:
- * - Pas d'image de fond (plus léger)
- * - Structure simple: icône + titre + progression
+ * - Image de fond pour chaque programme
+ * - Structure simple: titre + progression
  * - Bouton "Voir l'arbre" centré
  * - Badge "Actif" positionné top-right
- * - Bordure 1.5px bleu neon
- * - Plus compact que WorkoutCard (~180px)
+ * - Bordure 1.5px avec couleur du programme
+ * - ~180px (compact)
  * 
  * Utilisation:
  * <ProgramCard
@@ -34,7 +34,7 @@ const ProgramCard = ({
   const {
     id,
     name = 'Programme',
-    icon = '💪',
+    backgroundImage,
     status = 'active',
     completedSkills = 0,
     totalSkills = 0,
@@ -47,81 +47,118 @@ const ProgramCard = ({
   // Couleur du programme
   const programColor = getProgramColor(id, rpgTheme.colors.neon.blue);
 
+  // Image source - fallback si pas d'image
+  const imageSource = backgroundImage 
+    ? (typeof backgroundImage === 'string' 
+      ? { uri: backgroundImage }
+      : backgroundImage)  // require() retourne déjà le bon format
+    : null;
+
+  const cardContent = (
+    <>
+      {/* ═══ Status Badge (top-right) ═══ */}
+      {(isActive || isCompleted) && (
+        <StatusBadge
+          status={status}
+          size="small"
+          position="absolute"
+          style={styles.statusBadgePosition}
+        />
+      )}
+
+      {/* ═══ Program Header ═══ */}
+      <View style={styles.header}>
+        <Text style={styles.programName} numberOfLines={2}>
+          {name}
+        </Text>
+      </View>
+
+      {/* ═══ Progress Info ═══ */}
+      {totalSkills > 0 && (
+        <View style={styles.progressSection}>
+          <Text style={styles.progressText}>
+            {completedSkills} <Text style={styles.progressTotal}>/ {totalSkills}</Text>
+          </Text>
+          <Text style={styles.progressLabel}>compétences</Text>
+
+          {/* Progress bar */}
+          <View style={styles.progressBarContainer}>
+            <LinearGradient
+              colors={[programColor, '#7B61FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[
+                styles.progressBar,
+                { width: `${Math.max(10, progress * 100)}%` },
+              ]}
+            />
+          </View>
+        </View>
+      )}
+
+      {/* ═══ Action Button ═══ */}
+      <ActionButton
+        onPress={onViewTree}
+        icon="tree"
+        color="primary"
+        size="medium"
+        fullWidth
+        disabled={disabled}
+        style={styles.viewTreeButton}
+      >
+        Voir l'arbre
+      </ActionButton>
+
+      {/* Decorative corner */}
+      <View style={[styles.cornerAccent, { borderColor: programColor }]} />
+    </>
+  );
+
   return (
     <TouchableOpacity
       activeOpacity={0.9}
       disabled={disabled}
       style={[styles.cardContainer, style]}
     >
-      <LinearGradient
-        colors={['rgba(26, 34, 68, 0.95)', 'rgba(15, 23, 42, 0.90)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[
-          styles.card,
-          {
-            borderColor: isCompleted ? rpgTheme.colors.text.muted : rpgTheme.colors.neon.blue,
-            borderWidth: 1.5,
-          },
-        ]}
-      >
-        {/* ═══ Status Badge (top-right) ═══ */}
-        {(isActive || isCompleted) && (
-          <StatusBadge
-            status={status}
-            size="small"
-            position="absolute"
-            style={styles.statusBadgePosition}
-          />
-        )}
-
-        {/* ═══ Program Header ═══ */}
-        <View style={styles.header}>
-          <Text style={styles.programIcon}>{icon}</Text>
-          <Text style={styles.programName} numberOfLines={1}>
-            {name}
-          </Text>
-        </View>
-
-        {/* ═══ Progress Info ═══ */}
-        {totalSkills > 0 && (
-          <View style={styles.progressSection}>
-            <Text style={styles.progressText}>
-              {completedSkills} <Text style={styles.progressTotal}>/ {totalSkills}</Text>
-            </Text>
-            <Text style={styles.progressLabel}>compétences</Text>
-
-            {/* Progress bar */}
-            <View style={styles.progressBarContainer}>
-              <LinearGradient
-                colors={[programColor, '#7B61FF']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[
-                  styles.progressBar,
-                  { width: `${Math.max(10, progress * 100)}%` },
-                ]}
-              />
-            </View>
-          </View>
-        )}
-
-        {/* ═══ Action Button ═══ */}
-        <ActionButton
-          onPress={onViewTree}
-          icon="tree"
-          color="primary"
-          size="medium"
-          fullWidth
-          disabled={disabled}
-          style={styles.viewTreeButton}
+      {imageSource ? (
+        <ImageBackground
+          source={imageSource}
+          style={styles.imageBackground}
+          imageStyle={styles.backgroundImage}
+          resizeMode="cover"
         >
-          Voir l'arbre
-        </ActionButton>
-
-        {/* Decorative corner */}
-        <View style={[styles.cornerAccent, { borderColor: programColor }]} />
-      </LinearGradient>
+          {/* ═══ Dark overlay for readability ═══ */}
+          <LinearGradient
+            colors={['rgba(10, 14, 39, 0.85)', 'rgba(26, 34, 68, 0.90)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.card,
+              {
+                borderColor: isCompleted ? rpgTheme.colors.text.muted : programColor,
+                borderWidth: 1.5,
+              },
+            ]}
+          >
+            {cardContent}
+          </LinearGradient>
+        </ImageBackground>
+      ) : (
+        <LinearGradient
+          colors={['rgba(26, 34, 68, 0.95)', 'rgba(15, 23, 42, 0.90)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.card,
+            {
+              borderColor: isCompleted ? rpgTheme.colors.text.muted : programColor,
+              borderWidth: 1.5,
+            },
+          ]}
+        >
+          {cardContent}
+        </LinearGradient>
+      )}
     </TouchableOpacity>
   );
 };
@@ -131,6 +168,18 @@ const styles = StyleSheet.create({
   cardContainer: {
     marginHorizontal: rpgTheme.spacing.md,
     marginBottom: rpgTheme.spacing.md,
+    borderRadius: rpgTheme.borderRadius.lg,
+    overflow: 'hidden',
+  },
+
+  // ════════════ Background Image ════════════
+  imageBackground: {
+    borderRadius: rpgTheme.borderRadius.lg,
+    overflow: 'hidden',
+  },
+
+  backgroundImage: {
+    borderRadius: rpgTheme.borderRadius.lg,
   },
 
   // ════════════ Card ════════════
@@ -160,16 +209,13 @@ const styles = StyleSheet.create({
     marginTop: 24, // Space for status badge
   },
 
-  programIcon: {
-    fontSize: 32,
-  },
-
   programName: {
     fontSize: 18,
     fontWeight: rpgTheme.typography.weights.semibold,
     color: rpgTheme.colors.text.primary,
     flex: 1,
     letterSpacing: 0.2,
+    lineHeight: 22,
   },
 
   // ════════════ Progress ════════════

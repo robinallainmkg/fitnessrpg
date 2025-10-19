@@ -189,6 +189,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: rpgTheme.spacing.md,
     gap: rpgTheme.spacing.md,
+    flexShrink: 1,
+    justifyContent: 'space-between',
     ...rpgTheme.effects.shadows.card,
   },
 
@@ -267,6 +269,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: rpgTheme.spacing.sm,
     marginTop: rpgTheme.spacing.xs,
+    maxHeight: 50,
   },
 
   // ════════════ Completed ════════════

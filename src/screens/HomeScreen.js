@@ -30,6 +30,12 @@ import { loadProgramsMeta } from '../data/programsLoader';
 import { loadProgramDetails } from '../data/programsLoader';
 import { logger } from '../utils/debugHelper';
 
+// ═══ Images de fond des programmes ═══
+const PROGRAM_IMAGES = {
+  street: require('../../assets/programmes/StreetWorkout.jpg'),
+  running: require('../../assets/programmes/running-5.jpg'),
+};
+
 const HomeScreen = ({ navigation, route }) => {
   logger.section('🏠 HomeScreen Component Loaded');
   
@@ -361,12 +367,15 @@ const HomeScreen = ({ navigation, route }) => {
             ? programProgress.completedSkills.length 
             : 0;
           
+          // Récupérer l'image depuis le mapping
+          const backgroundImage = PROGRAM_IMAGES[categoryId] || null;
+          
           return {
             id: category.id,
             name: category.name,
             icon: category.icon,
             color: category.color,
-            backgroundImage: category.backgroundImage,
+            backgroundImage: backgroundImage,
             completedSkills: completedCount,
             totalSkills: totalSkills,
             status: 'active'
