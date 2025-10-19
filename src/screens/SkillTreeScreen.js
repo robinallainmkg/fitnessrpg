@@ -23,10 +23,14 @@ import { colors } from '../theme/colors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// 🖼️ Mapping des images de background par programme
-const PROGRAM_BACKGROUND_IMAGES = {
-  'assets/programmes/StreetWorkout.jpg': require('../../assets/programmes/StreetWorkout.jpg'),
-  'assets/programmes/running-5.jpg': require('../../assets/programmes/running-5.jpg'),
+// ═══ Pattern images: {categoryId}-bg.jpg
+const getProgramImageSource = (categoryId) => {
+  const imageMap = {
+    street: require('../../assets/programmes/street-bg.jpg'),
+    running: require('../../assets/programmes/running-bg.jpg'),
+    // Ajouter les nouvelles images ici: yoga: require('../../assets/programmes/yoga-bg.jpg'),
+  };
+  return imageMap[categoryId] || null;
 };
 
 // Dimensions responsives de l'arbre
@@ -595,11 +599,7 @@ const SkillTreeScreen = ({ navigation, route }) => {
 
       {/* Header avec image de background - DYNAMIQUE selon le programme */}
       <ImageBackground
-        source={
-          currentCategory?.backgroundImage && PROGRAM_BACKGROUND_IMAGES[currentCategory.backgroundImage]
-            ? PROGRAM_BACKGROUND_IMAGES[currentCategory.backgroundImage]
-            : require('../../assets/programmes/StreetWorkout.jpg')
-        }
+        source={getProgramImageSource(programId)}
         style={styles.headerBackground}
         imageStyle={styles.headerBackgroundImage}
       >

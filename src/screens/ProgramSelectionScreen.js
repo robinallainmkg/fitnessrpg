@@ -12,6 +12,18 @@ import SignupModal from '../components/SignupModal';
 import { loadProgramsMeta } from '../data/programsLoader';
 import { loadProgramTree } from '../utils/programLoader';
 import { colors } from '../theme/colors';
+import { ProgramCard } from '../components/cards';
+import { rpgTheme } from '../theme/rpgTheme';
+
+// ═══ Pattern images: {categoryId}-bg.jpg
+const getProgramImageSource = (categoryId) => {
+  const imageMap = {
+    street: require('../../assets/programmes/street-bg.jpg'),
+    running: require('../../assets/programmes/running-bg.jpg'),
+    // Ajouter les nouvelles images ici: yoga: require('../../assets/programmes/yoga-bg.jpg'),
+  };
+  return imageMap[categoryId] || null;
+};
 
 const ProgramSelectionScreen = ({ navigation }) => {
   const [selectedPrograms, setSelectedPrograms] = useState([]);
@@ -428,77 +440,48 @@ const ProgramSelectionScreen = ({ navigation }) => {
         const isDisabled = !isSelected && selectedPrograms.length >= maxPrograms;
         const tree = programTrees[category.id] || [];
 
+        const programData = {
+          id: category.id,
+          name: category.name,
+          icon: category.icon,
+          backgroundImage: getProgramImageSource(category.id),
+          description: category.description,
+          status: isSelected ? 'active' : 'locked',
+          completedSkills: 0,
+          totalSkills: tree.length || 0,
+        };
+
         return (
           <TouchableOpacity
             key={category.id}
             activeOpacity={0.8}
             disabled={isDisabled}
             onPress={() => !isDisabled && handleSelectProgram(category.id)}
-            style={styles.cardContainer}
+            style={[
+              styles.programCardWrapper,
+              isSelected && styles.programCardWrapperSelected,
+              isDisabled && styles.programCardWrapperDisabled
+            ]}
           >
-            <ImageBackground
-              source={require('../../assets/programmes/StreetWorkout.jpg')}
-              style={[
-                styles.programCard,
-                isSelected && styles.programCardSelected,
-                isDisabled && styles.programCardDisabled
-              ]}
-              imageStyle={styles.cardImage}
-            >
-              {/* Overlay gradient */}
-              <LinearGradient
-                colors={[
-                  'rgba(10, 14, 39, 0.00)',
-                  'rgba(10, 14, 39, 0.20)',
-                  'rgba(10, 14, 39, 0.70)',
-                  'rgba(10, 14, 39, 0.95)'
-                ]}
-                locations={[0, 0.3, 0.65, 1]}
-                style={styles.cardOverlay}
-              />
-              
-              <View style={styles.cardContent}>
-                {/* Badge sélectionné en haut à gauche */}
-                <View style={styles.topContent}>
-                  {isSelected && (
-                    <View style={styles.selectedBadge}>
-                      <Text style={styles.selectedBadgeEmoji}>✓</Text>
-                      <Text style={styles.selectedBadgeText}>SÉLECTIONNÉ</Text>
-                    </View>
-                  )}
-                </View>
-                
-                {/* Contenu principal en bas */}
-                <View style={styles.bottomContent}>
-                  {/* Titre du programme */}
-                  <Text style={styles.programName} numberOfLines={1}>
-                    {category.icon && category.icon + ' '}{category.name}
-                  </Text>
-                  
-                  {/* Description */}
-                  <Text style={styles.programDescription}>
-                    {category.description}
-                  </Text>
-                  
-                  {/* Tags/Stats */}
-                  <View style={styles.programInfo}>
-                    {getPrimaryStats(category).map(stat => (
-                      <View key={stat} style={styles.statBadge}>
-                        <Text style={styles.statBadgeText}>
-                          {getStatIcon(stat)}
-                        </Text>
-                      </View>
-                    ))}
-                    
-                    <View style={styles.statBadge}>
-                      <Text style={styles.statBadgeText}>
-                        🎯 {tree.length || 0} compétences
-                      </Text>
-                    </View>
-                  </View>
+            <ProgramCard
+              program={programData}
+              onViewTree={() => !isDisabled && handleSelectProgram(category.id)}
+              disabled={isDisabled}
+              showDescription={true}
+              showStats={true}
+              primaryStats={getPrimaryStats(category)}
+              style={styles.programCardCustom}
+            />
+            
+            {/* Badge sélection en overlay */}
+            {isSelected && (
+              <View style={styles.selectedOverlay}>
+                <View style={styles.selectedBadge}>
+                  <Text style={styles.selectedBadgeEmoji}>✓</Text>
+                  <Text style={styles.selectedBadgeText}>SÉLECTIONNÉ</Text>
                 </View>
               </View>
-            </ImageBackground>
+            )}
           </TouchableOpacity>
         );
       })}
@@ -672,6 +655,37 @@ const styles = StyleSheet.create({
   selectionChipTextActive: {
     color: '#4D9EFF',
   },
+
+  // ════════════ Program Card Wrapper (with ProgramCard component) ════════════
+  programCardWrapper: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    opacity: 1,
+  },
+  
+  programCardWrapperSelected: {
+    shadowColor: '#00E5FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  
+  programCardWrapperDisabled: {
+    opacity: 0.4,
+  },
+
+  programCardCustom: {
+    minHeight: 320,
+  },
+
+  selectedOverlay: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    zIndex: 10,
+  },
+
   cardContainer: {
     marginHorizontal: 16,
     marginBottom: 16,

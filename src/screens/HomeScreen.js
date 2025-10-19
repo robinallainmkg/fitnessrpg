@@ -31,9 +31,12 @@ import { loadProgramDetails } from '../data/programsLoader';
 import { logger } from '../utils/debugHelper';
 
 // ═══ Images de fond des programmes ═══
+// Pattern: {categoryId}-bg.jpg
+// Ajouter une nouvelle image: street => street-bg.jpg, running => running-bg.jpg, etc.
 const PROGRAM_IMAGES = {
-  street: require('../../assets/programmes/StreetWorkout.jpg'),
-  running: require('../../assets/programmes/running-5.jpg'),
+  street: require('../../assets/programmes/street-bg.jpg'),
+  running: require('../../assets/programmes/running-bg.jpg'),
+  // Pour les prochains programmes, utiliser le même pattern: yoga => yoga-bg.jpg, etc.
 };
 
 const HomeScreen = ({ navigation, route }) => {

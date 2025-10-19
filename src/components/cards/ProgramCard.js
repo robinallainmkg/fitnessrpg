@@ -9,20 +9,23 @@ import { StatusBadge } from '../badges';
 import { getProgramColor } from '../../theme/colors';
 
 /**
- * 📚 ProgramCard - Carte programme avec image de fond
+ * 📚 ProgramCard - Carte programme unifié pour HomeScreen et ProgramSelection
  * 
  * Design features:
- * - Image de fond pour chaque programme
- * - Structure simple: titre + progression
- * - Bouton "Voir l'arbre" centré
+ * - Image de fond pour chaque programme avec gradient overlay
+ * - Structure flexible: titre + description optionnelle + progression/stats
+ * - Bouton "Voir l'arbre" stylisé du thème
  * - Badge "Actif" positionné top-right
  * - Bordure 1.5px avec couleur du programme
- * - ~180px (compact)
+ * - Adaptatif: HomeScreen (compact) vs ProgramSelection (détaillé)
  * 
  * Utilisation:
  * <ProgramCard
  *   program={programData}
  *   onViewTree={handleViewTree}
+ *   showDescription={true}
+ *   showStats={true}
+ *   primaryStats={['strength', 'endurance']}
  * />
  */
 const ProgramCard = ({
@@ -30,6 +33,9 @@ const ProgramCard = ({
   onViewTree,
   disabled = false,
   style,
+  showDescription = false,
+  showStats = false,
+  primaryStats = [],
 }) => {
   const {
     id,
@@ -38,6 +44,8 @@ const ProgramCard = ({
     status = 'active',
     completedSkills = 0,
     totalSkills = 0,
+    description = '',
+    icon = '',
   } = program;
 
   const isCompleted = status === 'completed';
@@ -66,15 +74,34 @@ const ProgramCard = ({
         />
       )}
 
-      {/* ═══ Program Header ═══ */}
-      <View style={styles.header}>
-        <Text style={styles.programName} numberOfLines={2}>
-          {name}
-        </Text>
+      {/* ═══ TOP CONTENT: Titre + Description ═══ */}
+      <View style={styles.topContent}>
+        <View style={styles.header}>
+          {icon && <Text style={styles.programIcon}>{icon}</Text>}
+          <Text style={styles.programName} numberOfLines={2}>
+            {name}
+          </Text>
+        </View>
+        
+        {showDescription && description && (
+          <Text style={styles.programDescription} numberOfLines={2}>
+            {description}
+          </Text>
+        )}
       </View>
 
-      {/* ═══ Progress Info ═══ */}
-      {totalSkills > 0 && (
+      {/* ═══ MIDDLE CONTENT: Stats ou Progression ═══ */}
+      {showStats && primaryStats.length > 0 ? (
+        <View style={styles.statsSection}>
+          {primaryStats.map(stat => (
+            <View key={stat} style={styles.statBadge}>
+              <Text style={styles.statBadgeText}>
+                {stat}
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : totalSkills > 0 ? (
         <View style={styles.progressSection}>
           <Text style={styles.progressText}>
             {completedSkills} <Text style={styles.progressTotal}>/ {totalSkills}</Text>
@@ -94,17 +121,24 @@ const ProgramCard = ({
             />
           </View>
         </View>
-      )}
+      ) : null}
 
       {/* ═══ Action Button ═══ */}
       <ActionButton
         onPress={onViewTree}
-        icon="tree"
+        icon={rpgTheme.componentStyles.viewTreeButton.icon}
         color="primary"
         size="medium"
         fullWidth
         disabled={disabled}
-        style={styles.viewTreeButton}
+        style={[
+          styles.viewTreeButton,
+          {
+            backgroundColor: rpgTheme.componentStyles.viewTreeButton.backgroundColor,
+            borderWidth: rpgTheme.componentStyles.viewTreeButton.borderWidth,
+            borderColor: rpgTheme.componentStyles.viewTreeButton.borderColor,
+          }
+        ]}
       >
         Voir l'arbre
       </ActionButton>
@@ -201,12 +235,21 @@ const styles = StyleSheet.create({
   },
 
   // ════════════ Header ════════════
+  topContent: {
+    marginBottom: rpgTheme.spacing.md,
+  },
+
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: rpgTheme.spacing.sm,
-    marginBottom: rpgTheme.spacing.md,
+    marginBottom: rpgTheme.spacing.sm,
     marginTop: 24, // Space for status badge
+  },
+
+  programIcon: {
+    fontSize: 24,
+    lineHeight: 24,
   },
 
   programName: {
@@ -216,6 +259,37 @@ const styles = StyleSheet.create({
     flex: 1,
     letterSpacing: 0.2,
     lineHeight: 22,
+  },
+
+  programDescription: {
+    fontSize: 12,
+    color: rpgTheme.colors.text.secondary,
+    fontWeight: rpgTheme.typography.weights.regular,
+    lineHeight: 16,
+    marginTop: rpgTheme.spacing.xs,
+  },
+
+  // ════════════ Stats ════════════
+  statsSection: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: rpgTheme.spacing.xs,
+    marginBottom: rpgTheme.spacing.md,
+  },
+
+  statBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    backgroundColor: 'rgba(77, 158, 255, 0.15)',
+    borderRadius: rpgTheme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.3)',
+  },
+
+  statBadgeText: {
+    fontSize: 11,
+    color: rpgTheme.colors.neon.blue,
+    fontWeight: rpgTheme.typography.weights.semibold,
   },
 
   // ════════════ Progress ════════════
@@ -260,6 +334,10 @@ const styles = StyleSheet.create({
   // ════════════ Button ════════════
   viewTreeButton: {
     marginTop: rpgTheme.spacing.sm,
+    borderRadius: rpgTheme.componentStyles.viewTreeButton.borderRadius,
+    paddingVertical: rpgTheme.componentStyles.viewTreeButton.paddingVertical,
+    paddingHorizontal: rpgTheme.componentStyles.viewTreeButton.paddingHorizontal,
+    ...rpgTheme.effects.shadows.glow,
   },
 
   // ════════════ Decorative ════════════

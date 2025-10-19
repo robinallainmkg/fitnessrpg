@@ -97,13 +97,13 @@ const WorkoutCard = ({
 
           {/* XP Badge (droite) ou Status */}
           {!isCompleted && xpReward > 0 && (
-            <StatBadge
-              icon="lightning-bolt"
-              value={`+${xpReward}`}
-              color="primary"
-              size="small"
-              variant="filled"
-            />
+            <View style={styles.xpBadgeContainer}>
+              <View style={styles.xpBadge}>
+                <Icon name="lightning-bolt" size={16} color={rpgTheme.colors.neon.purple} />
+                <Text style={styles.xpValue}>+{xpReward}</Text>
+              </View>
+              <Text style={styles.xpLabel}>exp</Text>
+            </View>
           )}
 
           {isCompleted && (
@@ -241,6 +241,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 8,
     elevation: 5,
+  },
+
+  // ════════════ XP Badge ════════════
+  xpBadgeContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+
+  xpBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(123, 97, 255, 0.15)',
+    borderRadius: rpgTheme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(123, 97, 255, 0.3)',
+    shadowColor: rpgTheme.colors.neon.purple,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  xpValue: {
+    fontSize: 12,
+    fontWeight: rpgTheme.typography.weights.bold,
+    color: rpgTheme.colors.neon.purple,
+    letterSpacing: 0.3,
+  },
+
+  xpLabel: {
+    fontSize: 9,
+    fontWeight: rpgTheme.typography.weights.semibold,
+    color: rpgTheme.colors.text.secondary,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase',
   },
 
   // ════════════ Title ════════════
