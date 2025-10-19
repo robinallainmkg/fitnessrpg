@@ -352,4 +352,7 @@ export const addAlpha = (hexColor, opacity) => {
   return `${hexColor}${alpha}`;
 };
 
+// Ajouter componentStyles à rpgTheme pour l'accès via rpgTheme.componentStyles
+rpgTheme.componentStyles = componentStyles;
+
 export default rpgTheme;

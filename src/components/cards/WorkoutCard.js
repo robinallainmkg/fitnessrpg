@@ -5,7 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { rpgTheme } from '../../theme/rpgTheme';
 import { ActionButton, OutlineButton } from '../buttons';
-import { StatBadge } from '../badges';
 
 /**
  * 🎮 WorkoutCard - Carte unifiée pour les quêtes d'entraînement
