@@ -46,8 +46,24 @@ const WorkoutPreviewScreen = ({ navigation, route }) => {
   };
 
   const handleStartWorkout = () => {
-    // Navigation vers WorkoutScreen avec les données du workout
-    navigation.navigate('Workout', { workout });
+    // Reconstruire program et level pour WorkoutScreen
+    const program = {
+      id: workout.programId || 'beginner-foundation',
+      name: workout.programName || workout.name?.split(' - ')[0] || 'Programme',
+    };
+    
+    const level = {
+      id: workout.id || 1,
+      name: workout.name || 'Niveau 1',
+      subtitle: workout.subtitle || '',
+      xpReward: workout.xpReward || 100,
+      exercises: workout.exercises || []
+    };
+    
+    console.log('🚀 Démarrage workout avec program:', program, 'level:', level);
+    
+    // Navigation vers WorkoutScreen avec program et level
+    navigation.navigate('Workout', { program, level });
   };
 
   const handleGoBack = () => {
@@ -90,50 +106,53 @@ const WorkoutPreviewScreen = ({ navigation, route }) => {
                   <Text style={styles.workoutSubtitle}>{workout.subtitle}</Text>
                   <Text style={styles.workoutDescription}>{workout.description}</Text>
 
-                  {/* Stats Grid */}
+                  {/* Stats Grid - 2 lignes de 2 colonnes */}
                   <View style={styles.statsGrid}>
-                    <View style={styles.statItem}>
-                      <View style={[styles.statIcon, { backgroundColor: rpgTheme.colors.neon.blue + '20' }]}>
-                        <Icon name="dumbbell" size={20} color={rpgTheme.colors.neon.blue} />
+                    {/* Première ligne */}
+                    <View style={styles.statsRow}>
+                      <View style={styles.statItem}>
+                        <View style={styles.statIcon}>
+                          <Icon name="dumbbell" size={20} color="#7B61FF" />
+                        </View>
+                        <Text style={styles.statValue}>{workout.exercises?.length || 0}</Text>
+                        <Text style={styles.statLabel}>Exercices</Text>
                       </View>
-                      <Text style={styles.statValue}>{workout.exercises?.length || 0}</Text>
-                      <Text style={styles.statLabel}>Exercices</Text>
+
+                      <View style={styles.statItem}>
+                        <View style={styles.statIcon}>
+                          <Icon name="counter" size={20} color="#7B61FF" />
+                        </View>
+                        <Text style={styles.statValue}>{totalSets}</Text>
+                        <Text style={styles.statLabel}>Séries</Text>
+                      </View>
                     </View>
 
-                    <View style={styles.statItem}>
-                      <View style={[styles.statIcon, { backgroundColor: rpgTheme.colors.neon.purple + '20' }]}>
-                        <Icon name="counter" size={20} color={rpgTheme.colors.neon.purple} />
+                    {/* Deuxième ligne */}
+                    <View style={styles.statsRow}>
+                      <View style={styles.statItem}>
+                        <View style={styles.statIcon}>
+                          <Icon name="clock-outline" size={20} color="#7B61FF" />
+                        </View>
+                        <Text style={styles.statValue}>{calculateDuration(workout.exercises)}</Text>
+                        <Text style={styles.statLabel}>Minutes</Text>
                       </View>
-                      <Text style={styles.statValue}>{totalSets}</Text>
-                      <Text style={styles.statLabel}>Séries</Text>
-                    </View>
 
-                    <View style={styles.statItem}>
-                      <View style={[styles.statIcon, { backgroundColor: rpgTheme.colors.neon.cyan + '20' }]}>
-                        <Icon name="clock-outline" size={20} color={rpgTheme.colors.neon.cyan} />
+                      <View style={styles.statItem}>
+                        <View style={styles.statIcon}>
+                          <Icon name="chart-line" size={20} color="#7B61FF" />
+                        </View>
+                        <Text style={styles.statValue}>{workout.difficulty}</Text>
+                        <Text style={styles.statLabel}>Niveau</Text>
                       </View>
-                      <Text style={styles.statValue}>{calculateDuration(workout.exercises)}</Text>
-                      <Text style={styles.statLabel}>Minutes</Text>
-                    </View>
-
-                    <View style={styles.statItem}>
-                      <View style={[styles.statIcon, { backgroundColor: getDifficultyColor(workout.difficulty) + '20' }]}>
-                        <Icon name="chart-line" size={20} color={getDifficultyColor(workout.difficulty)} />
-                      </View>
-                      <Text style={styles.statValue}>{workout.difficulty}</Text>
-                      <Text style={styles.statLabel}>Niveau</Text>
                     </View>
                   </View>
 
                   {/* XP Reward Badge */}
                   <View style={styles.xpBadge}>
-                    <LinearGradient
-                      colors={rpgTheme.colors.gradients.xpBar}
-                      style={styles.xpGradient}
-                    >
-                      <Icon name="star" size={16} color="#FFD700" />
+                    <View style={styles.xpGradient}>
+                      <Icon name="star" size={16} color="#E9D5FF" />
                       <Text style={styles.xpText}>+{workout.xpReward || 0} XP</Text>
-                    </LinearGradient>
+                    </View>
                   </View>
                 </Card.Content>
               </LinearGradient>
@@ -201,19 +220,19 @@ const WorkoutPreviewScreen = ({ navigation, route }) => {
                 <Card.Content>
                   <View style={styles.tipsList}>
                     <View style={styles.tipItem}>
-                      <Icon name="water" size={20} color={rpgTheme.colors.neon.cyan} />
+                      <Icon name="water" size={20} color="#7B61FF" />
                       <Text style={styles.tipText}>Hydrate-toi régulièrement pendant la séance</Text>
                     </View>
                     <View style={styles.tipItem}>
-                      <Icon name="target" size={20} color={rpgTheme.colors.neon.green} />
+                      <Icon name="target" size={20} color="#7B61FF" />
                       <Text style={styles.tipText}>Concentre-toi sur la qualité des mouvements</Text>
                     </View>
                     <View style={styles.tipItem}>
-                      <Icon name="clock-outline" size={20} color={rpgTheme.colors.neon.purple} />
+                      <Icon name="clock-outline" size={20} color="#7B61FF" />
                       <Text style={styles.tipText}>Respecte les temps de repos entre les séries</Text>
                     </View>
                     <View style={styles.tipItem}>
-                      <Icon name="heart" size={20} color={rpgTheme.colors.neon.pink} />
+                      <Icon name="heart" size={20} color="#7B61FF" />
                       <Text style={styles.tipText}>Écoute ton corps et ajuste si nécessaire</Text>
                     </View>
                   </View>
@@ -227,10 +246,7 @@ const WorkoutPreviewScreen = ({ navigation, route }) => {
 
           {/* Fixed CTA Button */}
           <View style={styles.ctaContainer}>
-            <LinearGradient
-              colors={rpgTheme.colors.gradients.primary}
-              style={styles.ctaGradient}
-            >
+            <View style={styles.ctaGradient}>
               <TouchableOpacity
                 style={styles.ctaButton}
                 onPress={handleStartWorkout}
@@ -238,7 +254,7 @@ const WorkoutPreviewScreen = ({ navigation, route }) => {
                 <Icon name="play" size={24} color="#FFFFFF" />
                 <Text style={styles.ctaText}>Commencer l'entraînement</Text>
               </TouchableOpacity>
-            </LinearGradient>
+            </View>
           </View>
         </SafeAreaView>
       </View>
@@ -256,19 +272,20 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    paddingTop: 40, // ✅ Ajouté pour descendre le contenu
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: rpgTheme.spacing.md,
-    paddingVertical: rpgTheme.spacing.sm,
+    paddingVertical: rpgTheme.spacing.md, // Augmenté de sm à md
     borderBottomWidth: 1,
-    borderBottomColor: rpgTheme.colors.neon.blue + '30',
+    borderBottomColor: 'rgba(123, 97, 255, 0.3)', // ✅ Violet plus doux
   },
   backButton: {
     padding: rpgTheme.spacing.sm,
     borderRadius: 8,
-    backgroundColor: rpgTheme.colors.background.card + '80',
+    backgroundColor: 'rgba(30, 30, 50, 0.8)', // ✅ Fond sombre adouci
   },
   headerTitle: {
     flex: 1,
@@ -288,14 +305,19 @@ const styles = StyleSheet.create({
   },
   mainCard: {
     marginBottom: rpgTheme.spacing.md,
+    marginTop: rpgTheme.spacing.sm, // ✅ Espace supplémentaire en haut
     backgroundColor: 'transparent',
     elevation: 0,
   },
   cardGradient: {
     borderRadius: 16,
+    borderWidth: 2, // ✅ Bordure ajoutée
+    borderColor: 'rgba(123, 97, 255, 0.3)', // ✅ Violet doux
   },
   cardContent: {
     padding: rpgTheme.spacing.lg,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)', // ✅ Fond sombre/transparent
+    borderRadius: 14,
   },
   workoutTitle: {
     fontSize: rpgTheme.typography.sizes.title,
@@ -305,23 +327,28 @@ const styles = StyleSheet.create({
   },
   workoutSubtitle: {
     fontSize: rpgTheme.typography.sizes.subheading,
-    color: rpgTheme.colors.neon.blue,
+    color: '#94A3B8', // ✅ Gris doux au lieu de bleu néon
     marginBottom: rpgTheme.spacing.md,
   },
   workoutDescription: {
     fontSize: rpgTheme.typography.sizes.body,
-    color: rpgTheme.colors.text.secondary,
+    color: '#CBD5E1', // ✅ Gris clair adouci
     lineHeight: 22,
     marginBottom: rpgTheme.spacing.lg,
   },
   statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: rpgTheme.spacing.lg,
+    gap: rpgTheme.spacing.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: rpgTheme.spacing.md,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
+    paddingVertical: rpgTheme.spacing.sm,
   },
   statIcon: {
     width: 40,
@@ -330,6 +357,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: rpgTheme.spacing.xs,
+    backgroundColor: 'rgba(123, 97, 255, 0.15)', // ✅ Violet adouci uniforme
+    borderWidth: 1,
+    borderColor: 'rgba(123, 97, 255, 0.4)',
   },
   statValue: {
     fontSize: rpgTheme.typography.sizes.heading,
@@ -344,6 +374,7 @@ const styles = StyleSheet.create({
   },
   xpBadge: {
     alignSelf: 'center',
+    marginTop: rpgTheme.spacing.sm,
   },
   xpGradient: {
     flexDirection: 'row',
@@ -351,9 +382,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: rpgTheme.spacing.md,
     paddingVertical: rpgTheme.spacing.sm,
     borderRadius: 20,
+    backgroundColor: 'rgba(123, 97, 255, 0.2)', // ✅ Fond violet doux
+    borderWidth: 1,
+    borderColor: 'rgba(123, 97, 255, 0.5)',
   },
   xpText: {
-    color: '#FFD700',
+    color: '#E9D5FF', // ✅ Violet clair adouci au lieu d'or
     fontWeight: rpgTheme.typography.weights.bold,
     marginLeft: rpgTheme.spacing.xs,
   },
@@ -367,10 +401,10 @@ const styles = StyleSheet.create({
     marginBottom: rpgTheme.spacing.md,
   },
   exerciseCard: {
-    backgroundColor: rpgTheme.colors.background.card,
+    backgroundColor: 'rgba(30, 30, 50, 0.6)', // ✅ Fond sombre adouci
     marginBottom: rpgTheme.spacing.sm,
     borderWidth: 1,
-    borderColor: rpgTheme.colors.neon.blue + '30',
+    borderColor: 'rgba(123, 97, 255, 0.3)', // ✅ Bordure violette douce
   },
   exerciseContent: {
     padding: rpgTheme.spacing.md,
@@ -384,7 +418,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: rpgTheme.colors.neon.blue,
+    backgroundColor: 'rgba(123, 97, 255, 0.8)', // ✅ Violet adouci
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: rpgTheme.spacing.md,
@@ -408,10 +442,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   exerciseDetails: {
-    backgroundColor: rpgTheme.colors.background.secondary + '50',
+    backgroundColor: 'rgba(15, 23, 42, 0.5)', // ✅ Fond sombre doux
     padding: rpgTheme.spacing.md,
     borderRadius: 8,
     marginBottom: rpgTheme.spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(123, 97, 255, 0.2)',
   },
   detailRow: {
     flexDirection: 'row',
@@ -429,16 +465,16 @@ const styles = StyleSheet.create({
     color: rpgTheme.colors.text.primary,
   },
   tipsContainer: {
-    backgroundColor: rpgTheme.colors.neon.green + '10',
+    backgroundColor: 'rgba(123, 97, 255, 0.1)', // ✅ Violet très doux
     padding: rpgTheme.spacing.md,
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: rpgTheme.colors.neon.green,
+    borderLeftColor: '#7B61FF', // ✅ Violet principal
   },
   tipsLabel: {
     fontSize: rpgTheme.typography.sizes.caption,
     fontWeight: rpgTheme.typography.weights.semibold,
-    color: rpgTheme.colors.neon.green,
+    color: '#C4B5FD', // ✅ Violet clair
     marginBottom: rpgTheme.spacing.xs,
   },
   tipsText: {
@@ -447,9 +483,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   tipsCard: {
-    backgroundColor: rpgTheme.colors.background.card,
+    backgroundColor: 'rgba(30, 30, 50, 0.6)', // ✅ Fond sombre adouci
     borderWidth: 1,
-    borderColor: rpgTheme.colors.neon.purple + '30',
+    borderColor: 'rgba(123, 97, 255, 0.3)', // ✅ Bordure violette douce
   },
   tipsList: {
     gap: rpgTheme.spacing.md,
@@ -473,12 +509,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: rpgTheme.spacing.md,
-    backgroundColor: rpgTheme.colors.background.primary,
+    backgroundColor: 'rgba(10, 14, 39, 0.95)', // ✅ Fond sombre semi-transparent
     borderTopWidth: 1,
-    borderTopColor: rpgTheme.colors.neon.blue + '30',
+    borderTopColor: 'rgba(123, 97, 255, 0.3)', // ✅ Bordure violette douce
   },
   ctaGradient: {
     borderRadius: 12,
+    backgroundColor: '#7B61FF', // ✅ Violet principal au lieu de gradient
+    borderWidth: 2,
+    borderColor: '#9F7AEA', // ✅ Bordure violet clair
   },
   ctaButton: {
     flexDirection: 'row',

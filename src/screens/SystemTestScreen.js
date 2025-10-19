@@ -32,7 +32,6 @@ import {
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { colors } from '../theme/colors';
-import programs from '../data/programs.json';
 
 /**
  * 🧪 SYSTÈME DE TEST COMPLET

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
 
 /**
@@ -23,8 +24,7 @@ export const FirestoreStatusProvider = ({ children }) => {
     try {
       setIsChecking(true);
       
-      // Get current user from auth
-      const auth = require('@react-native-firebase/auth').default;
+      // Get current user
       const currentUser = auth().currentUser;
       
       if (!currentUser) {

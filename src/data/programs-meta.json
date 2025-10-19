@@ -1,0 +1,24 @@
+﻿{
+  "categories": [
+    {
+      "id": "street",
+      "name": "Street Workout",
+      "description": "L'arbre de compétences complet du calisthenics. Débute en débutant absolu, termine en athlète d'élite.",
+      "color": "#6C63FF",
+      "backgroundImage": "assets/programmes/StreetWorkout.jpg",
+      "type": "skill-tree",
+      "totalPrograms": 23,
+      "primaryStats": ["strength", "power", "endurance"]
+    },
+    {
+      "id": "running",
+      "name": "Run 10k - 45min",
+      "description": "Programme complet pour courir 10km en 45 minutes. Du débutant absolu au runner confirmé.",
+      "color": "#FF6B35",
+      "backgroundImage": "assets/programmes/running-5.jpg",
+      "type": "skill-tree",
+      "totalPrograms": 11,
+      "primaryStats": ["endurance", "speed", "power"]
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "id": "running",
+  "tree": [
+    {
+      "id": "base-i",
+      "name": "Base I",
+      "icon": "🏃‍♂️",
+      "color": "#4CAF50",
+      "difficulty": "Débutant",
+      "position": { "x": 0, "y": 0 },
+      "prerequisites": [],
+      "totalLevels": 4,
+      "statBonuses": {
+        "endurance": 8,
+        "speed": 2,
+        "power": 1
+      }
+    },
+    {
+      "id": "base-ii",
+      "name": "Base II",
+      "icon": "🏃",
+      "color": "#4CAF50",
+      "difficulty": "Débutant",
+      "position": { "x": 1, "y": 0 },
+      "prerequisites": ["base-i"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "endurance": 10,
+        "speed": 3,
+        "power": 2
+      }
+    },
+    {
+      "id": "tempo-i",
+      "name": "Tempo I",
+      "icon": "⚡",
+      "color": "#FF9800",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 0, "y": 1 },
+      "prerequisites": ["base-i"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 6,
+        "endurance": 5,
+        "power": 4
+      }
+    },
+    {
+      "id": "tempo-ii",
+      "name": "Tempo II",
+      "icon": "⚡",
+      "color": "#FF9800",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 1, "y": 1 },
+      "prerequisites": ["tempo-i"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 7,
+        "endurance": 6,
+        "power": 5
+      }
+    },
+    {
+      "id": "tempo-iii",
+      "name": "Tempo III",
+      "icon": "⚡",
+      "color": "#FF5722",
+      "difficulty": "Avancé",
+      "position": { "x": 2, "y": 1 },
+      "prerequisites": ["tempo-ii"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 9,
+        "endurance": 7,
+        "power": 6
+      }
+    },
+    {
+      "id": "sprint-i",
+      "name": "Sprint I",
+      "icon": "💨",
+      "color": "#2196F3",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 0, "y": 2 },
+      "prerequisites": ["base-i"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 10,
+        "power": 8,
+        "endurance": 2
+      }
+    },
+    {
+      "id": "sprint-ii",
+      "name": "Sprint II",
+      "icon": "💨",
+      "color": "#2196F3",
+      "difficulty": "Avancé",
+      "position": { "x": 1, "y": 2 },
+      "prerequisites": ["sprint-i"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 12,
+        "power": 10,
+        "endurance": 3
+      }
+    },
+    {
+      "id": "sprint-iii",
+      "name": "Sprint III",
+      "icon": "💨",
+      "color": "#1976D2",
+      "difficulty": "Avancé",
+      "position": { "x": 2, "y": 2 },
+      "prerequisites": ["sprint-ii"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 15,
+        "power": 12,
+        "endurance": 4
+      }
+    },
+    {
+      "id": "long-run-i",
+      "name": "Sortie Longue I",
+      "icon": "🎯",
+      "color": "#9C27B0",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 2, "y": 0 },
+      "prerequisites": ["base-ii"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "endurance": 12,
+        "speed": 3,
+        "power": 2
+      }
+    },
+    {
+      "id": "long-run-ii",
+      "name": "Sortie Longue II",
+      "icon": "🎯",
+      "color": "#9C27B0",
+      "difficulty": "Avancé",
+      "position": { "x": 3, "y": 0 },
+      "prerequisites": ["long-run-i"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "endurance": 15,
+        "speed": 4,
+        "power": 3
+      }
+    },
+    {
+      "id": "race-pace",
+      "name": "Allure Objectif",
+      "icon": "🏆",
+      "color": "#FFD700",
+      "difficulty": "Expert",
+      "position": { "x": 3, "y": 1 },
+      "prerequisites": ["tempo-iii", "long-run-ii"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "speed": 10,
+        "endurance": 10,
+        "power": 8
+      }
+    }
+  ]
+}

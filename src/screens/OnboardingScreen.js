@@ -81,16 +81,30 @@ const OnboardingScreen = ({ navigation }) => {
 
   const handleSkip = async () => {
     console.log('⏭️ Skip onboarding - Activation mode invité');
-    await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
-    await setGuestMode();
-    navigation.replace('ProgramSelection');
+    try {
+      await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
+      // Flag pour dire à HomeScreen d'ouvrir ProgramSelection
+      await AsyncStorage.setItem('@fitnessrpg:open_program_selection', 'true');
+      console.log('✅ AsyncStorage updated with flag to open ProgramSelection');
+      await setGuestMode();
+      console.log('✅ Guest mode activated - App.js will navigate to Main');
+    } catch (error) {
+      console.error('❌ Error in handleSkip:', error);
+    }
   };
 
   const handleFinish = async () => {
     console.log('🏁 Finish onboarding - Activation mode invité');
-    await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
-    await setGuestMode();
-    navigation.replace('ProgramSelection');
+    try {
+      await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
+      // Flag pour dire à HomeScreen d'ouvrir ProgramSelection
+      await AsyncStorage.setItem('@fitnessrpg:open_program_selection', 'true');
+      console.log('✅ AsyncStorage updated with flag to open ProgramSelection');
+      await setGuestMode();
+      console.log('✅ Guest mode activated - App.js will navigate to Main');
+    } catch (error) {
+      console.error('❌ Error in handleFinish:', error);
+    }
   };
 
   const currentStepData = ONBOARDING_STEPS[currentStep];

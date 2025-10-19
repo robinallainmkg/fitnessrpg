@@ -14,8 +14,7 @@ const MAX_ACTIVE_PROGRAMS = 2;
  */
 export const getActivePrograms = async (userId) => {
   try {
-    const userDocRef = firestore().doc(`users/${userId}`);
-    const userDoc = await userDocRef.get();
+    const userDoc = await firestore().collection('users').doc(userId).get();
 
     if (!userDoc.exists) {
       return [];
@@ -36,8 +35,8 @@ export const getActivePrograms = async (userId) => {
  */
 export const activateProgram = async (userId, programId) => {
   try {
-    const userDocRef = firestore().doc(`users/${userId}`);
-    const userDoc = await userDocRef.get();
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
       return {
@@ -66,8 +65,8 @@ export const activateProgram = async (userId, programId) => {
       };
     }
     
-    // Activer le programme
-    await userDocRef.update({
+    // Activer le programme - ANCIENNE API
+    await userRef.update({
       activePrograms: firestore.FieldValue.arrayUnion(programId)
     });
     
@@ -96,8 +95,8 @@ export const activateProgram = async (userId, programId) => {
  */
 export const deactivateProgram = async (userId, programId) => {
   try {
-    const userDocRef = firestore().doc(`users/${userId}`);
-    const userDoc = await userDocRef.get();
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
       return {
@@ -116,8 +115,8 @@ export const deactivateProgram = async (userId, programId) => {
       };
     }
     
-    // Désactiver le programme
-    await userDocRef.update({
+    // Désactiver le programme - ANCIENNE API
+    await userRef.update({
       activePrograms: firestore.FieldValue.arrayRemove(programId)
     });
     
@@ -147,8 +146,8 @@ export const deactivateProgram = async (userId, programId) => {
  */
 export const swapActiveProgram = async (userId, programIdToActivate, programIdToDeactivate) => {
   try {
-    const userDocRef = firestore().doc(`users/${userId}`);
-    const userDoc = await userDocRef.get();
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await userRef.get();
 
     if (!userDoc.exists) {
       return {
@@ -167,12 +166,12 @@ export const swapActiveProgram = async (userId, programIdToActivate, programIdTo
       };
     }
     
-    // Faire le swap atomiquement
+    // Faire le swap atomiquement - ANCIENNE API
     const newActivePrograms = activePrograms
       .filter(id => id !== programIdToDeactivate)
       .concat(programIdToActivate);
     
-    await userDocRef.update({
+    await userRef.update({
       activePrograms: newActivePrograms
     });
     
@@ -201,8 +200,7 @@ export const swapActiveProgram = async (userId, programIdToActivate, programIdTo
  */
 export const getAllUserPrograms = async (userId) => {
   try {
-    const userDocRef = firestore().doc(`users/${userId}`);
-    const userDoc = await userDocRef.get();
+    const userDoc = await firestore().collection('users').doc(userId).get();
 
     if (!userDoc.exists) {
       return { active: [], inactive: [] };
@@ -230,3 +228,4 @@ export const getAllUserPrograms = async (userId) => {
 };
 
 export const MAX_PROGRAMS = MAX_ACTIVE_PROGRAMS;
+

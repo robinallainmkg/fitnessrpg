@@ -48,7 +48,7 @@ export const testFirestoreConnection = async () => {
     try {
       const userRef = firestore().collection('users').doc(currentUser.uid);
       await userRef.set({ 
-        lastDiagnosticTest: firestore.FieldValue.serverTimestamp() 
+        lastDiagnosticTest: firestore().FieldValue.serverTimestamp() 
       }, { merge: true });
       results.canWriteOwnUser = true;
       console.log('✅ Can write to own user document');

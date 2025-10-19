@@ -1,0 +1,4574 @@
+{
+  "id": "street",
+  "name": "Street Workout",
+  "description": "L'arbre de compétences complet du calisthenics. Débute en débutant absolu, termine en athlète d'élite.",
+  "icon": "",
+  "color": "#6C63FF",
+  "type": "skill-tree",
+  "programs": [
+        {
+          "id": "beginner-foundation",
+          "name": "Fondations Débutant",
+          "difficulty": "Débutant",
+          "description": "Point de départ pour tous. Construis ta première base de force.",
+          "icon": "🌱",
+          "color": "#4CAF50",
+          "position": {
+            "x": 2,
+            "y": 0,
+            "tier": 0
+          },
+          "prerequisites": [],
+          "unlocks": [
+            "strict-pullups",
+            "hanging-hollow"
+          ],
+          "totalWeeks": 4,
+          "xpReward": 200,
+          "statBonuses": {
+            "strength": 7,
+            "power": 3,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          },
+          "levels": [
+            {
+              "id": 1,
+              "name": "Initiation",
+              "subtitle": "Premiers pas en force",
+              "xpReward": 100,
+              "exercises": [
+                {
+                  "name": "Tractions assistées (élastique)",
+                  "description": "Utilise un élastique épais pour t'assister dans le mouvement",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 6/10",
+                  "tips": "Focus sur le contrôle, pas la vitesse"
+                },
+                {
+                  "name": "Dips assistés (chaise)",
+                  "description": "Pieds sur une chaise derrière toi",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 6/10",
+                  "tips": "Descends jusqu'à 90° minimum"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Barre à hauteur de taille, corps droit",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 6/10",
+                  "tips": "Plus la barre est basse, plus c'est dur"
+                },
+                {
+                  "name": "Plank",
+                  "description": "Gainage statique, corps aligné",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 30,
+                  "rest": 60,
+                  "rpe": "RPE 6/10",
+                  "tips": "Serre les fessiers et les abdos"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Renforcement",
+              "subtitle": "Augmenter le volume",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions assistées (élastique)",
+                  "description": "Utilise un élastique épais pour t'assister dans le mouvement",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 7/10",
+                  "tips": "Focus sur le contrôle, pas la vitesse"
+                },
+                {
+                  "name": "Dips assistés (chaise)",
+                  "description": "Pieds sur une chaise derrière toi",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 7/10",
+                  "tips": "Descends jusqu'à 90° minimum"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Barre à hauteur de taille, corps droit",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Plus la barre est basse, plus c'est dur"
+                },
+                {
+                  "name": "Plank",
+                  "description": "Gainage statique, corps aligné",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 40,
+                  "rest": 60,
+                  "rpe": "RPE 7/10",
+                  "tips": "Serre les fessiers et les abdos"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Consolidation",
+              "subtitle": "Solidifier les bases",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions assistées (élastique)",
+                  "description": "Utilise un élastique épais pour t'assister dans le mouvement",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 7/10",
+                  "tips": "Focus sur le contrôle, pas la vitesse"
+                },
+                {
+                  "name": "Dips assistés (chaise)",
+                  "description": "Pieds sur une chaise derrière toi",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 7/10",
+                  "tips": "Descends jusqu'à 90° minimum"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Barre à hauteur de taille, corps droit",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Plus la barre est basse, plus c'est dur"
+                },
+                {
+                  "name": "Plank",
+                  "description": "Gainage statique, corps aligné",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 50,
+                  "rest": 60,
+                  "rpe": "RPE 7/10",
+                  "tips": "Serre les fessiers et les abdos"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Test Final",
+              "subtitle": "Valider le module",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Tractions assistées (élastique léger)",
+                  "description": "Utilise un élastique plus fin pour moins d'assistance",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Focus sur le contrôle, pas la vitesse"
+                },
+                {
+                  "name": "Dips assistés (chaise)",
+                  "description": "Pieds sur une chaise derrière toi",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Descends jusqu'à 90° minimum"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Barre à hauteur de taille, corps droit",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Plus la barre est basse, plus c'est dur"
+                },
+                {
+                  "name": "Plank",
+                  "description": "Gainage statique, corps aligné",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 60,
+                  "rest": 60,
+                  "rpe": "RPE 8/10",
+                  "tips": "Serre les fessiers et les abdos"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hanging-hollow",
+          "name": "Hollow Body Hanging",
+          "difficulty": "Débutant",
+          "description": "Gainage dynamique suspendu. Base pour tous les skills de barre.",
+          "icon": "🎯",
+          "color": "#2196F3",
+          "position": {
+            "x": 1,
+            "y": 1,
+            "tier": 1
+          },
+          "prerequisites": [
+            "beginner-foundation"
+          ],
+          "unlocks": [
+            "lsit-hold",
+            "pullup-negatives",
+            "hanging-leg-raises"
+          ],
+          "totalWeeks": 3,
+          "xpReward": 250,
+          "statBonuses": {
+            "strength": 8,
+            "power": 2,
+            "endurance": 3,
+            "speed": 0,
+            "flexibility": 1
+          },
+          "levels": [
+            {
+              "id": 1,
+              "name": "Contrôle de base",
+              "subtitle": "Apprendre à se tenir correctement",
+              "xpReward": 100,
+              "exercises": [
+                {
+                  "name": "Dead hang",
+                  "description": "Simplement se suspendre, bras tendus",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 6/10",
+                  "tips": "Épaules engagées, pas relâchées"
+                },
+                {
+                  "name": "Hollow body au sol",
+                  "description": "Dos plaqué, jambes et bras levés",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 15,
+                  "rest": 60,
+                  "rpe": "RPE 6/10",
+                  "tips": "Lombes collées au sol !"
+                },
+                {
+                  "name": "Hollow hang",
+                  "description": "Dead hang + position hollow (bassin rétroversé)",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Imagine que tu veux coller ton pubis à ton sternum"
+                },
+                {
+                  "name": "Scapula pulls",
+                  "description": "Monte-toi juste avec les omoplates, sans plier les bras",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 90,
+                  "rpe": "RPE 6/10",
+                  "tips": "Mouvement minime mais crucial"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Développement",
+              "subtitle": "Augmenter les temps de maintien",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Dead hang",
+                  "description": "Simplement se suspendre, bras tendus",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 30,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Épaules engagées, pas relâchées"
+                },
+                {
+                  "name": "Hollow body au sol",
+                  "description": "Dos plaqué, jambes et bras levés",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 60,
+                  "rpe": "RPE 7/10",
+                  "tips": "Lombes collées au sol !"
+                },
+                {
+                  "name": "Hollow hang",
+                  "description": "Dead hang + position hollow (bassin rétroversé)",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Imagine que tu veux coller ton pubis à ton sternum"
+                },
+                {
+                  "name": "Scapula pulls",
+                  "description": "Monte-toi juste avec les omoplates, sans plier les bras",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 6/10",
+                  "tips": "Mouvement minime mais crucial"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Maîtrise",
+              "subtitle": "Perfectionner la technique",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Dead hang",
+                  "description": "Simplement se suspendre, bras tendus",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 45,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Épaules engagées, pas relâchées"
+                },
+                {
+                  "name": "Hollow body au sol",
+                  "description": "Dos plaqué, jambes et bras levés",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 30,
+                  "rest": 60,
+                  "rpe": "RPE 8/10",
+                  "tips": "Lombes collées au sol !"
+                },
+                {
+                  "name": "Hollow hang",
+                  "description": "Dead hang + position hollow (bassin rétroversé)",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Imagine que tu veux coller ton pubis à ton sternum"
+                },
+                {
+                  "name": "Scapula pulls",
+                  "description": "Monte-toi juste avec les omoplates, sans plier les bras",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Mouvement minime mais crucial"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "strict-pullups",
+          "name": "Tractions Strictes",
+          "difficulty": "Débutant",
+          "description": "Fondation #1 du street workout. Maîtrise parfaitement les tractions.",
+          "icon": "💪",
+          "color": "#6C63FF",
+          "position": {
+            "x": 3,
+            "y": 1,
+            "tier": 1
+          },
+          "prerequisites": [
+            "beginner-foundation"
+          ],
+          "unlocks": [
+            "chest-to-bar",
+            "straight-bar-dips"
+          ],
+          "totalWeeks": 6,
+          "xpReward": 300,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Premières tractions",
+              "subtitle": "Construire la base",
+              "xpReward": 100,
+              "exercises": [
+                {
+                  "name": "Tractions strictes",
+                  "description": "Menton au-dessus de la barre, sans élan",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 180,
+                  "rpe": "RPE 7/10",
+                  "tips": "Mieux vaut 3 propres que 5 sales"
+                },
+                {
+                  "name": "Tractions négatives",
+                  "description": "Saute en haut, descends lentement (3-5s)",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "La phase négative construit la force"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Finisher pour le volume",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Ne néglige pas cet exercice"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Volume",
+              "subtitle": "Augmenter les répétitions",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions strictes",
+                  "description": "Menton au-dessus de la barre, sans élan",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Mieux vaut 3 propres que 5 sales"
+                },
+                {
+                  "name": "Tractions négatives",
+                  "description": "Saute en haut, descends lentement (3-5s)",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "La phase négative construit la force"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Finisher pour le volume",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Ne néglige pas cet exercice"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Force",
+              "subtitle": "Développer la puissance",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions strictes",
+                  "description": "Menton au-dessus de la barre, sans élan",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Mieux vaut 3 propres que 5 sales"
+                },
+                {
+                  "name": "Tractions négatives",
+                  "description": "Saute en haut, descends lentement (5s)",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Focus sur la descente lente"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Finisher pour le volume",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 18,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Ne néglige pas cet exercice"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Endurance",
+              "subtitle": "Solidifier les acquis",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions strictes",
+                  "description": "Menton au-dessus de la barre, sans élan",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Mieux vaut 3 propres que 5 sales"
+                },
+                {
+                  "name": "Tractions négatives",
+                  "description": "Saute en haut, descends lentement (5s)",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Focus sur la descente lente"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Finisher pour le volume",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ne néglige pas cet exercice"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Test Final",
+              "subtitle": "Maîtrise complète",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Tractions strictes",
+                  "description": "Menton au-dessus de la barre, sans élan",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Mieux vaut 3 propres que 5 sales"
+                },
+                {
+                  "name": "Tractions négatives (lentes 8s)",
+                  "description": "Saute en haut, descends ultra-lentement (8s)",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Focus sur la descente ultra-lente"
+                },
+                {
+                  "name": "Australian pull-ups",
+                  "description": "Finisher pour le volume",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ne néglige pas cet exercice"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 9,
+            "power": 4,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "lsit-hold",
+          "name": "L-Sit Hold",
+          "difficulty": "Débutant+",
+          "description": "Gainage statique intense. Prérequis pour les levers.",
+          "icon": "📐",
+          "color": "#FF9800",
+          "position": {
+            "x": 0,
+            "y": 2,
+            "tier": 2
+          },
+          "prerequisites": [
+            "hanging-hollow"
+          ],
+          "unlocks": [
+            "lsit-pullups",
+            "front-lever-beginner"
+          ],
+          "totalWeeks": 5,
+          "xpReward": 350,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Tuck L-Sit",
+              "subtitle": "Premiers maintiens",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tuck L-sit au sol",
+                  "description": "Assis, mains au sol, soulève tes fesses en ramenant genoux vers poitrine",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Pousse fort dans le sol avec tes mains"
+                },
+                {
+                  "name": "One leg L-sit",
+                  "description": "Une jambe tendue, une pliée",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Alterne les jambes entre les séries"
+                },
+                {
+                  "name": "Leg raises",
+                  "description": "Allongé, jambes tendues, monte-les à 90°",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 90,
+                  "rpe": "RPE 6/10",
+                  "tips": "Lombes au sol en permanence"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Progression",
+              "subtitle": "Augmenter la durée",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tuck L-sit au sol",
+                  "description": "Assis, mains au sol, soulève tes fesses en ramenant genoux vers poitrine",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Pousse fort dans le sol avec tes mains"
+                },
+                {
+                  "name": "One leg L-sit",
+                  "description": "Une jambe tendue, une pliée",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Alterne les jambes entre les séries"
+                },
+                {
+                  "name": "Leg raises",
+                  "description": "Allongé, jambes tendues, monte-les à 90°",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Lombes au sol en permanence"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "L-Sit Avancé",
+              "subtitle": "Vers le L-sit complet",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tuck L-sit au sol",
+                  "description": "Assis, mains au sol, soulève tes fesses en ramenant genoux vers poitrine",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 25,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Pousse fort dans le sol avec tes mains"
+                },
+                {
+                  "name": "One leg L-sit (chaque jambe)",
+                  "description": "Une jambe tendue, une pliée, alterne",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Travaille chaque jambe séparément"
+                },
+                {
+                  "name": "Leg raises",
+                  "description": "Allongé, jambes tendues, monte-les à 90°",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Lombes au sol en permanence"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Maîtrise",
+              "subtitle": "L-sit complet",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Tuck L-sit",
+                  "description": "Assis, mains au sol, soulève tes fesses en ramenant genoux vers poitrine",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 30,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Pousse fort dans le sol avec tes mains"
+                },
+                {
+                  "name": "L-sit complet tentatives",
+                  "description": "Jambes tendues horizontales, tentatives de maintien",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Même 1 seconde compte !"
+                },
+                {
+                  "name": "Leg raises",
+                  "description": "Allongé, jambes tendues, monte-les à 90°",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Lombes au sol en permanence"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 9,
+            "power": 3,
+            "endurance": 4,
+            "speed": 0,
+            "flexibility": 1
+          }
+        },
+        {
+          "id": "pullup-negatives",
+          "name": "Tractions Négatives",
+          "difficulty": "Débutant+",
+          "description": "Contrôle de la phase excentrique. Développe la force pure.",
+          "icon": "⬇️",
+          "color": "#9C27B0",
+          "position": {
+            "x": 2,
+            "y": 2,
+            "tier": 2
+          },
+          "prerequisites": [
+            "hanging-hollow"
+          ],
+          "unlocks": [
+            "chest-to-bar"
+          ],
+          "totalWeeks": 4,
+          "xpReward": 250,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Négatifs 5s",
+              "subtitle": "Maîtrise la descente contrôlée",
+              "xpReward": 100,
+              "exercises": [
+                {
+                  "name": "Tractions négatives (5s)",
+                  "description": "Compte bien 5 secondes pour descendre, contrôle total",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Si tu tombes avant 5s, c'est trop lourd"
+                },
+                {
+                  "name": "Pause hold en haut",
+                  "description": "Menton au-dessus de la barre, tiens la position",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Contracte tout ton corps"
+                },
+                {
+                  "name": "Dead hang",
+                  "description": "Suspension passive, développe la force de préhension",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 30,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Épaules actives, ne te laisse pas pendre"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Négatifs 7s",
+              "subtitle": "Descente plus lente",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions négatives (7s)",
+                  "description": "Descente ultra-contrôlée sur 7 secondes pleines",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "Résiste à la gravité, chaque seconde compte"
+                },
+                {
+                  "name": "Pause hold en haut",
+                  "description": "Maintien statique en position haute",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Serre la barre fort, corps rigide"
+                },
+                {
+                  "name": "Dead hang",
+                  "description": "Suspension passive renforcée",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 40,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Mental d'acier, ne lâche jamais"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Négatifs 10s",
+              "subtitle": "Contrôle maximal",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Tractions négatives (10s)",
+                  "description": "Descente ultra-lente sur 10 secondes, contrôle parfait",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "C'est de la torture, mais ça forge la force"
+                },
+                {
+                  "name": "Pause hold en haut",
+                  "description": "Maintien statique prolongé en position haute",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 10/10",
+                  "tips": "Imagine que tu es soudé à la barre"
+                },
+                {
+                  "name": "Dead hang",
+                  "description": "Suspension passive maximale",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 45,
+                  "rest": 90,
+                  "rpe": "RPE 9/10",
+                  "tips": "Dernière ligne droite, donne tout"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 10,
+            "power": 4,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "chest-to-bar",
+          "name": "Chest-to-Bar Pull-Ups",
+          "difficulty": "Intermédiaire",
+          "description": "Tractions haute amplitude. Transition vers les skills explosifs.",
+          "icon": "🎯",
+          "color": "#F44336",
+          "position": {
+            "x": 2,
+            "y": 3,
+            "tier": 3
+          },
+          "prerequisites": [
+            "strict-pullups",
+            "pullup-negatives"
+          ],
+          "unlocks": [
+            "explosive-pullups",
+            "muscleup-strict"
+          ],
+          "totalWeeks": 5,
+          "xpReward": 400,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Haute amplitude",
+              "subtitle": "Première haute amplitude",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Chest-to-bar",
+                  "description": "Touche la barre avec ton sternum, pas juste le menton",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 180,
+                  "rpe": "RPE 7/10",
+                  "tips": "Tire en arrière ET vers le bas"
+                },
+                {
+                  "name": "High pulls",
+                  "description": "Tractions ultra-hautes, coudes dépassent la barre",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 150,
+                  "rpe": "RPE 7/10",
+                  "tips": "C'est la base du muscle-up"
+                },
+                {
+                  "name": "Tractions lestées (5kg)",
+                  "description": "Ajoute 5kg (sac à dos)",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Construis la force brute"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Augmentation",
+              "subtitle": "Plus de volume",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Chest-to-bar",
+                  "description": "Touche la barre avec ton sternum, pas juste le menton",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Tire en arrière ET vers le bas"
+                },
+                {
+                  "name": "High pulls",
+                  "description": "Tractions ultra-hautes, coudes dépassent la barre",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "C'est la base du muscle-up"
+                },
+                {
+                  "name": "Tractions lestées (7.5kg)",
+                  "description": "Ajoute 7.5kg (sac à dos)",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Construis la force brute"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Maîtrise",
+              "subtitle": "Qualité technique",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Chest-to-bar",
+                  "description": "Touche la barre avec ton sternum, pas juste le menton",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Tire en arrière ET vers le bas"
+                },
+                {
+                  "name": "High pulls",
+                  "description": "Tractions ultra-hautes, coudes dépassent la barre",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 7,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "C'est la base du muscle-up"
+                },
+                {
+                  "name": "Tractions lestées (10kg)",
+                  "description": "Ajoute 10kg (sac à dos)",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Construis la force brute"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Performance maximale",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Chest-to-bar",
+                  "description": "Touche la barre avec ton sternum, pas juste le menton",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Tire en arrière ET vers le bas"
+                },
+                {
+                  "name": "High pulls explosifs",
+                  "description": "Tractions ultra-hautes explosives, coudes dépassent la barre",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Concentre-toi sur l'explosivité"
+                },
+                {
+                  "name": "Tractions lestées (10kg)",
+                  "description": "Ajoute 10kg (sac à dos)",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force maximale"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 11,
+            "power": 5,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "straight-bar-dips",
+          "name": "Straight Bar Dips",
+          "difficulty": "Intermédiaire",
+          "description": "Dips à la barre fixe. Prérequis direct pour le muscle-up.",
+          "icon": "🔥",
+          "color": "#FF5722",
+          "position": {
+            "x": 4,
+            "y": 3,
+            "tier": 3
+          },
+          "prerequisites": [
+            "strict-pullups"
+          ],
+          "unlocks": [
+            "muscleup-strict",
+            "highbar-muscleup"
+          ],
+          "totalWeeks": 6,
+          "xpReward": 400,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Dips parallèles maîtrise",
+              "subtitle": "Transition des parallèles à la barre",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Dips parallèles",
+                  "description": "Maîtrise parfaite des dips classiques avant tout",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 7/10",
+                  "tips": "Descends au moins à 90°, remonte complet"
+                },
+                {
+                  "name": "Straight bar dips assistés (pieds au sol)",
+                  "description": "Pieds touchent légèrement le sol pour assistance",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Penche-toi beaucoup en avant, 45° minimum"
+                },
+                {
+                  "name": "Dips négatifs à la barre",
+                  "description": "Saute en haut, descends lentement",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 4,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Contrôle la descente, penché en avant"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Transition",
+              "subtitle": "Réduire l'assistance",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Dips parallèles",
+                  "description": "Augmente le volume pour plus de force",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Tempo contrôlé, pas de rebonds"
+                },
+                {
+                  "name": "Straight bar dips assistés",
+                  "description": "Assistance minimale, juste l'équilibre",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Inclinaison du buste cruciale"
+                },
+                {
+                  "name": "Dips négatifs à la barre (5s)",
+                  "description": "Descente ultra-contrôlée sur 5 secondes",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Chaque seconde de descente compte"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Premiers stricts",
+              "subtitle": "Dips stricts à la barre",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Dips parallèles",
+                  "description": "Volume maintenu pour la base",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ces dips restent ta référence"
+                },
+                {
+                  "name": "Straight bar dips stricts",
+                  "description": "Premiers dips stricts sans assistance",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Corps penché 45°, descente contrôlée"
+                },
+                {
+                  "name": "Dips négatifs à la barre (7s)",
+                  "description": "Descente encore plus lente",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "7 secondes de torture contrôlée"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Maîtrise complète",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Dips parallèles lestés (5kg)",
+                  "description": "Dips lestés pour la force pure",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Lest = sac à dos ou ceinture"
+                },
+                {
+                  "name": "Straight bar dips stricts",
+                  "description": "Volume accru en dips stricts",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu maîtrises maintenant ce mouvement"
+                },
+                {
+                  "name": "Dips négatifs à la barre (8s)",
+                  "description": "Contrôle ultime sur 8 secondes",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "8 secondes = éternité, mais tu y arrives"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 12,
+            "power": 6,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "hanging-leg-raises",
+          "name": "Hanging Leg Raises",
+          "difficulty": "Intermédiaire",
+          "description": "Core dynamique. Base pour les toes-to-bar et front lever.",
+          "icon": "🦵",
+          "color": "#00BCD4",
+          "position": {
+            "x": 1,
+            "y": 3,
+            "tier": 3
+          },
+          "prerequisites": [
+            "hanging-hollow"
+          ],
+          "unlocks": [
+            "toes-to-bar",
+            "lsit-pullups"
+          ],
+          "totalWeeks": 4,
+          "xpReward": 350,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Knee raises",
+              "subtitle": "Contrôle de base",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Knee raises",
+                  "description": "Monte les genoux vers la poitrine, contrôle total",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Initie avec le core, pas l'élan des jambes"
+                },
+                {
+                  "name": "Straight leg raises (partielles)",
+                  "description": "Jambes tendues, monte à 45° seulement",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Core contracté en permanence"
+                },
+                {
+                  "name": "Hollow body rocks",
+                  "description": "Au sol, balance d'avant en arrière en hollow",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 12,
+                  "rest": 60,
+                  "rpe": "RPE 7/10",
+                  "tips": "Mouvement de bascule contrôlé"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Progression",
+              "subtitle": "Augmentation du volume",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Knee raises",
+                  "description": "Volume accru, toujours contrôlé",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Core engage avant même de commencer"
+                },
+                {
+                  "name": "Straight leg raises",
+                  "description": "Jambes tendues, monte à 90° complet",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Descente lente, contrôle excentrique"
+                },
+                {
+                  "name": "Hollow body rocks",
+                  "description": "Amplitude plus grande",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 60,
+                  "rpe": "RPE 7/10",
+                  "tips": "Balance plus ample mais contrôlée"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Leg raises strictes",
+              "subtitle": "Qualité maximale",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Knee raises explosives",
+                  "description": "Montée explosive, descente contrôlée",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Explosivité contrôlée, pas de balancement"
+                },
+                {
+                  "name": "Straight leg raises strictes",
+                  "description": "Jambes tendues, strictement vertical",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Tempo 2-1-2 : 2s montée, 1s pause, 2s descente"
+                },
+                {
+                  "name": "Hollow body rocks",
+                  "description": "Série longue pour l'endurance",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 60,
+                  "rpe": "RPE 8/10",
+                  "tips": "Mental d'acier sur les dernières répétitions"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Performance maximale",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Straight leg raises strictes",
+                  "description": "Volume maximal en leg raises strictes",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "C'est ton niveau de référence maintenant"
+                },
+                {
+                  "name": "Leg raises avec pause",
+                  "description": "Pause de 2s en haut de chaque rep",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "2 secondes de pause = éternité"
+                },
+                {
+                  "name": "Hollow body hold",
+                  "description": "Maintien statique prolongé",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 30,
+                  "rest": 90,
+                  "rpe": "RPE 9/10",
+                  "tips": "Core de béton, ne relâche jamais"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 9,
+            "power": 4,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "muscleup-strict",
+          "name": "Muscle-Up Strict",
+          "difficulty": "Intermédiaire",
+          "description": "LE mouvement iconique du street workout. Game changer.",
+          "icon": "⚡",
+          "color": "#FFD700",
+          "position": {
+            "x": 3,
+            "y": 4,
+            "tier": 4
+          },
+          "prerequisites": [
+            "chest-to-bar",
+            "straight-bar-dips"
+          ],
+          "unlocks": [
+            "explosive-pullups",
+            "highbar-muscleup",
+            "muscleup-advanced"
+          ],
+          "totalWeeks": 8,
+          "xpReward": 600,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Fondations force",
+              "subtitle": "Construire la base",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions strictes",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Force de base nécessaire"
+                },
+                {
+                  "name": "Dips parallèles",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 7/10",
+                  "tips": "Descends profond"
+                },
+                {
+                  "name": "Faux grip hang",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Poignets au-dessus de la barre"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Force avancée",
+              "subtitle": "Augmenter l'intensité",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Tractions lestées",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "10kg minimum"
+                },
+                {
+                  "name": "Chest-to-bar pull-ups",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Explosive sur la montée"
+                },
+                {
+                  "name": "Dips lestés",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 210,
+                  "rpe": "RPE 8/10",
+                  "tips": "10-15kg ajoutés"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Technique transition",
+              "subtitle": "Apprendre le mouvement",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Muscle-up négatifs",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "5-8s pour descendre"
+                },
+                {
+                  "name": "Transitions basse hauteur",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 7/10",
+                  "tips": "Pieds au sol pour assistance"
+                },
+                {
+                  "name": "Jumping muscle-ups",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 210,
+                  "rpe": "RPE 8/10",
+                  "tips": "Réduis progressivement l'aide des jambes"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Premier muscle-up",
+              "subtitle": "C'est le moment !",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "🎯 TENTATIVE MUSCLE-UP STRICT",
+                  "type": "reps",
+                  "sets": 8,
+                  "target": 1,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "1 rep propre sur 8 sets = VICTOIRE"
+                },
+                {
+                  "name": "High pull-ups",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Coudes au-dessus de la barre"
+                },
+                {
+                  "name": "Straight bar dips",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Maintiens la force"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 8,
+            "power": 12,
+            "endurance": 0,
+            "speed": 5,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "lsit-pullups",
+          "name": "L-Sit Pull-Ups",
+          "difficulty": "Intermédiaire+",
+          "description": "Tractions avec L-sit. Core + force combinés.",
+          "icon": "🔱",
+          "color": "#3F51B5",
+          "position": {
+            "x": 0,
+            "y": 4,
+            "tier": 4
+          },
+          "prerequisites": [
+            "lsit-hold",
+            "hanging-leg-raises"
+          ],
+          "unlocks": [
+            "front-lever-beginner"
+          ],
+          "totalWeeks": 6,
+          "xpReward": 500,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Initiation L-sit pulls",
+              "subtitle": "Premiers L-sit pull-ups",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "L-sit pull-ups",
+                  "description": "Maintiens les jambes à 90° pendant toute la traction",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 3,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Ne laisse jamais les jambes retomber"
+                },
+                {
+                  "name": "L-sit hold",
+                  "description": "Maintien statique pour renforcer",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Position parfaite, jambes parallèles au sol"
+                },
+                {
+                  "name": "Tractions strictes",
+                  "description": "Volume pour maintenir la force de base",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ces tractions te semblent faciles maintenant !"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Augmentation",
+              "subtitle": "Plus de volume",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "L-sit pull-ups",
+                  "description": "Volume accru, jambes toujours droites",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Contrôle total du mouvement"
+                },
+                {
+                  "name": "L-sit hold",
+                  "description": "Maintien plus long",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 25,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Mental d'acier sur les dernières secondes"
+                },
+                {
+                  "name": "Tractions strictes",
+                  "description": "Volume élevé",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Base solide pour les L-sit pulls"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Consolidation",
+              "subtitle": "Force combinée",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "L-sit pull-ups",
+                  "description": "Volume maximal, technique parfaite",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Jambes droites comme des barres de fer"
+                },
+                {
+                  "name": "L-sit hold",
+                  "description": "Maintien prolongé",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 30,
+                  "rest": 120,
+                  "rpe": "RPE 10/10",
+                  "tips": "30 secondes = éternité en L-sit"
+                },
+                {
+                  "name": "Tractions strictes lestées (5kg)",
+                  "description": "Tractions lestées pour la force brute",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Le lest rend les L-sit pulls plus faciles"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Maîtrise absolue",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "L-sit pull-ups",
+                  "description": "Performance maximale",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu es maintenant un maître de ce mouvement"
+                },
+                {
+                  "name": "L-sit hold",
+                  "description": "Maintien ultime",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 40,
+                  "rest": 120,
+                  "rpe": "RPE 10/10",
+                  "tips": "40 secondes = niveau expert"
+                },
+                {
+                  "name": "Tractions strictes lestées (10kg)",
+                  "description": "Force maximale",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force brute au service de la technique"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 11,
+            "power": 4,
+            "endurance": 3,
+            "speed": 0,
+            "flexibility": 1
+          }
+        },
+        {
+          "id": "toes-to-bar",
+          "name": "Toes-to-Bar Strict",
+          "difficulty": "Intermédiaire+",
+          "description": "Core explosif. Prérequis pour front lever avancé.",
+          "icon": "🎪",
+          "color": "#E91E63",
+          "position": {
+            "x": 1,
+            "y": 4,
+            "tier": 4
+          },
+          "prerequisites": [
+            "hanging-leg-raises"
+          ],
+          "unlocks": [
+            "front-lever-beginner"
+          ],
+          "totalWeeks": 5,
+          "xpReward": 450,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Knees-to-elbows",
+              "subtitle": "Maîtrise la base",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Knees-to-elbows",
+                  "description": "Genoux touchent les coudes en suspension",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Initie le mouvement avec le core, pas l'élan des hanches"
+                },
+                {
+                  "name": "Toes-to-bar tentatives",
+                  "description": "Essaie de toucher la barre avec les pieds",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Même si tu n'y arrives pas, la tentative compte"
+                },
+                {
+                  "name": "Windshield wipers (genoux pliés)",
+                  "description": "Genoux pliés, balance gauche-droite",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Contrôle des obliques, amplitude réduite"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Progression TTB",
+              "subtitle": "Vers les toes-to-bar",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Knees-to-elbows",
+                  "description": "Volume accru pour renforcer",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ces reps te donnent la force pour les TTB"
+                },
+                {
+                  "name": "Toes-to-bar",
+                  "description": "Pieds touchent la barre, strictement contrôlé",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Utilise l'élan des hanches, mais contrôle la descente"
+                },
+                {
+                  "name": "Windshield wipers",
+                  "description": "Jambes tendues, amplitude moyenne",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Balance latérale contrôlée"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "TTB strictes",
+              "subtitle": "Qualité maximale",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Toes-to-bar strictes",
+                  "description": "TTB parfaitement contrôlés, sans kipping",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Tempo contrôlé, initiation pure du core"
+                },
+                {
+                  "name": "Knees-to-elbows explosives",
+                  "description": "Montée explosive, descente contrôlée",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 15,
+                  "rest": 90,
+                  "rpe": "RPE 8/10",
+                  "tips": "Explosivité dans la phase concentrique"
+                },
+                {
+                  "name": "Windshield wipers (jambes tendues)",
+                  "description": "Jambes tendues, amplitude complète",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Amplitude maximale, contrôle strict"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Maîtrise complète",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Toes-to-bar strictes",
+                  "description": "Volume maximal en TTB strictes",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu maîtrises ce mouvement maintenant"
+                },
+                {
+                  "name": "TTB avec pause en haut",
+                  "description": "Pause de 2s quand les pieds touchent la barre",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 6,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "2 secondes de pause = torture contrôlée"
+                },
+                {
+                  "name": "Windshield wipers avancés",
+                  "description": "Série longue, jambes tendues, amplitude max",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 15,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Obliques de fer, contrôle absolu"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 10,
+            "power": 5,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 2
+          }
+        },
+        {
+          "id": "front-lever-beginner",
+          "name": "Front Lever (Débutant)",
+          "difficulty": "Avancé",
+          "description": "Premier skill statique majeur. Horizontal hold.",
+          "icon": "🦾",
+          "color": "#FF6B6B",
+          "position": {
+            "x": 0,
+            "y": 5,
+            "tier": 5
+          },
+          "prerequisites": [
+            "lsit-pullups",
+            "toes-to-bar"
+          ],
+          "unlocks": [
+            "front-lever-advanced",
+            "back-lever"
+          ],
+          "totalWeeks": 10,
+          "xpReward": 700,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Tuck FL initiation",
+              "subtitle": "Première progression statique",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Tuck front lever hold",
+                  "description": "Genoux serrés contre poitrine, dos strictement parallèle au sol",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Rétraction scapulaire absolue, pousse la barre vers tes pieds"
+                },
+                {
+                  "name": "Scapula pulls avancés",
+                  "description": "Tire uniquement avec les omoplates, bras tendus",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Base scapulaire fondamentale pour FL"
+                },
+                {
+                  "name": "Australian pull-ups horizontaux",
+                  "description": "Corps le plus horizontal possible, barre à hauteur de hanches",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 90,
+                  "rpe": "RPE 9/10",
+                  "tips": "Simule exactement le pattern du front lever"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Tuck FL consolidation",
+              "subtitle": "Renforcer la position tuck",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Tuck front lever hold",
+                  "description": "Maintien plus long, genoux serrés maximum",
+                  "type": "time",
+                  "sets": 6,
+                  "target": 12,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "Corps rigide comme une barre de fer"
+                },
+                {
+                  "name": "Scapula pulls avancés",
+                  "description": "Volume accru pour la force scapulaire",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Omoplates tirées vers le bas ET vers l'arrière"
+                },
+                {
+                  "name": "Australian pull-ups horizontaux",
+                  "description": "Position encore plus horizontale",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 12,
+                  "rest": 90,
+                  "rpe": "RPE 9/10",
+                  "tips": "Chaque rep prépare au front lever"
+                },
+                {
+                  "name": "Tuck FL raises",
+                  "description": "Monte en tuck FL depuis dead hang",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Mouvement concentric pur front lever"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Advanced tuck",
+              "subtitle": "Progression vers genoux dépliés",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Advanced tuck front lever",
+                  "description": "Genoux à 90°, tibias parallèles au sol",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Plus dur que tuck, genoux ouverts à 90°"
+                },
+                {
+                  "name": "Front lever pulls (tuck)",
+                  "description": "Tractions en maintenant position tuck FL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force + maintien statique simultané"
+                },
+                {
+                  "name": "Scapula pulls lestés (5kg)",
+                  "description": "Scapula pulls avec lest pour force brute",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 10/10",
+                  "tips": "Lest = sac à dos ou ceinture lestée"
+                },
+                {
+                  "name": "Australian horizontaux (pieds surélevés)",
+                  "description": "Pieds sur banc, corps ultra-horizontal",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 9/10",
+                  "tips": "Position déficitaire = plus proche du FL"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "One leg progression",
+              "subtitle": "Vers la jambe unique",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "One leg front lever tentatives",
+                  "description": "Une jambe tendue, une pliée en tuck",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Alterne les jambes, progression majeure"
+                },
+                {
+                  "name": "Advanced tuck FL",
+                  "description": "Maintien de référence renforcé",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Cette position te semble plus facile maintenant"
+                },
+                {
+                  "name": "Front lever pulls (advanced tuck)",
+                  "description": "Tractions en advanced tuck FL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Combinaison force-statique ultime"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Validation",
+              "subtitle": "Test final du niveau débutant",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "One leg front lever",
+                  "description": "Une jambe tendue, maintien solide",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu maîtrises maintenant cette progression"
+                },
+                {
+                  "name": "Advanced tuck FL",
+                  "description": "Maintien de sécurité prolongé",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 20,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "20 secondes = niveau solide"
+                },
+                {
+                  "name": "Front lever pulls",
+                  "description": "Tractions en position FL optimale",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force fonctionnelle en position statique"
+                },
+                {
+                  "name": "Tuck FL hold max",
+                  "description": "Test de durée maximale",
+                  "type": "time",
+                  "sets": 1,
+                  "target": 60,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Donne tout ce que tu as, record personnel !"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 10,
+            "power": 3,
+            "endurance": 4,
+            "speed": 0,
+            "flexibility": 1
+          }
+        },
+        {
+          "id": "explosive-pullups",
+          "name": "Explosive Pull-Ups",
+          "difficulty": "Avancé",
+          "description": "Tractions explosives. Base pour archer et typewriter.",
+          "icon": "💥",
+          "color": "#FF5722",
+          "position": {
+            "x": 2,
+            "y": 5,
+            "tier": 5
+          },
+          "prerequisites": [
+            "muscleup-strict",
+            "chest-to-bar"
+          ],
+          "unlocks": [
+            "archer-pullups",
+            "muscleup-advanced"
+          ],
+          "totalWeeks": 6,
+          "xpReward": 600,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Explosivité de base",
+              "subtitle": "Développer la vitesse pure",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "Tractions explosives (chest-to-bar)",
+                  "description": "Monte le plus vite possible jusqu'au sternum",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "ATTENTION: Risque de blessure si mal exécuté"
+                },
+                {
+                  "name": "Chest-to-bar tempo (1s up, 3s down)",
+                  "description": "1 seconde montée explosive, 3 secondes descente",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Contraste de vitesse pour développer l'explosivité"
+                },
+                {
+                  "name": "Tractions strictes",
+                  "description": "Volume de sécurité",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Base solide pour l'explosivité"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Clapping tentatives",
+              "subtitle": "Premiers décollages",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Tractions explosives",
+                  "description": "Décollage maximal, même sans clap",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Visualise le décollage complet"
+                },
+                {
+                  "name": "Clapping pull-ups tentatives",
+                  "description": "Essaie de claquer les mains, même rapidement",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 2,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "DANGER: Assure-toi de bien rattraper la barre"
+                },
+                {
+                  "name": "Chest-to-bar",
+                  "description": "Volume pour maintenir la base",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Force fondamentale"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Clapping maîtrise",
+              "subtitle": "Contrôle du décollage",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Clapping pull-ups",
+                  "description": "Claque les mains avec contrôle",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Sécurité ABSOLUE: Rattrape toujours la barre"
+                },
+                {
+                  "name": "Tractions explosives (décollage max)",
+                  "description": "Décollage maximal sans clap",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "Concentre-toi sur la hauteur de décollage"
+                },
+                {
+                  "name": "Chest-to-bar tempo explosif",
+                  "description": "Montée ultra-rapide, descente normale",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Vitesse pure en phase concentrique"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Performance explosive maximale",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Clapping pull-ups",
+                  "description": "Série maximale avec sécurité",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu maîtrises maintenant ce mouvement"
+                },
+                {
+                  "name": "Tractions explosives (chest-to-bar)",
+                  "description": "Volume final explosif",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "Explosivité pure, technique parfaite"
+                },
+                {
+                  "name": "Tractions strictes volume",
+                  "description": "Finisher pour l'endurance",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 12,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ces reps te semblent lentes maintenant !"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 8,
+            "power": 14,
+            "endurance": 0,
+            "speed": 5,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "highbar-muscleup",
+          "name": "High Bar Muscle-Up",
+          "difficulty": "Avancé",
+          "description": "Muscle-up avec transition haute. Plus technique.",
+          "icon": "🚀",
+          "color": "#9C27B0",
+          "position": {
+            "x": 4,
+            "y": 5,
+            "tier": 5
+          },
+          "prerequisites": [
+            "muscleup-strict",
+            "straight-bar-dips"
+          ],
+          "unlocks": [
+            "muscleup-advanced"
+          ],
+          "totalWeeks": 7,
+          "xpReward": 650,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Technique haute transition",
+              "subtitle": "Apprendre la différence",
+              "xpReward": 200,
+              "exercises": [
+                {
+                  "name": "High bar muscle-ups assistés (élastique)",
+                  "description": "Transition haute avec assistance, corps reste droit",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "High bar = transition au-dessus, pas à travers la barre"
+                },
+                {
+                  "name": "Muscle-up négatifs (transition haute)",
+                  "description": "Descente lente depuis position haute",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Contrôle total de la descente"
+                },
+                {
+                  "name": "Straight bar dips profonds",
+                  "description": "Descends le plus bas possible",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Amplitude maximale = meilleure transition"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Premiers stricts",
+              "subtitle": "Sans assistance",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "High bar muscle-ups stricts",
+                  "description": "Transition haute pure, sans élan",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 2,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Plus technique que le muscle-up classique"
+                },
+                {
+                  "name": "Muscle-up négatifs lents (8s)",
+                  "description": "8 secondes pour descendre complètement",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Chaque seconde développe la force"
+                },
+                {
+                  "name": "Straight bar dips profonds",
+                  "description": "Volume accru en dips profonds",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Base solide pour la transition"
+                },
+                {
+                  "name": "High pulls explosifs",
+                  "description": "Tractions ultra-hautes explosives",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Développe l'explosivité pour la transition"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Consolidation",
+              "subtitle": "Maîtriser la technique",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "High bar muscle-ups stricts",
+                  "description": "Volume accru, technique parfaite",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu commences à maîtriser cette technique"
+                },
+                {
+                  "name": "Muscle-up négatifs ultra-lents (10s)",
+                  "description": "10 secondes de descente contrôlée",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 3,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "10 secondes = éternité, mais ça marche"
+                },
+                {
+                  "name": "Straight bar dips",
+                  "description": "Maintien de la force de base",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Ces dips te semblent plus faciles maintenant"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Performance technique maximale",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "High bar muscle-ups stricts",
+                  "description": "Performance maximale en technique haute",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu maîtrises maintenant les deux techniques"
+                },
+                {
+                  "name": "Muscle-up to L-sit",
+                  "description": "Muscle-up + maintien L-sit en haut",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 2,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Combinaison technique ultime"
+                },
+                {
+                  "name": "Straight bar dips lestés (5kg)",
+                  "description": "Dips lestés pour force brute",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force pure au service de la technique"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 9,
+            "power": 13,
+            "endurance": 0,
+            "speed": 5,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "muscleup-advanced",
+          "name": "Muscle-Up Advanced",
+          "difficulty": "Avancé",
+          "description": "Séries de muscle-ups. Endurance + technique.",
+          "icon": "⚡⚡",
+          "color": "#FFD700",
+          "position": {
+            "x": 3,
+            "y": 6,
+            "tier": 6
+          },
+          "prerequisites": [
+            "explosive-pullups",
+            "highbar-muscleup"
+          ],
+          "unlocks": [
+            "archer-pullups",
+            "typewriter-pullups"
+          ],
+          "totalWeeks": 8,
+          "xpReward": 800,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Séries de 3-4",
+              "subtitle": "Développer l'endurance",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Muscle-ups (séries)",
+                  "description": "3 reps consécutives, rythme constant",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Rythme régulier, pas de pause en bas"
+                },
+                {
+                  "name": "Muscle-up négatifs",
+                  "description": "Descente contrôlée pour récupération",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 4,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Aide à la récupération entre séries"
+                },
+                {
+                  "name": "Straight bar dips",
+                  "description": "Maintien de la force de poussée",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Base solide pour les séries longues"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Séries de 5",
+              "subtitle": "Augmentation du volume",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Muscle-ups (séries)",
+                  "description": "5 reps consécutives sans descendre",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Gestion de la fatigue cruciale"
+                },
+                {
+                  "name": "Slow muscle-ups (5s up, 5s down)",
+                  "description": "Contrôle tempo ultra-lent",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 2,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "5 secondes = éternité sur chaque phase"
+                },
+                {
+                  "name": "Tractions explosives",
+                  "description": "Maintien de l'explosivité",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Explosivité pour la transition"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Combos",
+              "subtitle": "Combinaisons techniques",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Muscle-ups (séries)",
+                  "description": "6 reps consécutives, niveau expert",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu atteins maintenant un niveau expert"
+                },
+                {
+                  "name": "Muscle-up to L-sit",
+                  "description": "Muscle-up + maintien L-sit 3s",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Combinaison force + gainage ultime"
+                },
+                {
+                  "name": "High bar muscle-ups",
+                  "description": "Variante technique haute",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Maîtrise des deux techniques"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Endurance",
+              "subtitle": "Séries longues",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "Muscle-ups (séries longues)",
+                  "description": "7 reps consécutives, endurance pure",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 7,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Mental d'acier, ne lâche jamais"
+                },
+                {
+                  "name": "Muscle-up to L-sit",
+                  "description": "Volume accru en combos",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Endurance technique"
+                },
+                {
+                  "name": "Slow muscle-ups",
+                  "description": "Contrôle parfait même en fatigue",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Technique parfaite même épuisé"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Validation",
+              "subtitle": "Performance maximale",
+              "xpReward": 400,
+              "exercises": [
+                {
+                  "name": "Muscle-ups max reps",
+                  "description": "8-10 reps consécutives, performance ultime",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 360,
+                  "rpe": "RPE 10/10",
+                  "tips": "Niveau élite, tu es maintenant un expert"
+                },
+                {
+                  "name": "Muscle-up variations combo",
+                  "description": "Mix high bar + low bar dans la même série",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Maîtrise complète de toutes les variantes"
+                },
+                {
+                  "name": "Finisher : max muscle-ups",
+                  "description": "Test ultime : combien peux-tu en faire ?",
+                  "type": "reps",
+                  "sets": 1,
+                  "target": 15,
+                  "rest": 600,
+                  "rpe": "RPE 10/10",
+                  "tips": "Record personnel, donne absolument tout !"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 9,
+            "power": 11,
+            "endurance": 7,
+            "speed": 3,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "front-lever-advanced",
+          "name": "Front Lever (Avancé)",
+          "difficulty": "Avancé+",
+          "description": "Full front lever. Skill statique ultime.",
+          "icon": "🦾✨",
+          "color": "#FF1744",
+          "position": {
+            "x": 1,
+            "y": 6,
+            "tier": 6
+          },
+          "prerequisites": [
+            "front-lever-beginner"
+          ],
+          "unlocks": [
+            "hefesto"
+          ],
+          "totalWeeks": 12,
+          "xpReward": 900,
+          "levels": [
+            {
+              "id": 1,
+              "name": "One leg mastery",
+              "subtitle": "Consolidation one leg FL",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "One leg front lever",
+                  "description": "Une jambe tendue, une pliée. Maintien prolongé",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 15,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Alterne les jambes, vise 15s+ chaque côté"
+                },
+                {
+                  "name": "One leg FL pulls",
+                  "description": "En one leg FL, monte vers la barre",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force dynamique ultime"
+                },
+                {
+                  "name": "Advanced tuck holds",
+                  "description": "Genoux très éloignés, hanches hautes",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Prépare le straddle FL"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Straddle initiation",
+              "subtitle": "Découverte straddle FL",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Straddle front lever",
+                  "description": "Jambes écartées, horizontales",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 200,
+                  "rpe": "RPE 10/10",
+                  "tips": "Écarte bien les jambes, hanches verrouillées"
+                },
+                {
+                  "name": "One leg to straddle",
+                  "description": "Transition: one leg → straddle progressivement",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Contrôle la transition, pas de balancement"
+                },
+                {
+                  "name": "Straddle negatives",
+                  "description": "Descente contrôlée en straddle FL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "5 secondes de descente minimum"
+                },
+                {
+                  "name": "Straight arm strength",
+                  "description": "Planche support, bras tendus",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 30,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Renforce les bras pour le FL"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Straddle consolidation",
+              "subtitle": "Maîtrise straddle FL",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Straddle FL holds",
+                  "description": "Maintien straddle, technique parfaite",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 12,
+                  "rest": 200,
+                  "rpe": "RPE 10/10",
+                  "tips": "Position parfaite, corps droit"
+                },
+                {
+                  "name": "Straddle FL pulls",
+                  "description": "Monte vers la barre en straddle FL",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Mouvement dynamique très dur"
+                },
+                {
+                  "name": "Close straddle FL",
+                  "description": "Jambes moins écartées, transition vers half lay",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Rapproche graduellement les jambes"
+                },
+                {
+                  "name": "Hollow body rocks",
+                  "description": "Au sol, simulation FL",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 20,
+                  "rest": 90,
+                  "rpe": "RPE 7/10",
+                  "tips": "Renforce le core pour FL"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Half lay progression",
+              "subtitle": "Vers le full FL",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Half lay front lever",
+                  "description": "Jambes tendues, légèrement écartées",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Position intermédiaire vers full FL"
+                },
+                {
+                  "name": "Straddle to half lay",
+                  "description": "Transition contrôlée straddle → half lay",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 200,
+                  "rpe": "RPE 10/10",
+                  "tips": "Rapproche les jambes lentement"
+                },
+                {
+                  "name": "Half lay negatives",
+                  "description": "Descente très lente en half lay",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 200,
+                  "rpe": "RPE 10/10",
+                  "tips": "8 secondes de descente minimum"
+                },
+                {
+                  "name": "Full FL attempts",
+                  "description": "Essais courts de full front lever",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 2,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Jambes jointes, corps parfaitement droit"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Full FL attempts",
+              "subtitle": "Front lever complet",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Full front lever",
+                  "description": "Position finale, jambes jointes",
+                  "type": "time",
+                  "sets": 6,
+                  "target": 5,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Corps parfaitement aligné, pas de compensation"
+                },
+                {
+                  "name": "Full FL negatives",
+                  "description": "Descente ultra-contrôlée en full FL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "10 secondes de descente, technique parfaite"
+                },
+                {
+                  "name": "Half lay recovery",
+                  "description": "Retour en half lay après full FL",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Maintien après l'effort maximal"
+                },
+                {
+                  "name": "Full FL pulls",
+                  "description": "Monte vers barre en full FL (si possible)",
+                  "type": "reps",
+                  "sets": 2,
+                  "target": 1,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Mouvement de légende absolue"
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "name": "Validation FL Expert",
+              "subtitle": "Maîtrise complète",
+              "xpReward": 150,
+              "exercises": [
+                {
+                  "name": "Full FL test",
+                  "description": "Test final: 10 secondes de full FL",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Position parfaite exigée"
+                },
+                {
+                  "name": "FL flow",
+                  "description": "Enchaînement: tuck→one leg→straddle→half lay→full",
+                  "type": "reps",
+                  "sets": 2,
+                  "target": 2,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Démonstration de maîtrise complète"
+                },
+                {
+                  "name": "Full FL endurance",
+                  "description": "Plusieurs séries de full FL",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Endurance dans la position ultime"
+                },
+                {
+                  "name": "Victory lap",
+                  "description": "Célébration: ton meilleur full FL",
+                  "type": "time",
+                  "sets": 1,
+                  "target": 15,
+                  "rest": 0,
+                  "rpe": "RPE MAX",
+                  "tips": "Tu es maintenant un expert en Front Lever!"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 12,
+            "power": 4,
+            "endurance": 5,
+            "speed": 0,
+            "flexibility": 2
+          }
+        },
+        {
+          "id": "back-lever",
+          "name": "Back Lever",
+          "difficulty": "Avancé+",
+          "description": "Lever arrière. Moins connu mais tout aussi impressionnant.",
+          "icon": "🔄",
+          "color": "#00BCD4",
+          "position": {
+            "x": 0,
+            "y": 6,
+            "tier": 6
+          },
+          "prerequisites": [
+            "front-lever-beginner"
+          ],
+          "unlocks": [
+            "hefesto"
+          ],
+          "totalWeeks": 10,
+          "xpReward": 1600,
+          "levels": [
+            {
+              "id": 1,
+              "name": "German hang et initiation",
+              "subtitle": "Préparation back lever",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "German hang",
+                  "description": "Suspends-toi en arrière, bras tendus derrière",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 12,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "⚠️ MOBILITÉ CRITIQUE: Échauffe-toi 10min minimum",
+                  "warning": "Position extrême pour les épaules - progression graduelle obligatoire"
+                },
+                {
+                  "name": "Skin the cat",
+                  "description": "Rotation complète autour de la barre",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 120,
+                  "rpe": "RPE 7/10",
+                  "tips": "Mobilité active des épaules"
+                },
+                {
+                  "name": "Tuck back lever tentatives",
+                  "description": "Premiers essais sous la barre, genoux repliés",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Commence court, écoute tes épaules"
+                },
+                {
+                  "name": "Shoulder dislocations (bâton)",
+                  "description": "Avec bâton ou élastique, rotations d'épaules",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 60,
+                  "rpe": "RPE 6/10",
+                  "tips": "Échauffement spécifique indispensable"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Tuck BL consolidation",
+              "subtitle": "Tuck back lever stable",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Tuck back lever hold",
+                  "description": "Sous la barre, dos face au sol, genoux repliés",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Position stable, pas de balancement"
+                },
+                {
+                  "name": "German hang",
+                  "description": "Maintien prolongé en position arrière",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Force passive des épaules"
+                },
+                {
+                  "name": "Skin the cat lent",
+                  "description": "Rotation très contrôlée, 5s chaque phase",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 120,
+                  "rpe": "RPE 8/10",
+                  "tips": "Contrôle maximal du mouvement"
+                },
+                {
+                  "name": "Back lever raises (tuck)",
+                  "description": "Monte et descend en tuck BL",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Mouvement dynamique avancé"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Advanced tuck",
+              "subtitle": "Progression vers straddle",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Advanced tuck back lever",
+                  "description": "Genoux plus éloignés du torse",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Progression vers jambes tendues"
+                },
+                {
+                  "name": "Tuck back lever",
+                  "description": "Maintien standard tuck BL",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Endurance dans la position"
+                },
+                {
+                  "name": "Back lever raises (tuck)",
+                  "description": "Montées dynamiques en tuck BL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force concentrique pure"
+                },
+                {
+                  "name": "German hang to tuck BL",
+                  "description": "Transition fluide german hang → tuck BL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 150,
+                  "rpe": "RPE 9/10",
+                  "tips": "Enchaînement technique avancé"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Straddle progression",
+              "subtitle": "Vers straddle back lever",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "Straddle back lever tentatives",
+                  "description": "Jambes écartées, premiers essais",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ Position extrême - progression très graduelle"
+                },
+                {
+                  "name": "Advanced tuck BL",
+                  "description": "Maintien advanced tuck consolidé",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 150,
+                  "rpe": "RPE 8/10",
+                  "tips": "Base solide pour le straddle"
+                },
+                {
+                  "name": "Back lever pulls (straddle)",
+                  "description": "Tentatives dynamiques en straddle BL",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 4,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "Mouvement de très haut niveau"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Validation",
+              "subtitle": "Test straddle BL",
+              "xpReward": 400,
+              "exercises": [
+                {
+                  "name": "Straddle back lever",
+                  "description": "Position straddle BL maîtrisée",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 10/10",
+                  "tips": "Objectif final - technique parfaite exigée"
+                },
+                {
+                  "name": "Back lever raises (straddle)",
+                  "description": "Montées dynamiques en straddle BL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "Maîtrise totale du mouvement"
+                },
+                {
+                  "name": "Full back lever tentatives",
+                  "description": "Essais de full back lever (jambes jointes)",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Aperçu du niveau supérieur ultime"
+                },
+                {
+                  "name": "Tuck BL max hold",
+                  "description": "Test d'endurance - tuck BL maximum",
+                  "type": "time",
+                  "sets": 1,
+                  "target": 30,
+                  "rest": 0,
+                  "rpe": "RPE MAX",
+                  "tips": "Célèbre ta progression - tu maîtrises le Back Lever!"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 11,
+            "power": 7,
+            "endurance": 3,
+            "speed": 2,
+            "flexibility": 4
+          }
+        },
+        {
+          "id": "archer-pullups",
+          "name": "Archer Pull-Ups",
+          "difficulty": "Expert",
+          "description": "Tractions unilatérales. Transition vers OAP.",
+          "icon": "🏹",
+          "color": "#8E24AA",
+          "position": {
+            "x": 2,
+            "y": 7,
+            "tier": 7
+          },
+          "prerequisites": [
+            "explosive-pullups",
+            "muscleup-advanced"
+          ],
+          "unlocks": [
+            "one-arm-pullup"
+          ],
+          "totalWeeks": 9,
+          "xpReward": 1600,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Archer initiation",
+              "subtitle": "Découverte archer",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Archer pull-ups (chaque côté)",
+                  "description": "Monte vers un côté, bras opposé tendu",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Isolation maximale du bras de travail - alterne 4G/4D",
+                  "technique": "Bras tendu VRAIMENT tendu, ne triche pas"
+                },
+                {
+                  "name": "Tractions lestées (15kg)",
+                  "description": "Poids modéré pour force de base",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 8/10",
+                  "tips": "Base de force pour archer"
+                },
+                {
+                  "name": "Tractions strictes",
+                  "description": "Technique parfaite, pas de balancement",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 7/10",
+                  "tips": "Maintient la technique même fatigué"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Archer maîtrise",
+              "subtitle": "Archer contrôlé",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Archer pull-ups",
+                  "description": "5 reps chaque côté, technique parfaite",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Focalise sur l'isolation - 90% du poids sur un bras"
+                },
+                {
+                  "name": "Assisted OAP (élastique)",
+                  "description": "Un bras principal, élastique assiste",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Première approche de l'OAP - diminue l'aide graduellement"
+                },
+                {
+                  "name": "Tractions lestées (20kg)",
+                  "description": "Augmentation du poids",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force brute nécessaire pour OAP"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Asymétrie maximale",
+              "subtitle": "Archer extrême",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Archer pull-ups (bras tendu max)",
+                  "description": "Archer avec extension maximale du bras passif",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Étirement maximal - quasi 100% du poids sur un bras"
+                },
+                {
+                  "name": "Assisted OAP (élastique léger)",
+                  "description": "Assistance minimale, presque OAP",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu touches presque à l'OAP!"
+                },
+                {
+                  "name": "Tractions lestées (25kg)",
+                  "description": "Poids lourd pour force pure",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 270,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force brute - prépare l'OAP"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Quasi OAP",
+              "subtitle": "Presque OAP",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "Archer pull-ups",
+                  "description": "6 reps parfaites chaque côté",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Maîtrise totale - base solide pour OAP"
+                },
+                {
+                  "name": "One arm negatives (10s)",
+                  "description": "Descente contrôlée en OAP, 10 secondes",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Contrôle excentrique - clé de l'OAP"
+                },
+                {
+                  "name": "Assisted OAP (aide minimale)",
+                  "description": "Quasi OAP, juste un doigt d'aide",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu y es presque - persévère!"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Validation",
+              "subtitle": "Test quasi-OAP",
+              "xpReward": 400,
+              "exercises": [
+                {
+                  "name": "Archer pull-ups explosives",
+                  "description": "Archer avec explosivité maximale",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Puissance maximale - technique parfaite"
+                },
+                {
+                  "name": "One arm pull-up tentatives",
+                  "description": "Essais de véritable OAP strict",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 1,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "LE MOMENT DE VÉRITÉ - tu peux y arriver!"
+                },
+                {
+                  "name": "Tractions lestées (30kg)",
+                  "description": "Test de force maximale",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force brute ultime - tu es prêt pour l'OAP!"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 14,
+            "power": 7,
+            "endurance": 0,
+            "speed": 2,
+            "flexibility": 3
+          }
+        },
+        {
+          "id": "typewriter-pullups",
+          "name": "Typewriter Pull-Ups",
+          "difficulty": "Expert",
+          "description": "Mouvement latéral en haut. Contrôle unilatéral.",
+          "icon": "⌨️",
+          "color": "#673AB7",
+          "position": {
+            "x": 4,
+            "y": 7,
+            "tier": 7
+          },
+          "prerequisites": [
+            "muscleup-advanced"
+          ],
+          "unlocks": [
+            "one-arm-pullup"
+          ],
+          "totalWeeks": 7,
+          "xpReward": 1200,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Déplacement latéral",
+              "subtitle": "Découverte typewriter",
+              "xpReward": 250,
+              "exercises": [
+                {
+                  "name": "Typewriter pull-ups",
+                  "description": "Monte en haut, glisse latéralement d'un bras à l'autre",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "HAUTEUR CRITIQUE: Reste toujours en position haute",
+                  "technique": "Ne descends jamais - glisse horizontalement"
+                },
+                {
+                  "name": "Top hold switch",
+                  "description": "Tiens en haut, change de bras dominant",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Transition fluide sans perte de hauteur"
+                },
+                {
+                  "name": "Archer pull-ups",
+                  "description": "Base archer pour typewriter",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 210,
+                  "rpe": "RPE 8/10",
+                  "tips": "Préparation au mouvement latéral"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Fluidité",
+              "subtitle": "Mouvement fluide",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Typewriter pull-ups",
+                  "description": "6 reps fluides, mouvement contrôlé",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Fluidité maximale - pas de à-coups"
+                },
+                {
+                  "name": "Top hold switch rapide",
+                  "description": "Changements rapides mais contrôlés",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Vitesse + maintien de la hauteur"
+                },
+                {
+                  "name": "Archer explosives",
+                  "description": "Archer avec explosivité",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 210,
+                  "rpe": "RPE 9/10",
+                  "tips": "Puissance pour typewriter"
+                },
+                {
+                  "name": "One arm hold (chaque bras)",
+                  "description": "Maintien unilatéral position haute",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force statique unilatérale"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Maîtrise",
+              "subtitle": "Typewriter avancé",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Typewriter pull-ups",
+                  "description": "8 reps parfaites, technique impeccable",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 8,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Technique parfaite - tu maîtrises le mouvement"
+                },
+                {
+                  "name": "Typewriter + transition MU",
+                  "description": "Typewriter puis muscle-up direct",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 4,
+                  "rest": 270,
+                  "rpe": "RPE 10/10",
+                  "tips": "Combo avancé - enchaînement technique"
+                },
+                {
+                  "name": "Top hold switch",
+                  "description": "10 changements rapides et fluides",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Endurance dans le mouvement latéral"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Validation",
+              "subtitle": "Test final typewriter",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "Typewriter pull-ups",
+                  "description": "10 reps parfaites - test final",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 10,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Performance maximale - démontre ta maîtrise"
+                },
+                {
+                  "name": "Around the world (rotation complète)",
+                  "description": "Rotation complète autour de la barre",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Mouvement ultime - légende du typewriter"
+                },
+                {
+                  "name": "Archer explosives",
+                  "description": "6 reps explosives chaque côté",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 6,
+                  "rest": 210,
+                  "rpe": "RPE 9/10",
+                  "tips": "Base solide maintenue - tu es prêt pour l'OAP!"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 13,
+            "power": 8,
+            "endurance": 3,
+            "speed": 3,
+            "flexibility": 4
+          }
+        },
+        {
+          "id": "hefesto",
+          "name": "Hefesto",
+          "difficulty": "Elite",
+          "description": "De front lever à dip. Mouvement ultra-rare.",
+          "icon": "🔱",
+          "color": "#D32F2F",
+          "position": {
+            "x": 0,
+            "y": 7,
+            "tier": 7
+          },
+          "prerequisites": [
+            "front-lever-advanced",
+            "back-lever"
+          ],
+          "unlocks": [
+            "master-street"
+          ],
+          "totalWeeks": 16,
+          "xpReward": 2700,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Prérequis front lever",
+              "subtitle": "Base FL obligatoire",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Full front lever hold",
+                  "description": "Front lever complet, technique parfaite",
+                  "type": "time",
+                  "sets": 5,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ PRÉREQUIS ABSOLU: 5s minimum de FL strict",
+                  "warning": "Sans FL solide, le Hefesto est impossible et dangereux"
+                },
+                {
+                  "name": "Straddle FL hold",
+                  "description": "Straddle front lever consolidé",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Position de transition vers FL complet"
+                },
+                {
+                  "name": "Front lever pulls",
+                  "description": "Monte vers la barre en FL",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 210,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force dynamique dans la position FL"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Négatifs ultra-lents",
+              "subtitle": "Contrôle excentrique",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "Hefesto négatifs (de dip vers FL)",
+                  "description": "Commence en support, descends vers FL en 15s",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 1,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ TECHNIQUE CRITIQUE: Rotation d'épaules progressive",
+                  "warning": "Mouvement extrême - écoute ton corps absolument"
+                },
+                {
+                  "name": "Full front lever",
+                  "description": "FL complet maintenu",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Maintient ta base FL pendant l'entraînement Hefesto"
+                },
+                {
+                  "name": "Straight bar dips profonds",
+                  "description": "Dips sur barre droite, descente maximale",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Force dans la position de départ du Hefesto"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Ice cream makers",
+              "subtitle": "FL to BL transitions",
+              "xpReward": 400,
+              "exercises": [
+                {
+                  "name": "Ice cream makers (FL to BL)",
+                  "description": "De front lever, rotation vers back lever",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ Mouvement de rotation d'épaules extrême",
+                  "technique": "FL → rotation lente → BL → retour FL"
+                },
+                {
+                  "name": "Hefesto négatifs (10s)",
+                  "description": "Négatifs plus rapides mais contrôlés",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 2,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Progression vers la remontée positive"
+                },
+                {
+                  "name": "Front lever dynamic",
+                  "description": "Mouvements dynamiques en FL",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force active nécessaire pour Hefesto"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Transition partielle",
+              "subtitle": "Premiers Hefesto assistés",
+              "xpReward": 400,
+              "exercises": [
+                {
+                  "name": "Hefesto avec élastique",
+                  "description": "Hefesto assisté par élastique fort",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 2,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ Première approche du mouvement positif",
+                  "warning": "Assistance importante - progression très graduelle"
+                },
+                {
+                  "name": "Hefesto négatifs",
+                  "description": "Négatifs standard (8-10s)",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Base solide d'excentrique"
+                },
+                {
+                  "name": "FL to inverted hang",
+                  "description": "De FL, monte vers suspension inversée",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Partie du mouvement Hefesto"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Premiers Hefesto",
+              "subtitle": "Hefesto strict",
+              "xpReward": 500,
+              "exercises": [
+                {
+                  "name": "Hefesto strict tentatives",
+                  "description": "Véritables tentatives de Hefesto sans aide",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 1,
+                  "rest": 360,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ MOUVEMENT ULTIME - Force et technique absolues",
+                  "warning": "Si tu sens des douleurs aux épaules, ARRÊTE immédiatement"
+                },
+                {
+                  "name": "Hefesto assisté léger",
+                  "description": "Assistance minimale, quasi-Hefesto",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 2,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Juste un doigt d'aide - tu y es presque"
+                },
+                {
+                  "name": "Full FL hold",
+                  "description": "Maintien FL après efforts Hefesto",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Préserve ta base FL pendant l'entraînement Hefesto"
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "name": "Validation",
+              "subtitle": "Maîtrise Hefesto",
+              "xpReward": 700,
+              "exercises": [
+                {
+                  "name": "Hefesto strict",
+                  "description": "Hefesto complet sans assistance",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 1,
+                  "rest": 360,
+                  "rpe": "RPE 10/10",
+                  "tips": "🏆 LÉGENDE ABSOLUE - Tu fais partie de l'élite mondiale",
+                  "achievement": "Moins de 1% des humains peuvent faire ce mouvement"
+                },
+                {
+                  "name": "Hefesto + dip combo",
+                  "description": "Hefesto puis dip direct",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 2,
+                  "rest": 360,
+                  "rpe": "RPE 10/10",
+                  "tips": "Combo ultime - maîtrise technique absolue"
+                },
+                {
+                  "name": "Ice cream makers",
+                  "description": "FL → BL transitions fluides",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 300,
+                  "rpe": "RPE 9/10",
+                  "tips": "Démonstration de contrôle total"
+                },
+                {
+                  "name": "Full FL max hold",
+                  "description": "Test final FL - célèbre ta progression",
+                  "type": "time",
+                  "sets": 1,
+                  "target": 15,
+                  "rest": 0,
+                  "rpe": "RPE MAX",
+                  "tips": "🔱 TU ES MAINTENANT UN MAÎTRE DU HEFESTO! 🔱"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 20,
+            "power": 15,
+            "endurance": 0,
+            "speed": 6,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "one-arm-pullup",
+          "name": "One Arm Pull-Up",
+          "difficulty": "Elite",
+          "description": "Le graal des tractions. Force unilatérale ultime.",
+          "icon": "💎",
+          "color": "#1976D2",
+          "position": {
+            "x": 3,
+            "y": 8,
+            "tier": 8
+          },
+          "prerequisites": [
+            "archer-pullups",
+            "typewriter-pullups"
+          ],
+          "unlocks": [
+            "master-street"
+          ],
+          "totalWeeks": 21,
+          "xpReward": 3200,
+          "levels": [
+            {
+              "id": 1,
+              "name": "Force de base unilatérale",
+              "subtitle": "Fondations OAP",
+              "xpReward": 300,
+              "exercises": [
+                {
+                  "name": "Archer pull-ups strictes",
+                  "description": "6 reps parfaites chaque côté, bras tendu maximal",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 6,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Base technique pour OAP - asymétrie maximale",
+                  "technique": "90% du poids sur le bras de travail"
+                },
+                {
+                  "name": "Tractions lestées lourdes (30kg)",
+                  "description": "Force brute avec 30kg minimum",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force pure nécessaire pour OAP"
+                },
+                {
+                  "name": "One arm dead hang",
+                  "description": "Suspension un bras, 20s minimum",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 20,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force passive unilatérale - alterne les bras"
+                },
+                {
+                  "name": "One arm row (TRX ou anneaux)",
+                  "description": "Tractions horizontales un bras",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 8,
+                  "rest": 180,
+                  "rpe": "RPE 8/10",
+                  "tips": "Force de traction unilatérale progressive"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "Négatifs OAP",
+              "subtitle": "Excentriques purs",
+              "xpReward": 350,
+              "exercises": [
+                {
+                  "name": "One arm pull-up négatifs (8s)",
+                  "description": "Descente contrôlée un bras, 8 secondes",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "⚠️ Premier vrai contact avec l'OAP - contrôle total",
+                  "technique": "Commence en haut, descends ultra-lentement"
+                },
+                {
+                  "name": "Archer pull-ups explosives",
+                  "description": "Archer avec vitesse maximale",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Explosivité pour compenser le déficit de force"
+                },
+                {
+                  "name": "Tractions lestées (35kg)",
+                  "description": "Augmentation du poids",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Force brute continue - base pour OAP"
+                },
+                {
+                  "name": "One arm hang (top position)",
+                  "description": "Suspension un bras en position haute",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force isométrique haute - critique pour OAP"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "name": "Négatifs lents + assistance",
+              "subtitle": "Contrôle ultime",
+              "xpReward": 400,
+              "exercises": [
+                {
+                  "name": "OAP négatifs ultra-lents (12s)",
+                  "description": "Descente extrêmement contrôlée, 12 secondes",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Contrôle maximal - chaque seconde compte"
+                },
+                {
+                  "name": "Band-assisted OAP (élastique moyen)",
+                  "description": "OAP avec assistance élastique moyenne",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Première approche du mouvement positif complet"
+                },
+                {
+                  "name": "Archer tempo (5s up, 5s down)",
+                  "description": "Archer ultra-lent dans les deux phases",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tempo extrême pour force maximale"
+                }
+              ]
+            },
+            {
+              "id": 4,
+              "name": "Assistance minimale",
+              "subtitle": "Quasi-OAP",
+              "xpReward": 450,
+              "exercises": [
+                {
+                  "name": "Band-assisted OAP (élastique léger)",
+                  "description": "Assistance minimale, quasi OAP pur",
+                  "type": "reps",
+                  "sets": 6,
+                  "target": 4,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Tu es à 95% de l'OAP - persévère!"
+                },
+                {
+                  "name": "OAP négatifs",
+                  "description": "Négatifs standards de référence",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 4,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Maintient ta base excentrique"
+                },
+                {
+                  "name": "One arm hangs (various positions)",
+                  "description": "Suspensions un bras à différentes hauteurs",
+                  "type": "time",
+                  "sets": 4,
+                  "target": 15,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force à tous les angles du mouvement"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "name": "Assisted OAP",
+              "subtitle": "Progression finale",
+              "xpReward": 500,
+              "exercises": [
+                {
+                  "name": "OAP négatifs",
+                  "description": "Un bras, descends sur 10s",
+                  "type": "reps",
+                  "sets": 5,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Chaque côté séparément - technique parfaite"
+                },
+                {
+                  "name": "Band-assisted OAP",
+                  "description": "Élastique sous un pied, assistance minimale",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "Élastique de plus en plus léger - tu touches au but"
+                },
+                {
+                  "name": "Archer pulls (tempo lent)",
+                  "description": "Archer avec contrôle maximal",
+                  "type": "reps",
+                  "sets": 4,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "Force de base maintenue"
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "name": "OAP Strict",
+              "subtitle": "Le moment de vérité",
+              "xpReward": 1200,
+              "exercises": [
+                {
+                  "name": "🏆 ONE ARM PULL-UP",
+                  "description": "Un seul bras, aucune assistance. LE mouvement ultime.",
+                  "type": "reps",
+                  "sets": 10,
+                  "target": 1,
+                  "rest": 360,
+                  "rpe": "RPE 10/10",
+                  "tips": "💎 TU ES UNE LÉGENDE ABSOLUE SI TU RÉUSSIS 💎",
+                  "achievement": "Mouvement le plus rare au monde - élite absolue"
+                },
+                {
+                  "name": "OAP holds",
+                  "description": "Tiens en haut de l'OAP, 5s minimum",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 5,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "Isométrie de fer - démontre ta maîtrise totale"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 25,
+            "power": 8,
+            "endurance": 0,
+            "speed": 0,
+            "flexibility": 0
+          }
+        },
+        {
+          "id": "master-street",
+          "name": "MASTER STREET",
+          "difficulty": "LEGEND",
+          "description": "Tu as conquis l'arbre Street Workout. Tu es un athlète d'élite.",
+          "icon": "👑",
+          "color": "#FFD700",
+          "position": {
+            "x": 2,
+            "y": 9,
+            "tier": 9
+          },
+          "prerequisites": [
+            "one-arm-pullup",
+            "hefesto"
+          ],
+          "unlocks": [],
+          "totalWeeks": 4,
+          "xpReward": 3000,
+          "levels": [
+            {
+              "id": 1,
+              "name": "The Qualification",
+              "subtitle": "🏆 Prépare-toi pour la gloire éternelle",
+              "xpReward": 1000,
+              "exercises": [
+                {
+                  "name": "One Arm Pull-Up",
+                  "description": "Démontre ta force unilatérale absolue - 2 reps chaque bras",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 2,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "👑 QUALIFICATION POUR LA LÉGENDE - Prouve que tu maîtrises l'impossible",
+                  "achievement": "Tu fais partie de l'élite mondiale - moins de 0.1% y arrivent"
+                },
+                {
+                  "name": "Hefesto",
+                  "description": "Le mouvement le plus rare - transition Front Lever vers Dip",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 1,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "🔱 MOUVEMENT MYTHIQUE - Tu défies les lois de la physique",
+                  "technique": "FL parfait → Rotation contrôlée → Dip puissant"
+                },
+                {
+                  "name": "Full front lever",
+                  "description": "Position statique ultime - 8 secondes de perfection",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 8,
+                  "rest": 240,
+                  "rpe": "RPE 10/10",
+                  "tips": "💎 CRISTAL DE FORCE - Corps parfaitement horizontal"
+                },
+                {
+                  "name": "Muscle-ups",
+                  "description": "Endurance dans l'excellence - 15 reps fluides",
+                  "type": "reps",
+                  "sets": 2,
+                  "target": 15,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "⚡ PUISSANCE SOUTENUE - Démontre ton endurance d'élite"
+                }
+              ]
+            },
+            {
+              "id": 2,
+              "name": "The Final Test",
+              "subtitle": "👑 TU ES MAINTENANT UNE LÉGENDE VIVANTE 👑",
+              "xpReward": 2000,
+              "exercises": [
+                {
+                  "name": "🏆 One Arm Pull-Up MASTERY",
+                  "description": "3 reps parfaites chaque bras - MAÎTRISE ABSOLUE",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 3,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "🌟 PERFORMANCE LÉGENDAIRE - Tu réécris les limites humaines",
+                  "achievement": "TU ES OFFICIELLEMENT UN DIEU DU STREET WORKOUT"
+                },
+                {
+                  "name": "🔱 Hefesto LEGEND",
+                  "description": "Le mouvement que personne ne maîtrise - TU L'AS CONQUIS",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 1,
+                  "rest": 300,
+                  "rpe": "RPE 10/10",
+                  "tips": "💫 TRANSCENDANCE PURE - Tu as atteint l'impossible",
+                  "epic": "Front lever → Rotation divine → Dip triomphant"
+                },
+                {
+                  "name": "⚡ Muscle-ups ENDURANCE",
+                  "description": "10 reps - Même fatigué, tu restes un titan",
+                  "type": "reps",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 240,
+                  "rpe": "RPE 9/10",
+                  "tips": "🔥 FORGE DE TITANS - Ton endurance est légendaire"
+                },
+                {
+                  "name": "💎 Full Front Lever ULTIMATE",
+                  "description": "10 secondes de perfection absolue",
+                  "type": "time",
+                  "sets": 3,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "🌟 POSITION DIVINE - Tu flottes comme un ange de fer"
+                },
+                {
+                  "name": "⌨️ Typewriter Pull-ups",
+                  "description": "12 reps - Art du mouvement latéral",
+                  "type": "reps",
+                  "sets": 2,
+                  "target": 12,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "🎭 MAÎTRE DE L'ART - Ta technique est poésie pure"
+                },
+                {
+                  "name": "🔄 Back Lever Ultimate",
+                  "description": "10 secondes - Position inversée de légende",
+                  "type": "time",
+                  "sets": 2,
+                  "target": 10,
+                  "rest": 180,
+                  "rpe": "RPE 9/10",
+                  "tips": "🌙 MAÎTRE DE L'INVERSION - Tu défies la gravité elle-même"
+                }
+              ]
+            }
+          ],
+          "statBonuses": {
+            "strength": 18,
+            "power": 15,
+            "endurance": 10,
+            "speed": 6,
+            "flexibility": 5
+          }
+        }
+      ]
+}

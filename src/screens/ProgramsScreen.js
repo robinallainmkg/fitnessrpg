@@ -3,12 +3,13 @@ import { View, ScrollView, StyleSheet, Alert } from 'react-native';
 import { Card, Button, Text, Chip, ActivityIndicator, Divider, Badge } from 'react-native-paper';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
-import programs from '../data/programs.json';
+import { loadProgramsMeta } from '../data/programsLoader';
 import { activateProgram, deactivateProgram, getActivePrograms } from '../services/activeProgramsService';
 import { getTopCumulativeStats } from '../utils/programStats';
 
 const ProgramsScreen = ({ navigation, route }) => {
   const { user } = useAuth();
+  const [programs, setPrograms] = useState({ categories: [] });
   const [activePrograms, setActivePrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activatingId, setActivatingId] = useState(null);
@@ -18,16 +19,20 @@ const ProgramsScreen = ({ navigation, route }) => {
   const isOnboarding = route.params?.isOnboarding || false;
 
   useEffect(() => {
-    loadActivePrograms();
+    loadData();
   }, [user.uid]);
 
-  const loadActivePrograms = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const active = await getActivePrograms(user.uid);
+      const [meta, active] = await Promise.all([
+        loadProgramsMeta(),
+        getActivePrograms(user.uid)
+      ]);
+      setPrograms(meta);
       setActivePrograms(active || []);
     } catch (error) {
-      console.error('Erreur chargement programmes actifs:', error);
+      console.error('Erreur chargement données:', error);
     } finally {
       setLoading(false);
     }

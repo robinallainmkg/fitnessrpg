@@ -127,7 +127,7 @@ const FirestoreDiagnosticScreen = ({ navigation }) => {
           .collection('_test')
           .doc('diagnostic')
           .set({
-            lastTest: firestore.FieldValue.serverTimestamp(),
+            lastTest: firestore().FieldValue.serverTimestamp(),
             testBy: currentUser.email,
             status: 'success'
           }, { merge: true });

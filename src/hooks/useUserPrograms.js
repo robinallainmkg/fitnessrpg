@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react';
-import firestore from '@react-native-firebase/firestore';
-import auth from '@react-native-firebase/auth';
 import { getWithRetry } from '../utils/firestoreRetry';
-import programs from '../data/programs.json';
+import { loadPrograms } from '../data/programsLoader';
+import { useAuth } from '../contexts/AuthContext';
+import firestore from '@react-native-firebase/firestore';
 
 /**
- * Hook pour gérer les données des  useEffect(() => {
-    const user = auth().currentUser;
-    if (user) {
-      fetchUserCategories();
-    } else {
-      setLoading(false);
-      setCategories([]);
-    }
-  }, []); // On garde [] car fetchUserCategories vérifie déjà auth().currentUseres utilisateur
+ * Hook pour gérer les données des programmes utilisateur
  * Combine les programmes disponibles avec la progression utilisateur
+ * 
+ * GUEST MODE: Retourne des données vides si l'utilisateur est en mode invité
  * 
  * @returns {Object} {
  *   userPrograms: Array des programmes avec progression,
@@ -27,23 +21,56 @@ export const useUserPrograms = () => {
   const [userPrograms, setUserPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, isGuest } = useAuth();
 
   const fetchUserPrograms = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const user = auth().currentUser;
-      if (!user) {
-        setUserPrograms([]);
+      // Charger les programmes (métadonnées) - TOUJOURS, même en mode invité
+      const programs = await loadPrograms();
+      
+      // Validation : vérifier que les programmes sont chargés
+      if (!programs || !programs.categories) {
+        console.error('❌ Impossible de charger les métadonnées des programmes');
+        throw new Error('Impossible de charger les métadonnées des programmes');
+      }
+
+      // GUEST MODE: Retourner les programmes sans progression Firebase
+      if (isGuest || !user?.uid) {
+        console.log('👤 Mode invité - programmes chargés sans progression Firebase');
+        
+        // Créer la liste des programmes sans progression
+        const programsWithoutProgress = [];
+        programs.categories.forEach(category => {
+          // Vérification défensive : skip si category.programs n'existe pas
+          if (!category.programs || !Array.isArray(category.programs)) {
+            console.warn(`⚠️ [GUEST] Category ${category.id} has no programs array`);
+            return;
+          }
+          
+          category.programs.forEach(program => {
+            programsWithoutProgress.push({
+              ...program,
+              categoryId: category.id,
+              categoryName: category.name,
+              userProgress: { xp: 0, level: 0, completedSkills: 0 },
+              isStarted: false,
+              hasSkills: true
+            });
+          });
+        });
+        
+        setUserPrograms(programsWithoutProgress);
         setLoading(false);
         return;
       }
 
-      // Récupérer les données utilisateur avec retry
-      const userRef = firestore().collection('users').doc(user.uid);
-      const userDoc = await getWithRetry(userRef);
-      const userData = userDoc.exists() ? userDoc.data() : {};
+      // Récupérer les données utilisateur
+      const fs = firestore();
+      const userDoc = await fs.collection('users').doc(user.uid).get();
+      const userData = userDoc.exists ? userDoc.data() : {};
       const userProgramsData = userData.programs || {};
 
       // Créer la liste des programmes avec progression
@@ -51,6 +78,12 @@ export const useUserPrograms = () => {
 
       // Parcourir toutes les catégories et programmes disponibles
       programs.categories.forEach(category => {
+        // Vérification défensive : skip si category.programs n'existe pas
+        if (!category.programs || !Array.isArray(category.programs)) {
+          console.warn(`⚠️ Category ${category.id} has no programs array`);
+          return;
+        }
+        
         category.programs.forEach(program => {
           // Récupérer la progression utilisateur pour ce programme
           const userProgress = userProgramsData[program.id] || {
@@ -115,20 +148,22 @@ export const useUserPrograms = () => {
 
   useEffect(() => {
     const startTime = Date.now();
-    const user = auth().currentUser;
-    console.log(`[useUserPrograms] useEffect triggered - User: ${user ? user.email : 'null'}`);
     
-    if (user) {
-      console.log(`[useUserPrograms] Starting fetchUserPrograms...`);
-      fetchUserPrograms().then(() => {
-        console.log(`[useUserPrograms] ✅ Completed in ${Date.now() - startTime}ms`);
-      });
-    } else {
+    // GUEST MODE: Skip Firebase
+    if (isGuest || !user?.uid) {
+      console.log(`[useUserPrograms] 👤 Mode invité - skip Firebase (${Date.now() - startTime}ms)`);
       setLoading(false);
       setUserPrograms([]);
-      console.log(`[useUserPrograms] ✅ No user - skipped (${Date.now() - startTime}ms)`);
+      return;
     }
-  }, []); // On garde [] car fetchUserPrograms vérifie déjà auth().currentUser
+    
+    console.log(`[useUserPrograms] useEffect triggered - User: ${user.email}`);
+    console.log(`[useUserPrograms] Starting fetchUserPrograms...`);
+    
+    fetchUserPrograms().then(() => {
+      console.log(`[useUserPrograms] ✅ Completed in ${Date.now() - startTime}ms`);
+    });
+  }, [user, isGuest]); // ✅ Dépendances: user ET isGuest
 
   return {
     userPrograms,
@@ -234,23 +269,42 @@ export const useUserCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user, isGuest } = useAuth();
 
   const fetchUserCategories = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const user = auth().currentUser;
-      if (!user) {
-        setCategories([]);
+      // Charger les programmes (métadonnées) - TOUJOURS
+      const programs = await loadPrograms();
+
+      // GUEST MODE: Retourner les catégories sans progression Firebase
+      if (isGuest || !user?.uid) {
+        console.log('👤 Mode invité - catégories chargées sans progression Firebase');
+        
+        const categoriesWithoutProgress = programs.categories.map(category => ({
+          id: category.id,
+          name: category.name,
+          icon: category.icon,
+          totalPrograms: category.programs?.length || 0,
+          completedPrograms: 0,
+          totalXP: 0,
+          totalLevels: category.programs?.reduce((sum, prog) => sum + (prog.totalLevels || 0), 0) || 0,
+          completedLevels: 0,
+          progressPercentage: 0,
+          isStarted: false
+        }));
+        
+        setCategories(categoriesWithoutProgress);
         setLoading(false);
         return;
       }
 
-      // Récupérer les données utilisateur avec retry
-      const userRef = firestore().collection('users').doc(user.uid);
-      const userDoc = await getWithRetry(userRef);
-      const userData = userDoc.exists() ? userDoc.data() : {};
+      // Récupérer les données utilisateur
+      const fs = firestore();
+      const userDoc = await fs.collection('users').doc(user.uid).get();
+      const userData = userDoc.exists ? userDoc.data() : {};
       const userProgramsData = userData.programs || {};
 
       // Créer la liste des catégories avec progression
@@ -314,20 +368,22 @@ export const useUserCategories = () => {
 
   useEffect(() => {
     const startTime = Date.now();
-    const user = auth().currentUser;
-    console.log(`[useUserCategories] useEffect triggered - User: ${user ? user.email : 'null'}`);
     
-    if (user) {
-      console.log(`[useUserCategories] Starting fetchUserCategories...`);
-      fetchUserCategories().then(() => {
-        console.log(`[useUserCategories] ✅ Completed in ${Date.now() - startTime}ms`);
-      });
-    } else {
+    // GUEST MODE: Skip Firebase
+    if (isGuest || !user?.uid) {
+      console.log(`[useUserCategories] 👤 Mode invité - skip Firebase (${Date.now() - startTime}ms)`);
       setLoading(false);
       setCategories([]);
-      console.log(`[useUserCategories] ✅ No user - skipped (${Date.now() - startTime}ms)`);
+      return;
     }
-  }, []);
+    
+    console.log(`[useUserCategories] useEffect triggered - User: ${user.email}`);
+    console.log(`[useUserCategories] Starting fetchUserCategories...`);
+    
+    fetchUserCategories().then(() => {
+      console.log(`[useUserCategories] ✅ Completed in ${Date.now() - startTime}ms`);
+    });
+  }, [user, isGuest]); // ✅ Dépendances: user ET isGuest
 
   return {
     categories,

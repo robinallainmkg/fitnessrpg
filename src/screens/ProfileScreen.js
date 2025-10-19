@@ -59,8 +59,9 @@ const ProfileScreen = ({ navigation }) => {
   }, [user, isGuest]);
 
   const loadUserStats = async () => {
-    if (!user?.uid) {
-      console.warn('⚠️ loadUserStats appelé sans user.uid');
+    // Skip Firebase calls in guest mode
+    if (!user?.uid || isGuest) {
+      console.warn('⚠️ loadUserStats appelé sans user.uid ou en mode invité');
       setLoadingStats(false);
       return;
     }
@@ -108,7 +109,10 @@ const ProfileScreen = ({ navigation }) => {
       console.error('❌ Erreur chargement stats ProfileScreen:', error);
       
       // Mode dégradé : continuer avec données par défaut
-      if (error.code === 'firestore/unavailable') {
+      const errorCode = error?.code || error?.message || '';
+      const isUnavailable = errorCode.includes('unavailable') || errorCode.includes('firestore/unavailable');
+      
+      if (isUnavailable) {
         console.warn('⚠️ ProfileScreen en mode dégradé - Firestore indisponible');
         setUserStats({
           stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
@@ -307,13 +311,23 @@ const ProfileScreen = ({ navigation }) => {
           
           {/* Bouton Debug Firestore (DEV uniquement) */}
           {__DEV__ && (
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('FirestoreDiagnostic')}
-              style={[styles.resetButton, { backgroundColor: '#EF4444', marginTop: 12 }]}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.resetButtonText}>🔍 Diagnostic Firestore</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('FirebaseDiagnostic')}
+                style={[styles.resetButton, { backgroundColor: '#f59e0b', marginTop: 12 }]}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.resetButtonText}>🔥 Diagnostic Firebase Auth</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('FirestoreDiagnostic')}
+                style={[styles.resetButton, { backgroundColor: '#EF4444', marginTop: 12 }]}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.resetButtonText}>🔍 Diagnostic Firestore</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>

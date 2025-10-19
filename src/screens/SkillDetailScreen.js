@@ -12,7 +12,6 @@ import {
 } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../theme/colors';
-import programsData from '../data/programs.json';
 
 const SkillDetailScreen = ({ route, navigation }) => {
   const { 
@@ -291,29 +290,36 @@ const SkillDetailScreen = ({ route, navigation }) => {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      {/* Header avec gradient et icône - FIXE en haut */}
-      <LinearGradient
-        colors={[skill.color || '#4D9EFF', '#1A1A1A']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerIconContainer}>
-          <Text style={styles.headerIcon}>{skill.icon}</Text>
-        </View>
-        <Text style={styles.headerTitle}>{skill.name}</Text>
-        <Text style={styles.headerDescription}>{skill.description}</Text>
-        
-        {/* Badges */}
-        <View style={styles.badgesContainer}>
-          <View style={[styles.badge, { backgroundColor: skill.color || '#4D9EFF' }]}>
-            <Text style={styles.badgeText}>{skill.difficulty}</Text>
+      {/* Header avec gradient */}
+      
+        <LinearGradient
+          colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)', '#0A0A0A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>{skill.name}</Text>
+            <Text style={styles.headerDescription}>{skill.description}</Text>
+            
+            {/* Badges */}
+            <View style={styles.badgesContainer}>
+              <View style={[styles.badge, { backgroundColor: skill.color || '#4D9EFF' }]}>
+                <Text style={styles.badgeText}>{skill.difficulty}</Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {skill.totalLevels || skill.levels?.length || 0} niveaux
+                </Text>
+              </View>
+              {skill.xpReward && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>+{skill.xpReward} XP</Text>
+                </View>
+              )}
+            </View>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>+{skill.xpReward} XP</Text>
-          </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
       {/* Contenu scrollable */}
       <ScrollView 
@@ -322,13 +328,13 @@ const SkillDetailScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
       >
 
-        {/* État verrouillé */}
+        {/* État verrouillé - Message d'info mais on affiche quand même les niveaux */}
         {isSkillLocked && (
           <View style={styles.lockedCard}>
             <Text style={styles.lockedIcon}>🔒</Text>
             <Text style={styles.lockedTitle}>Compétence verrouillée</Text>
             <Text style={styles.lockedText}>
-              Complétez les prérequis pour débloquer cette compétence
+              Complétez les prérequis pour débloquer cette compétence.
             </Text>
           </View>
         )}
@@ -362,7 +368,19 @@ const SkillDetailScreen = ({ route, navigation }) => {
         </View>
 
         {/* Liste des niveaux */}
-        {skill.levels && skill.levels.map(level => renderLevel(level))}
+        {skill.levels && skill.levels.length > 0 ? (
+          skill.levels.map(level => renderLevel(level))
+        ) : (
+          <View style={styles.noLevelsCard}>
+            <Text style={styles.noLevelsIcon}>📋</Text>
+            <Text style={styles.noLevelsText}>
+              Aucun niveau disponible pour cette compétence
+            </Text>
+            <Text style={styles.noLevelsSubtext}>
+              Les détails seront bientôt ajoutés
+            </Text>
+          </View>
+        )}
         
         <View style={styles.bottomSpacing} />
       </ScrollView>
@@ -409,19 +427,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  headerIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+  headerGradient: {
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
-  headerIcon: {
-    fontSize: 40,
+  headerContent: {
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 24,

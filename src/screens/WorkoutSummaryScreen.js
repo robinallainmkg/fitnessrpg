@@ -20,12 +20,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { calculateWorkoutScore, isLevelCompleted } from '../utils/scoring';
 import firestore from '@react-native-firebase/firestore';
-import programs from '../data/programs.json';
 
 const WorkoutSummaryScreen = ({ route, navigation }) => {
   const { program, level } = route.params;
   const { setsData, completeWorkout, resetWorkout } = useWorkout();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -41,7 +40,8 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
   }, []);
 
   const calculateStatGains = async (levelCompleted) => {
-    if (!levelCompleted || !user?.uid) return null;
+    // Skip Firebase calls in guest mode
+    if (!levelCompleted || !user?.uid || isGuest) return null;
 
     try {
       // Récupérer les données utilisateur actuelles
@@ -51,12 +51,18 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
       const currentStats = userData.stats || {};
       const currentGlobalXP = userData.globalXP || 0;
 
+      // TODO: Adapter pour nouvelle architecture - temporairement désactivé
       // Trouver le programme actuel dans programs.json
+      /* 
       const currentProgram = programs.categories
         .flatMap(cat => cat.programs)
         .find(p => p.id === program.id);
 
       if (!currentProgram?.statBonuses) return null;
+      */
+
+      // Utiliser directement les statBonuses du programme passé en paramètre
+      if (!program?.statBonuses) return null;
 
       // Calculer le niveau global actuel
       const currentGlobalLevel = Math.floor(currentGlobalXP / 1000) + 1;
@@ -64,11 +70,11 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
 
       // Calculer les gains de stats
       const gains = {
-        strength: currentProgram.statBonuses.strength || 0,
-        endurance: currentProgram.statBonuses.endurance || 0,
-        power: currentProgram.statBonuses.power || 0,
-        speed: currentProgram.statBonuses.speed || 0,
-        flexibility: currentProgram.statBonuses.flexibility || 0
+        strength: program.statBonuses.strength || 0,
+        endurance: program.statBonuses.endurance || 0,
+        power: program.statBonuses.power || 0,
+        speed: program.statBonuses.speed || 0,
+        flexibility: program.statBonuses.flexibility || 0
       };
 
       // Calculer le nouveau XP global et vérifier le level up
@@ -233,7 +239,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
   const levelValidated = sessionData.levelCompleted || isLevelCompleted(sessionData.score);
   const programCompleted = sessionData.programCompleted || false;
   const unlockedPrograms = sessionData.unlockedPrograms || [];
-  const isLastLevel = level.id === program.levels.length;
+  const isLastLevel = level.id === (program.levels?.length || 1); // ✅ Protection
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

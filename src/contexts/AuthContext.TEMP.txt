@@ -1,0 +1,16 @@
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const AuthContext = createContext();
+
+const IS_DEV = __DEV__;
+const log = (...args) => IS_DEV && console.log(...args);
+const logError = (...args) => console.error(...args);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  return context;
+};

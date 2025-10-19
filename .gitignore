@@ -14,3 +14,8 @@ android/app/.cxx/
 # Environment
 .env.local
 .env.*.local
+
+# Signing credentials (NEVER commit these!)
+android/gradle.properties.local
+android/app/*.keystore
+*.jks

@@ -95,9 +95,9 @@ const SkillNode = ({
 
     const baseStyle = {
       transform: baseTransform,
-      width: 110,
-      height: 110,
-      borderRadius: 55,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 3,
@@ -107,8 +107,8 @@ const SkillNode = ({
       case 'LOCKED':
         return {
           ...baseStyle,
-          backgroundColor: '#1A1A1A', // Très sombre, presque noir - OPAQUE
-          borderColor: '#333333', // Gris très foncé
+          backgroundColor: 'rgba(42, 42, 42, 0.9)', // Gris très foncé
+          borderColor: '#444444', // Gris foncé
           borderWidth: 2,
           // Pas de shadow
         };
@@ -116,26 +116,26 @@ const SkillNode = ({
       case 'UNLOCKED':
         return {
           ...baseStyle,
-          backgroundColor: '#1A1A1A', // Fond noir opaque pour cacher les traits
-          borderColor: program.color,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)', // Noir semi-transparent
+          borderColor: '#4ECDC4', // Turquoise brillant
           borderWidth: 3,
-          // Shadow/glow vibrant
-          shadowColor: program.color,
+          // Shadow/glow turquoise
+          shadowColor: '#4ECDC4',
           shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.6,
-          shadowRadius: 10,
+          shadowOpacity: 0.8,
+          shadowRadius: 12,
           elevation: 12,
         };
         
       case 'IN_PROGRESS':
         return {
           ...baseStyle,
-          backgroundColor: '#1A1A1A', // Fond noir opaque pour cacher les traits
-          borderColor: '#FFD700', // Or
+          backgroundColor: 'rgba(0, 0, 0, 0.7)', // Noir semi-transparent
+          borderColor: '#FFB800', // Orange
           borderWidth: 3,
-          shadowColor: '#FFD700',
+          shadowColor: '#FFB800',
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.8,
+          shadowOpacity: 0.6,
           shadowRadius: 8,
           elevation: 8,
         };
@@ -143,12 +143,12 @@ const SkillNode = ({
       case 'COMPLETED':
         return {
           ...baseStyle,
-          backgroundColor: '#1A1A1A', // Fond noir opaque pour cacher les traits
-          borderColor: '#4CAF50',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)', // Noir semi-transparent
+          borderColor: '#4CAF50', // Vert
           borderWidth: 3,
           shadowColor: '#4CAF50',
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.8,
+          shadowOpacity: 0.6,
           shadowRadius: 8,
           elevation: 8,
         };
@@ -163,19 +163,19 @@ const SkillNode = ({
     switch (nodeState) {
       case 'LOCKED':
         return {
-          fontSize: 50,
-          opacity: 0.3, // Très désaturée
-          filter: 'grayscale(100%)', // Grayscale (ne marche pas sur RN, mais bon)
+          fontSize: 32,
+          color: '#FFB800', // Jaune-orange pour le cadenas
+          opacity: 1,
         };
       case 'UNLOCKED':
       case 'IN_PROGRESS':
       case 'COMPLETED':
         return {
-          fontSize: 50,
+          fontSize: 36,
           opacity: 1,
         };
       default:
-        return { fontSize: 50 };
+        return { fontSize: 36 };
     }
   };
 
@@ -210,15 +210,19 @@ const SkillNode = ({
       >
         {/* Nœud principal avec nouveau style */}
         <Animated.View style={[getNodeContainerStyle()]}>
-          {/* Icône du programme */}
-          <Text style={[styles.programIcon, getIconStyle()]}>
-            {program.icon}
-          </Text>
+          {/* Icône du programme ou cadenas */}
+          {nodeState === 'LOCKED' ? (
+            <Text style={[styles.programIcon, getIconStyle()]}>🔒</Text>
+          ) : (
+            <Text style={[styles.programIcon, getIconStyle()]}>
+              {program.icon}
+            </Text>
+          )}
 
-          {/* Cadenas superposé pour LOCKED */}
-          {nodeState === 'LOCKED' && (
-            <View style={styles.lockOverlay}>
-              <Text style={styles.lockIcon}>🔒</Text>
+          {/* Checkmark pour COMPLETED */}
+          {nodeState === 'COMPLETED' && (
+            <View style={styles.checkmark}>
+              <Text style={styles.checkmarkIcon}>✓</Text>
             </View>
           )}
 
@@ -252,13 +256,13 @@ const SkillNode = ({
           
           {nodeState === 'IN_PROGRESS' && (
             <View style={[styles.badge, styles.progressBadge]}>
-              <Text style={styles.badgeText}>En cours</Text>
+              <Text style={styles.badgeText}>EN COURS</Text>
             </View>
           )}
           
           {nodeState === 'COMPLETED' && (
             <View style={[styles.badge, styles.completedBadge]}>
-              <Text style={styles.badgeText}>✅ Complété</Text>
+              <Text style={styles.badgeText}>COMPLÉTÉ</Text>
             </View>
           )}
         </View>
@@ -283,7 +287,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     margin: 8,
-    width: 120, // Augmenté pour les nouveaux nœuds 110px
+    width: 100, // Ajusté pour les nouveaux nœuds 80px
   },
   programIcon: {
     textAlign: 'center',
@@ -298,20 +302,38 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 55,
+    borderRadius: 40,
   },
   lockIcon: {
     fontSize: 30,
     color: 'white',
     opacity: 0.5,
   },
+  checkmark: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  checkmarkIcon: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
   progressRing: {
     position: 'absolute',
     top: -3,
     left: -3,
-    width: 116, // 110 + 6px pour la bordure
-    height: 116,
-    borderRadius: 58,
+    width: 86, // 80 + 6px pour la bordure
+    height: 86,
+    borderRadius: 43,
     borderWidth: 4,
     borderColor: 'transparent',
     justifyContent: 'center',
@@ -321,11 +343,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: 116,
-    height: 116,
-    borderRadius: 58,
+    width: 86,
+    height: 86,
+    borderRadius: 43,
     borderWidth: 4,
-    borderColor: '#FFD700',
+    borderColor: '#FFB800',
     borderRightColor: 'transparent',
     borderBottomColor: 'transparent',
   },
@@ -354,13 +376,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   newBadge: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#00D9B5', // Turquoise
   },
   progressBadge: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#FFB800', // Orange
   },
   completedBadge: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4CAF50', // Vert
   },
   badgeText: {
     fontSize: 9,

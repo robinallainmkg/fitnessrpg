@@ -1,0 +1,8 @@
+# Fichiers à ignorer lors du build EAS
+*.md
+docs/
+.vscode/
+.idea/
+*.log
+platform-tools/
+FitnessGameApp/

@@ -24,7 +24,10 @@ const AuthScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup, login } = useAuth();
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const { signup, login, resetPassword } = useAuth();
 
   const validateForm = () => {
     if (!email.includes('@')) {
@@ -88,6 +91,39 @@ const AuthScreen = () => {
     setIsLogin(!isLogin);
     setEmail('');
     setPassword('');
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetEmail.includes('@')) {
+      Alert.alert('Erreur', 'Veuillez entrer une adresse email valide');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const result = await resetPassword(resetEmail);
+      if (result.success) {
+        Alert.alert(
+          '✅ Succès',
+          result.message + '\n\nConsulte ta boîte mail pour créer un nouveau mot de passe.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setShowResetPassword(false);
+                setResetEmail('');
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert('Erreur', result.error);
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   return (
@@ -186,6 +222,17 @@ const AuthScreen = () => {
                   />
                 </View>
 
+                {/* "Forgot password?" link - only shown in login mode */}
+                {isLogin && (
+                  <TouchableOpacity
+                    style={styles.forgotPasswordButton}
+                    onPress={() => setShowResetPassword(true)}
+                    disabled={loading}
+                  >
+                    <Text style={styles.forgotPasswordText}>🔑 Mot de passe oublié ?</Text>
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
                   style={[
                     styles.submitButton,
@@ -228,6 +275,80 @@ const AuthScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Reset Password Modal */}
+      {showResetPassword && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => {
+                setShowResetPassword(false);
+                setResetEmail('');
+              }}
+              disabled={resetLoading}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>🔑 Réinitialiser mot de passe</Text>
+            
+            <Text style={styles.modalDescription}>
+              Saisis ton email et tu recevras un lien pour créer un nouveau mot de passe.
+            </Text>
+
+            <TextInput
+              value={resetEmail}
+              onChangeText={setResetEmail}
+              mode="flat"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholder="ton@email.com"
+              placeholderTextColor="rgba(148, 163, 184, 0.5)"
+              style={styles.modalInput}
+              underlineColor="transparent"
+              activeUnderlineColor="transparent"
+              theme={{
+                colors: {
+                  text: '#FFFFFF',
+                  placeholder: 'rgba(148, 163, 184, 0.5)',
+                  primary: '#4D9EFF',
+                  background: 'rgba(15, 23, 42, 0.8)'
+                }
+              }}
+              editable={!resetLoading}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.resetButton,
+                (resetLoading || !resetEmail) && styles.resetButtonDisabled
+              ]}
+              onPress={handleResetPassword}
+              disabled={resetLoading || !resetEmail}
+              activeOpacity={0.8}
+            >
+              {resetLoading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.resetButtonText}>Envoyer le lien</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => {
+                setShowResetPassword(false);
+                setResetEmail('');
+              }}
+              disabled={resetLoading}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cancelButtonText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </ImageBackground>
   );
 };
@@ -401,6 +522,116 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  forgotPasswordButton: {
+    marginTop: 12,
+    marginBottom: 16,
+    alignItems: 'flex-end',
+    paddingRight: 4,
+  },
+  forgotPasswordText: {
+    fontSize: 13,
+    color: '#4D9EFF',
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(77, 158, 255, 0.4)',
+    padding: 24,
+    width: '100%',
+    maxWidth: 420,
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 15,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(77, 158, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: '#94A3B8',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  modalInput: {
+    marginBottom: 20,
+    backgroundColor: 'rgba(15, 23, 42, 0.8)',
+    borderRadius: 12,
+    color: '#FFFFFF',
+  },
+  resetButton: {
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#4D9EFF',
+    borderWidth: 2,
+    borderColor: '#7B61FF',
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  resetButtonDisabled: {
+    backgroundColor: 'rgba(148, 163, 184, 0.3)',
+    borderColor: 'rgba(148, 163, 184, 0.5)',
+    shadowOpacity: 0.2,
+    elevation: 2,
+  },
+  resetButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  cancelButton: {
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#94A3B8',
+    letterSpacing: 0.3,
   },
 });
 

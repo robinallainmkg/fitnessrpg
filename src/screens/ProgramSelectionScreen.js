@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, Alert, ImageBackground, TouchableOpacity } from 'react-native';
 import { Card, Button, Text, Chip, ActivityIndicator } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// ✅ ANCIENNE API FIREBASE (cohérente avec firebase.js)
 import firestore from '@react-native-firebase/firestore';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
 import SignupModal from '../components/SignupModal';
-import programs from '../data/programs.json';
+import { loadProgramsMeta } from '../data/programsLoader';
+import { loadProgramTree } from '../utils/programLoader';
 import { colors } from '../theme/colors';
 
 const ProgramSelectionScreen = ({ navigation }) => {
@@ -16,6 +20,9 @@ const ProgramSelectionScreen = ({ navigation }) => {
   const [existingPrograms, setExistingPrograms] = useState({});
   const [showSignupModal, setShowSignupModal] = useState(false);
   const [pendingProgramData, setPendingProgramData] = useState(null);
+  const [signupSuccessful, setSignupSuccessful] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [programTrees, setProgramTrees] = useState({});
   const { user, isGuest, saveGuestData } = useAuth();
   const maxPrograms = 2;
 
@@ -41,6 +48,32 @@ const ProgramSelectionScreen = ({ navigation }) => {
     });
   }, [navigation]);
 
+  // Charger les métadonnées des catégories et les trees
+  useEffect(() => {
+    const loadCategoriesData = async () => {
+      try {
+        console.log('📦 [ProgramSelection] Chargement catégories et trees...');
+        const meta = await loadProgramsMeta();
+        setCategories(meta.categories);
+        
+        // Charger les trees pour chaque catégorie
+        const trees = {};
+        for (const category of meta.categories) {
+          const tree = await loadProgramTree(category.id);
+          if (tree) {
+            trees[category.id] = tree.tree; // Extraire le tableau tree
+          }
+        }
+        setProgramTrees(trees);
+        console.log('✅ [ProgramSelection] Catégories et trees chargés');
+      } catch (error) {
+        console.error('❌ [ProgramSelection] Erreur chargement:', error);
+      }
+    };
+    
+    loadCategoriesData();
+  }, []);
+
   // Charger les programmes existants de l'utilisateur
   useEffect(() => {
     const loadExistingPrograms = async () => {
@@ -60,8 +93,8 @@ const ProgramSelectionScreen = ({ navigation }) => {
 
         // Si utilisateur authentifié, charger depuis Firestore
         if (user && !isGuest) {
-          const userRef = firestore().collection('users').doc(user.uid);
-          const userDoc = await userRef.get();
+          // ✅ ANCIENNE API FIRESTORE
+          const userDoc = await firestore().collection('users').doc(user.uid).get();
           
           if (userDoc.exists) {
             const userData = userDoc.data();
@@ -120,14 +153,14 @@ const ProgramSelectionScreen = ({ navigation }) => {
       // Préparer les données du programme
       const programsData = {};
       selectedPrograms.forEach(programId => {
-        const category = programs.categories.find(c => c.id === programId);
-        if (category && category.programs) {
+        const tree = programTrees[programId];
+        if (tree) {
           programsData[programId] = {
             xp: 0,
             level: 1,
             completedSkills: [],
             skillProgress: {},
-            totalSkills: category.programs.length,
+            totalSkills: tree.length,
             lastSession: null
           };
         }
@@ -156,21 +189,21 @@ const ProgramSelectionScreen = ({ navigation }) => {
     setLoading(true);
     
     try {
-      const userId = user.uid;
-      const userRef = firestore().collection('users').doc(userId);
+      // ✅ ANCIENNE API FIRESTORE
+      const userRef = firestore().collection('users').doc(user.uid);
       
       // Créer l'objet programs pour Firestore
       const programsData = {};
       selectedPrograms.forEach(programId => {
-        const category = programs.categories.find(c => c.id === programId);
-        if (category && category.programs) {
+        const tree = programTrees[programId];
+        if (tree) {
           // Garder les données existantes ou créer nouvelles avec la structure correcte
           programsData[programId] = existingPrograms[programId] || {
             xp: 0,
             level: 1,
             completedSkills: [], // Array des IDs de compétences 100% complétées
             skillProgress: {}, // Object: { skillId: { completedLevels: [1,2,3], currentLevel: 4 } }
-            totalSkills: category.programs.length,
+            totalSkills: tree.length,
             lastSession: null
           };
         }
@@ -199,17 +232,19 @@ const ProgramSelectionScreen = ({ navigation }) => {
         updateData.globalLevel = 1;
         updateData.email = user.email;
         
+        // ✅ ANCIENNE API: set avec merge
         await userRef.set(updateData, { merge: true });
         console.log('✅ Nouveau document utilisateur créé avec programmes');
       } else {
         // Pour un utilisateur existant, mettre à jour le document
+        // ✅ ANCIENNE API: update
         await userRef.update(updateData);
         console.log('✅ Document utilisateur mis à jour');
       }
 
-      // Navigation vers HomeScreen avec trigger tooltip pour nouveaux utilisateurs
+      // Navigation vers SkillTree pour nouveaux utilisateurs, HomeScreen pour utilisateurs existants
       if (Object.keys(existingPrograms).length === 0) {
-        console.log('🚀 Programmes sélectionnés - App.js va détecter le changement et afficher Main');
+        console.log('🚀 Nouveau utilisateur - Navigation vers Home puis ProgramSelection auto-ouvre');
         
         // Marquer l'onboarding comme terminé dans AsyncStorage
         await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
@@ -217,8 +252,24 @@ const ProgramSelectionScreen = ({ navigation }) => {
         // Réinitialiser le flag tooltip pour permettre l'affichage
         await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
         
-        // ✅ App.js va automatiquement détecter le changement et afficher Main Stack
-        // Pas besoin de navigation.reset() ici car on est dans un Stack différent
+        // Rediriger vers Home avec paramètre pour auto-ouvrir ProgramSelection
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [
+              { 
+                name: 'Main',
+                params: {
+                  screen: 'Home',
+                  params: {
+                    openProgramSelection: true,  // 🎯 Nouveau paramètre
+                    refresh: Date.now()
+                  }
+                }
+              }
+            ],
+          });
+        }, 100);
       } else {
         console.log('🚀 Navigation vers Home pour utilisateur existant avec refresh');
         // Forcer le rechargement des données en passant un timestamp
@@ -256,10 +307,13 @@ const ProgramSelectionScreen = ({ navigation }) => {
 
   // Calculer les stats principales d'une catégorie
   const getPrimaryStats = (category) => {
+    const tree = programTrees[category.id];
+    if (!tree) return [];
+    
     const statTotals = {};
     
-    // Parcourir toutes les compétences de la catégorie
-    category.programs?.forEach(program => {
+    // Parcourir toutes les compétences du tree
+    tree.forEach(program => {
       const bonuses = program.statBonuses || {};
       Object.entries(bonuses).forEach(([stat, value]) => {
         statTotals[stat] = (statTotals[stat] || 0) + value;
@@ -294,7 +348,13 @@ const ProgramSelectionScreen = ({ navigation }) => {
   });
 
   const handleSignupSuccess = async () => {
-    console.log('✅ Signup réussi - Navigation vers HomeScreen');
+    console.log('✅ Signup/Login réussi - Attente user Firebase');
+    
+    // Marquer que le signup a réussi pour éviter l'alerte "mode invité"
+    setSignupSuccessful(true);
+    
+    // Fermer le modal
+    setShowSignupModal(false);
     
     // Marquer l'onboarding comme terminé
     await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
@@ -302,41 +362,19 @@ const ProgramSelectionScreen = ({ navigation }) => {
     // Nettoyer les données temporaires
     await AsyncStorage.removeItem('@fitnessrpg:guest_programs');
     
-    // Naviguer vers l'écran principal
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Main' }],
-    });
+    // ⚠️ Ne PAS faire navigation.reset() ici!
+    // App.js va automatiquement montrer Main quand Firebase détecte le user
+    console.log('✅ Laissons App.js gérer la navigation automatiquement');
   };
 
   const handleContinueAsGuest = () => {
-    console.log('👤 Continuer en mode invité');
+    console.log('👤 onClose appelé - Fermeture du modal sans popup');
     setShowSignupModal(false);
-    
-    // Permettre la navigation en mode invité
-    Alert.alert(
-      'Mode invité activé',
-      'Tu peux utiliser l\'app, mais tes données ne seront pas sauvegardées de façon permanente. Crée un compte à tout moment depuis ton profil.',
-      [
-        {
-          text: 'Compris !',
-          onPress: async () => {
-            // Marquer onboarding comme terminé
-            await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
-            
-            // Naviguer vers l'app
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'Main' }],
-            });
-          }
-        }
-      ]
-    );
+    // ⭐ SUPPRESSION COMPLÈTE DE LA POPUP - On laisse juste le modal se fermer
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <ImageBackground 
         source={require('../../assets/Home-BG-2.jpg')} 
         style={styles.backgroundImage}
@@ -352,7 +390,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 160 }}>
       {/* Header avec style gaming */}
       <View style={styles.header}>
         <Text style={styles.title}>
@@ -385,9 +423,10 @@ const ProgramSelectionScreen = ({ navigation }) => {
       </View>
 
       {/* Liste des programmes avec style gaming */}
-      {programs.categories.map((category) => {
+      {categories.map((category) => {
         const isSelected = selectedPrograms.includes(category.id);
         const isDisabled = !isSelected && selectedPrograms.length >= maxPrograms;
+        const tree = programTrees[category.id] || [];
 
         return (
           <TouchableOpacity
@@ -437,7 +476,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
                   </Text>
                   
                   {/* Description */}
-                  <Text style={styles.programDescription} numberOfLines={2}>
+                  <Text style={styles.programDescription}>
                     {category.description}
                   </Text>
                   
@@ -453,7 +492,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
                     
                     <View style={styles.statBadge}>
                       <Text style={styles.statBadgeText}>
-                        🎯 {category.programs?.length || 0} compétences
+                        🎯 {tree.length || 0} compétences
                       </Text>
                     </View>
                   </View>
@@ -464,55 +503,56 @@ const ProgramSelectionScreen = ({ navigation }) => {
         );
       })}
 
-      {/* Bouton validation avec style gaming */}
-      <TouchableOpacity
-        activeOpacity={0.8}
-        disabled={selectedPrograms.length === 0 || loading}
-        onPress={() => {
-          console.log('🔘 Bouton validation cliqué, selectedPrograms:', selectedPrograms);
-          handleValidate();
-        }}
-      >
-        <View style={[
-          styles.validateButton,
-          (selectedPrograms.length === 0 || loading) && styles.validateButtonDisabled
-        ]}>
-          <Text style={[
-            styles.validateButtonText,
-            (selectedPrograms.length === 0 || loading) && styles.validateButtonTextDisabled
-          ]}>
-            {loading 
-              ? "⏳ Sauvegarde..." 
-              : isExistingUser 
-              ? "Confirmer la sélection"
-              : selectedPrograms.length === 0
-              ? "⚔️ Sélectionne au moins 1 programme"
-              : "⚔️ Confirmer la sélection"
-            }
-          </Text>
-        </View>
-      </TouchableOpacity>
-      
-      {/* Message d'aide avec style */}
-      {!isExistingUser && (
-        <Text style={styles.helpText}>
-          💡 Tu pourras modifier tes programmes dans ton profil
-        </Text>
-      )}
-      
-      {/* Espace en bas */}
-      <View style={styles.bottomSpace} />
       </ScrollView>
+
+      {/* ⭐ BOUTON FIXE EN BAS */}
+      <View style={styles.fixedBottomContainer}>
+        {/* Message d'aide avec style */}
+        {!isExistingUser && (
+          <Text style={styles.helpText}>
+            💡 Tu pourras modifier tes programmes dans ton profil
+          </Text>
+        )}
+        
+        {/* Bouton validation avec style gaming */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          disabled={selectedPrograms.length === 0 || loading}
+          onPress={() => {
+            console.log('🔘 Bouton validation cliqué, selectedPrograms:', selectedPrograms);
+            handleValidate();
+          }}
+        >
+          <View style={[
+            styles.validateButton,
+            (selectedPrograms.length === 0 || loading) && styles.validateButtonDisabled
+          ]}>
+            <Text style={[
+              styles.validateButtonText,
+              (selectedPrograms.length === 0 || loading) && styles.validateButtonTextDisabled
+            ]}>
+              {loading 
+                ? "⏳ Sauvegarde..." 
+                : isExistingUser 
+                ? "Confirmer la sélection"
+                : selectedPrograms.length === 0
+                ? "⚔️ Sélectionne au moins 1 programme"
+                : "⚔️ Confirmer la sélection"
+              }
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </ImageBackground>
 
-    {/* Signup Modal */}
-    <SignupModal
-      visible={showSignupModal}
-      onClose={handleContinueAsGuest}
-      onSuccess={handleSignupSuccess}
-      guestData={pendingProgramData}
-    />
-    </>
+      {/* Signup Modal */}
+      <SignupModal
+        visible={showSignupModal}
+        onClose={handleContinueAsGuest}
+        onSuccess={handleSignupSuccess}
+        guestData={pendingProgramData}
+      />
+    </View>
   );
 };
 
@@ -522,7 +562,7 @@ const styles = StyleSheet.create({
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Plus sombre pour le gaming look
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
   },
   backButton: {
     position: 'absolute',
@@ -545,7 +585,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: 60, // Espace pour le bouton retour
+    paddingTop: 60,
   },
   loadingContainer: {
     flex: 1,
@@ -560,15 +600,15 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   },
   header: {
-    marginTop: 40, // Baissé pour laisser place au bouton retour
+    marginTop: 40,
     marginHorizontal: 16,
     marginBottom: 24,
     paddingHorizontal: 16,
     paddingVertical: 20,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)', // Semi-transparent dark
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: 'rgba(77, 158, 255, 0.3)', // Bordure bleue néon
+    borderColor: 'rgba(77, 158, 255, 0.3)',
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
@@ -637,7 +677,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   programCard: {
-    height: 280,
+    height: 320,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 2,
@@ -669,9 +709,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
   },
-  topContent: {
-    // Zone pour le badge en haut
-  },
+  topContent: {},
   selectedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -693,9 +731,7 @@ const styles = StyleSheet.create({
     color: '#00E5FF',
     letterSpacing: 0.5,
   },
-  bottomContent: {
-    // Contenu regroupé en bas
-  },
+  bottomContent: {},
   programName: {
     fontSize: 24,
     fontWeight: '700',
@@ -728,9 +764,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#B8C5D6',
   },
+  fixedBottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    paddingBottom: 20,
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderTopColor: 'rgba(77, 158, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
   validateButton: {
     marginHorizontal: 16,
-    marginVertical: 24,
+    marginVertical: 8,
     paddingVertical: 18,
     paddingHorizontal: 20,
     borderRadius: 16,
@@ -767,13 +819,9 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     marginHorizontal: 16,
-    marginTop: -8,
-    marginBottom: 16,
+    marginBottom: 8,
     fontStyle: 'italic',
   },
-  bottomSpace: {
-    height: 32
-  }
 });
 
 export default ProgramSelectionScreen;

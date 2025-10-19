@@ -124,6 +124,21 @@ const WorkoutScreen = ({ route, navigation }) => {
 
   const currentExercise = getCurrentExercise();
   const progress = getProgressPercentage();
+  
+  // Vérifier que workoutData existe avant d'accéder à exercises
+  if (!workoutData || !workoutData.exercises) {
+    return (
+      <LinearGradient
+        colors={['#0F172A', '#1E293B', '#0F172A']}
+        style={styles.container}
+      >
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Chargement de la séance...</Text>
+        </View>
+      </LinearGradient>
+    );
+  }
+
   const totalExercises = workoutData.exercises.length;
   const sessionProgress = (currentExerciseIndex / totalExercises) * 100;
 
@@ -171,7 +186,7 @@ const WorkoutScreen = ({ route, navigation }) => {
           />
 
           <LinearGradient
-            colors={['rgba(77, 158, 255, 0.15)', 'rgba(123, 97, 255, 0.15)']}
+            colors={['rgba(123, 97, 255, 0.15)', 'rgba(123, 97, 255, 0.15)']}
             style={styles.nextExerciseInfo}
           >
             <Text style={styles.nextExerciseLabel}>⏭️ Prochaine série</Text>
@@ -270,7 +285,7 @@ const WorkoutScreen = ({ route, navigation }) => {
             
             <View style={styles.progressBar}>
               <LinearGradient
-                colors={['#4D9EFF', '#7B61FF']}
+                colors={['#7B61FF', '#7B61FF']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={[styles.progressFill, { width: `${progress}%` }]}
@@ -318,7 +333,7 @@ const WorkoutScreen = ({ route, navigation }) => {
           
           {/* Instruction */}
           <LinearGradient
-            colors={['rgba(77, 158, 255, 0.15)', 'rgba(123, 97, 255, 0.15)']}
+            colors={['rgba(123, 97, 255, 0.15)', 'rgba(123, 97, 255, 0.15)']}
             style={styles.instruction}
           >
             <Text style={styles.instructionText}>
@@ -352,7 +367,7 @@ const WorkoutScreen = ({ route, navigation }) => {
           </View>
           
           <LinearGradient
-            colors={reps > 0 ? ['#4D9EFF', '#7B61FF'] : ['#334155', '#1E293B']}
+            colors={reps > 0 ? ['#7B61FF', '#7B61FF'] : ['#334155', '#1E293B']}
             style={styles.validateButton}
           >
             <TouchableOpacity 
@@ -391,7 +406,7 @@ const WorkoutScreen = ({ route, navigation }) => {
               
               {currentExercise.tips && (
                 <LinearGradient
-                  colors={['#FFD700', '#FFA500']}
+                  colors={['#E9D5FF', '#9F7AEA']}
                   style={styles.modalTipsContainer}
                 >
                   <Text style={styles.modalTipsTitle}>💡 Conseils Pro</Text>
@@ -414,7 +429,7 @@ const WorkoutScreen = ({ route, navigation }) => {
               </View>
             </ScrollView>
             <LinearGradient
-              colors={['#4D9EFF', '#7B61FF']}
+              colors={['#7B61FF', '#7B61FF']}
               style={styles.modalCloseButtonGradient}
             >
               <TouchableOpacity 
@@ -469,6 +484,7 @@ const WorkoutScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 40, // Évite le chevauchement avec la barre de statut
   },
   
   loadingContainer: {
@@ -483,7 +499,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backButton: {
-    backgroundColor: '#4D9EFF',
+    backgroundColor: '#7B61FF',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -504,14 +520,14 @@ const styles = StyleSheet.create({
   
   // Rectangle résumé de la séance
   sessionSummaryCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.6)',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
     borderRadius: 20,
     padding: 20,
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(77, 158, 255, 0.3)',
+    borderWidth: 2,
+    borderColor: 'rgba(123, 97, 255, 0.3)',
   },
   sessionHeader: {
     flexDirection: 'row',
@@ -632,7 +648,7 @@ const styles = StyleSheet.create({
   },
   expandButton: {
     fontSize: 14,
-    color: '#4D9EFF',
+    color: '#7B61FF',
     fontWeight: '600',
     marginBottom: 16,
   },
@@ -653,16 +669,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   setDetailItem: {
-    backgroundColor: 'rgba(77, 158, 255, 0.1)',
+    backgroundColor: 'rgba(123, 97, 255, 0.1)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(77, 158, 255, 0.2)',
+    borderColor: 'rgba(123, 97, 255, 0.2)',
   },
   setDetailText: {
     fontSize: 13,
-    color: '#4D9EFF',
+    color: '#7B61FF',
     fontWeight: '500',
   },
   
@@ -671,7 +687,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#4D9EFF',
+    borderLeftColor: '#7B61FF',
   },
   instructionText: {
     fontSize: 14,
@@ -688,7 +704,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: 'rgba(77, 158, 255, 0.2)',
+    borderColor: 'rgba(123, 97, 255, 0.2)',
   },
   inputLabel: {
     fontSize: 18,
@@ -709,16 +725,16 @@ const styles = StyleSheet.create({
   counterButton: {
     width: 56,
     height: 56,
-    backgroundColor: 'rgba(77, 158, 255, 0.2)',
+    backgroundColor: 'rgba(123, 97, 255, 0.2)',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#4D9EFF',
+    borderColor: '#7B61FF',
   },
   counterButtonText: {
     fontSize: 32,
-    color: '#4D9EFF',
+    color: '#7B61FF',
     fontWeight: '600',
   },
   counterValue: {
@@ -733,7 +749,7 @@ const styles = StyleSheet.create({
   validateButton: {
     borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#4D9EFF',
+    shadowColor: '#7B61FF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -779,7 +795,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 280,
     borderWidth: 1,
-    borderColor: 'rgba(77, 158, 255, 0.3)',
+    borderColor: 'rgba(123, 97, 255, 0.3)',
   },
   nextExerciseLabel: {
     fontSize: 14,
@@ -814,7 +830,7 @@ const styles = StyleSheet.create({
   },
   nextExerciseTarget: {
     fontSize: 16,
-    color: '#FFD700',
+    color: '#E9D5FF',
     fontWeight: 'bold',
   },
   
@@ -833,7 +849,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     borderWidth: 1,
-    borderColor: 'rgba(77, 158, 255, 0.3)',
+    borderColor: 'rgba(123, 97, 255, 0.3)',
   },
   modalTitle: {
     color: '#FFFFFF',
@@ -940,13 +956,13 @@ const styles = StyleSheet.create({
   abandonCancelButton: {
     flex: 1,
     borderWidth: 1.5,
-    borderColor: '#4D9EFF',
+    borderColor: '#7B61FF',
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
   },
   abandonCancelText: {
-    color: '#4D9EFF',
+    color: '#7B61FF',
     fontWeight: '600',
     fontSize: 16,
   },
@@ -967,3 +983,7 @@ const styles = StyleSheet.create({
 });
 
 export default WorkoutScreen;
+
+
+
+

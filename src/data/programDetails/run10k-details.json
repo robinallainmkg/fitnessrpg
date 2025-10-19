@@ -1,0 +1,600 @@
+﻿{
+  "id": "running",
+  "name": "Run 10k - 45min",
+  "description": "Programme complet pour courir 10km en 45 minutes",
+  "icon": "🏃",
+  "color": "#FF6B35",
+  "difficulty": "Intermédiaire",
+  "estimatedDuration": "12 semaines",
+  "backgroundImage": "assets/programmes/running-5.jpg",
+  "type": "cardio",
+  "programs": [
+    {
+      "id": "base-i",
+      "name": "Base I",
+      "description": "Course continue 20-30min",
+      "icon": "🏃‍♂️",
+      "category": "Endurance",
+      "difficulty": "Débutant",
+      "prerequisites": [],
+      "position": { "x": 0, "y": 0 },
+      "statBonuses": { "endurance": 2, "speed": 1 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "20min",
+          "subtitle": "Allure conversationnelle",
+          "xpReward": 100,
+          "exercises": [
+            {
+              "name": "Échauffement",
+              "description": "Marche rapide puis jogging très léger",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Prépare tes muscles et articulations"
+            },
+            {
+              "name": "Course continue",
+              "description": "Allure conversationnelle - tu dois pouvoir parler",
+              "type": "time",
+              "sets": 1,
+              "target": 20,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Si tu es essoufflé(e), ralentis. L'objectif est la durée, pas la vitesse"
+            },
+            {
+              "name": "Retour au calme",
+              "description": "Marche lente avec étirements légers",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 2/10",
+              "tips": "Laisse ton rythme cardiaque redescendre progressivement"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "22min",
+          "subtitle": "Allure conversationnelle",
+          "xpReward": 110,
+          "exercises": [
+            {
+              "name": "Échauffement",
+              "description": "Marche rapide puis jogging très léger",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Prépare tes muscles et articulations"
+            },
+            {
+              "name": "Course continue",
+              "description": "Allure conversationnelle - maintiens un rythme régulier",
+              "type": "time",
+              "sets": 1,
+              "target": 22,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "2 minutes de plus que le niveau 1 - garde le même rythme"
+            },
+            {
+              "name": "Retour au calme",
+              "description": "Marche lente avec étirements légers",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 2/10",
+              "tips": "Étire surtout les mollets et quadriceps"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "25min",
+          "subtitle": "Allure conversationnelle",
+          "xpReward": 125,
+          "exercises": [
+            {
+              "name": "Échauffement",
+              "description": "Marche rapide puis jogging très léger",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Échauffe-toi bien, c'est un palier important"
+            },
+            {
+              "name": "Course continue",
+              "description": "Allure conversationnelle - 25min d'affilée",
+              "type": "time",
+              "sets": 1,
+              "target": 25,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 5-6/10",
+              "tips": "Tu franchis la barre des 25min, c'est un cap mental important !"
+            },
+            {
+              "name": "Retour au calme",
+              "description": "Marche lente avec étirements complets",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 2/10",
+              "tips": "Prends le temps de bien t'étirer après cet effort"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "30min",
+          "subtitle": "Allure conversationnelle",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Échauffement",
+              "description": "Marche rapide puis jogging très léger",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Dernier niveau de Base I - prépare-toi bien"
+            },
+            {
+              "name": "Course continue",
+              "description": "30 minutes en continu - allure facile",
+              "type": "time",
+              "sets": 1,
+              "target": 30,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 5-6/10",
+              "tips": "30 minutes ! C'est une vraie base solide. Bravo !"
+            },
+            {
+              "name": "Retour au calme",
+              "description": "Marche lente avec étirements complets",
+              "type": "time",
+              "sets": 1,
+              "target": 5,
+              "unit": "minutes",
+              "rest": 0,
+              "rpe": "RPE 2/10",
+              "tips": "Félicitations ! Tu as complété Base I 🎉"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "base-ii",
+      "name": "Base II",
+      "description": "Course continue 35-45min",
+      "icon": "🏃",
+      "category": "Endurance",
+      "difficulty": "Débutant",
+      "prerequisites": ["base-i"],
+      "position": { "x": 1, "y": 0 },
+      "statBonuses": { "endurance": 3, "speed": 1 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "35min",
+          "subtitle": "Allure facile",
+          "xpReward": 175,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "40min",
+          "subtitle": "Allure facile",
+          "xpReward": 200,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "45min",
+          "subtitle": "Allure facile",
+          "xpReward": 225,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "50min",
+          "subtitle": "Allure facile",
+          "xpReward": 250,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "tempo-i",
+      "name": "Tempo I",
+      "description": "4 x 1km - Allure soutenue",
+      "icon": "⚡",
+      "category": "Speed",
+      "difficulty": "Intermédiaire",
+      "prerequisites": ["base-i"],
+      "position": { "x": 0, "y": 1 },
+      "statBonuses": { "speed": 3, "endurance": 1 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "5:00/km",
+          "subtitle": "4x1km à 5:00/km - R:2min",
+          "xpReward": 150,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "4:50/km",
+          "subtitle": "4x1km à 4:50/km - R:2min",
+          "xpReward": 175,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "4:40/km",
+          "subtitle": "4x1km à 4:40/km - R:2min",
+          "xpReward": 200,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "4:30/km",
+          "subtitle": "4x1km à 4:30/km - R:2min",
+          "xpReward": 225,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "tempo-ii",
+      "name": "Tempo II",
+      "description": "4 x 6min - Allure tempo",
+      "icon": "⚡",
+      "category": "Speed",
+      "difficulty": "Intermédiaire",
+      "prerequisites": ["tempo-i"],
+      "position": { "x": 1, "y": 1 },
+      "statBonuses": { "speed": 4, "endurance": 2 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "5:00/km",
+          "subtitle": "4x6min à 5:00/km - R:2min",
+          "xpReward": 200,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "4:50/km",
+          "subtitle": "4x6min à 4:50/km - R:2min",
+          "xpReward": 225,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "4:40/km",
+          "subtitle": "4x6min à 4:40/km - R:2min",
+          "xpReward": 250,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "4:30/km",
+          "subtitle": "4x6min à 4:30/km - R:2min",
+          "xpReward": 275,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "tempo-iii",
+      "name": "Tempo III",
+      "description": "3 x 10min - Allure tempo",
+      "icon": "⚡",
+      "category": "Speed",
+      "difficulty": "Avancé",
+      "prerequisites": ["tempo-ii"],
+      "position": { "x": 2, "y": 1 },
+      "statBonuses": { "speed": 4, "endurance": 3 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "5:00/km",
+          "subtitle": "3x10min à 5:00/km - R:3min",
+          "xpReward": 250,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "4:50/km",
+          "subtitle": "3x10min à 4:50/km - R:3min",
+          "xpReward": 275,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "4:40/km",
+          "subtitle": "3x10min à 4:40/km - R:3min",
+          "xpReward": 300,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "4:30/km",
+          "subtitle": "3x10min à 4:30/km - R:3min",
+          "xpReward": 325,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "sprint-i",
+      "name": "Sprint I",
+      "description": "8 x 30sec - Vitesse maximale",
+      "icon": "💨",
+      "category": "Power",
+      "difficulty": "Intermédiaire",
+      "prerequisites": ["base-i"],
+      "position": { "x": 0, "y": 2 },
+      "statBonuses": { "speed": 4, "power": 2 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "6 x 30sec",
+          "subtitle": "Sprint 85% - R:90sec",
+          "xpReward": 150,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "8 x 30sec",
+          "subtitle": "Sprint 85% - R:90sec",
+          "xpReward": 175,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "10 x 30sec",
+          "subtitle": "Sprint 90% - R:90sec",
+          "xpReward": 200,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "12 x 30sec",
+          "subtitle": "Sprint 90% - R:90sec",
+          "xpReward": 225,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "sprint-ii",
+      "name": "Sprint II",
+      "description": "6 x 1min - Sprint long",
+      "icon": "💨",
+      "category": "Power",
+      "difficulty": "Avancé",
+      "prerequisites": ["sprint-i"],
+      "position": { "x": 1, "y": 2 },
+      "statBonuses": { "speed": 5, "power": 3 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "4 x 1min",
+          "subtitle": "Sprint 85% - R:2min",
+          "xpReward": 200,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "5 x 1min",
+          "subtitle": "Sprint 85% - R:2min",
+          "xpReward": 225,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "6 x 1min",
+          "subtitle": "Sprint 90% - R:2min",
+          "xpReward": 250,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "8 x 1min",
+          "subtitle": "Sprint 90% - R:2min",
+          "xpReward": 275,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "sprint-iii",
+      "name": "Sprint III",
+      "description": "400m répétitions",
+      "icon": "💨",
+      "category": "Power",
+      "difficulty": "Avancé",
+      "prerequisites": ["sprint-ii"],
+      "position": { "x": 2, "y": 2 },
+      "statBonuses": { "speed": 5, "power": 4 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "6 x 400m",
+          "subtitle": "Allure 10k - R:90sec",
+          "xpReward": 250,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "8 x 400m",
+          "subtitle": "Allure 10k - R:90sec",
+          "xpReward": 275,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "10 x 400m",
+          "subtitle": "Allure 10k - R:90sec",
+          "xpReward": 300,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "12 x 400m",
+          "subtitle": "Allure 10k - R:90sec",
+          "xpReward": 325,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "long-run-i",
+      "name": "Sortie Longue I",
+      "description": "5-7km - Endurance longue",
+      "icon": "🎯",
+      "category": "Endurance",
+      "difficulty": "Intermédiaire",
+      "prerequisites": ["base-ii"],
+      "position": { "x": 2, "y": 0 },
+      "statBonuses": { "endurance": 5, "mental": 2 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "5km",
+          "subtitle": "Allure facile",
+          "xpReward": 200,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "6km",
+          "subtitle": "Allure facile",
+          "xpReward": 225,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "7km",
+          "subtitle": "Allure facile",
+          "xpReward": 250,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "8km",
+          "subtitle": "Allure facile",
+          "xpReward": 275,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "long-run-ii",
+      "name": "Sortie Longue II",
+      "description": "9-12km - Endurance maximale",
+      "icon": "🎯",
+      "category": "Endurance",
+      "difficulty": "Avancé",
+      "prerequisites": ["long-run-i"],
+      "position": { "x": 3, "y": 0 },
+      "statBonuses": { "endurance": 6, "mental": 3 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "9km",
+          "subtitle": "Allure facile",
+          "xpReward": 300,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "10km",
+          "subtitle": "Allure facile",
+          "xpReward": 325,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "11km",
+          "subtitle": "Allure facile",
+          "xpReward": 350,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "12km",
+          "subtitle": "Allure facile",
+          "xpReward": 375,
+          "exercises": []
+        }
+      ]
+    },
+    {
+      "id": "race-pace",
+      "name": "Allure Objectif",
+      "description": "Simulation 10km en 45min",
+      "icon": "🏆",
+      "category": "Performance",
+      "difficulty": "Expert",
+      "prerequisites": ["tempo-iii", "long-run-ii"],
+      "position": { "x": 3, "y": 1 },
+      "statBonuses": { "speed": 4, "endurance": 4, "mental": 3 },
+      "levels": [
+        {
+          "id": 1,
+          "name": "3km @ 4:30",
+          "subtitle": "3km à allure objectif",
+          "xpReward": 275,
+          "exercises": []
+        },
+        {
+          "id": 2,
+          "name": "5km @ 4:30",
+          "subtitle": "5km à allure objectif",
+          "xpReward": 325,
+          "exercises": []
+        },
+        {
+          "id": 3,
+          "name": "8km @ 4:30",
+          "subtitle": "8km à allure objectif",
+          "xpReward": 375,
+          "exercises": []
+        },
+        {
+          "id": 4,
+          "name": "10km @ 4:30",
+          "subtitle": "Objectif complet !",
+          "xpReward": 500,
+          "exercises": []
+        }
+      ]
+    }
+  ]
+}

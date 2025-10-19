@@ -1,8 +1,19 @@
 import React, { createContext, useContext, useState } from 'react';
+
 import firestore from '@react-native-firebase/firestore';
+import { 
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+  Timestamp
+} from '@react-native-firebase/firestore';
+
 import { useAuth } from './AuthContext';
 import { calculateWorkoutScore, calculateXPBonus } from '../utils/scoring';
-import programsData from '../data/programs.json';
+// Note: Programme unlocking nécessite d'être adapté à la nouvelle architecture
 
 const WorkoutContext = createContext({});
 
@@ -11,13 +22,13 @@ export const WorkoutProvider = ({ children }) => {
   const [workoutData, setWorkoutData] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [currentSetIndex, setCurrentSetIndex] = useState(0);
-  const [setsData, setSetsData] = useState([]); // Stocke les valeurs saisies
+  const [setsData, setSetsData] = useState([]);
   const [isResting, setIsResting] = useState(false);
   const [restTimeRemaining, setRestTimeRemaining] = useState(0);
   const [workoutStartTime, setWorkoutStartTime] = useState(null);
   const [restTimer, setRestTimer] = useState(null);
 
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
 
   /**
    * Démarre une nouvelle séance d'entraînement
@@ -73,7 +84,6 @@ export const WorkoutProvider = ({ children }) => {
       // Passer à l'exercice suivant
       setCurrentExerciseIndex(currentExerciseIndex + 1);
       setCurrentSetIndex(0);
-      // Pas de repos entre les exercices, on passe directement
     } else {
       // Passer à la série suivante et commencer le repos
       setCurrentSetIndex(currentSetIndex + 1);
@@ -119,10 +129,34 @@ export const WorkoutProvider = ({ children }) => {
    * Termine la séance et sauvegarde les données
    */
   const completeWorkout = async (finalSetsData = setsData) => {
-    if (!workoutData || !user?.uid) return;
+    if (!workoutData) return;
+
+    // ✅ PROTECTION GUEST MODE
+    if (isGuest || !user?.uid) {
+      console.log('👤 Mode invité - Workout complété sans sauvegarde Firebase');
+      return {
+        sessionId: `guest_${Date.now()}`,
+        score: 850,
+        percentage: 85,
+        levelCompleted: true,
+        programCompleted: false,
+        unlockedPrograms: [],
+        exercises: [],
+        xpEarned: 100,
+        startTime: workoutStartTime || new Date(), // Date JS pour les retours (pas Firestore)
+        endTime: new Date(), // Date JS pour les retours
+        userProgress: {
+          currentLevel: 1,
+          unlockedLevels: [1]
+        }
+      };
+    }
 
     try {
-      console.log('📱 MOCK: Début finalisation workout...');
+      console.log('💾 Début finalisation workout...');
+      console.log('📊 WorkoutData:', workoutData);
+      console.log('👤 User:', user);
+      console.log('⏱️ WorkoutStartTime:', workoutStartTime);
 
       // Calculer le score
       const exercisesCompleted = workoutData.exercises.map((exercise, index) => {
@@ -131,9 +165,9 @@ export const WorkoutProvider = ({ children }) => {
         const totalTarget = exercise.sets * exercise.target;
 
         return {
-          exerciseId: exercise.id,
-          exerciseName: exercise.name,
-          type: exercise.type,
+          exerciseId: exercise.id || `exercise-${index}`, // ✅ Génère un ID si absent
+          exerciseName: exercise.name || 'Unknown Exercise',
+          type: exercise.type || 'reps',
           target: totalTarget,
           actual: totalActual,
           sets: setsResults
@@ -141,55 +175,68 @@ export const WorkoutProvider = ({ children }) => {
       });
 
       const { score, percentage } = calculateWorkoutScore(exercisesCompleted);
-      const xpEarned = calculateXPBonus(score, workoutData.level.xpReward);
+      const xpReward = workoutData.level?.xpReward || 100; // ✅ Protection contre undefined
+      const xpEarned = calculateXPBonus(score, xpReward);
+
+      console.log('📈 Score calculé:', score, 'Percentage:', percentage, 'XP:', xpEarned);
 
       // Créer la session de workout
+      const now = new Date();
       const workoutSession = {
         userId: user.uid,
-        programId: workoutData.program.id,
-        levelId: workoutData.level.id,
+        programId: workoutData.program?.id || 'unknown', // ✅ Protection
+        levelId: workoutData.level?.id || 1, // ✅ Protection
         exercises: exercisesCompleted,
         score,
         percentage,
         xpEarned,
-        startTime: workoutStartTime,
-        endTime: new Date(),
-        createdAt: new Date() // Mock timestamp
+        startTime: Timestamp.fromDate(workoutStartTime || now), // ✅ Conversion en Timestamp Firestore
+        endTime: Timestamp.fromDate(now), // ✅ Conversion en Timestamp Firestore
+        createdAt: serverTimestamp()
       };
 
-      // MOCK: Simuler la sauvegarde en Firestore
-      console.log('📱 MOCK: Sauvegarde session workout...', workoutSession);
-      const sessionRef = { id: `session_${Date.now()}` };
+      console.log('💾 WorkoutSession à sauvegarder:', JSON.stringify(workoutSession, null, 2));
+
+      // Sauvegarder la session
+      const fs = firestore();
+      const sessionsRef = fs.collection('workoutSessions');
+      const newSessionRef = sessionsRef.doc();
+      await newSessionRef.set(workoutSession);
+
+      console.log('✅ Session workout sauvegardée:', newSessionRef.id);
 
       let levelCompleted = false;
       let programCompleted = false;
       let unlockedPrograms = [];
 
-      // MOCK: Simuler la mise à jour de la progression
+      // Vérifier si le niveau est validé
       if (score >= 800) {
         levelCompleted = true;
-        console.log('📱 MOCK: Niveau validé ! Score:', score);
+        console.log('✅ Niveau validé ! Score:', score);
         
         // Vérifier si c'est le dernier niveau du programme 
         if (workoutData.level.id === workoutData.program.levels?.length) {
           programCompleted = true;
-          console.log('📱 MOCK: Programme complété !', workoutData.program.name);
+          console.log('✅ Programme complété !', workoutData.program.name);
           
-          // Simuler le déblocage des programmes suivants
+          // TODO: Adapter la logique de déblocage pour la nouvelle architecture
+          // Actuellement désactivé car programsMeta n'est plus disponible
+          /* 
           if (workoutData.program.unlocks && workoutData.program.unlocks.length > 0) {
             unlockedPrograms = workoutData.program.unlocks.map(programId => {
-              const program = programsData.categories[0]?.programs?.find(p => p.id === programId);
+              const program = programsMeta.categories[0]?.programs?.find(p => p.id === programId);
               return program ? { id: programId, name: program.name } : null;
             }).filter(Boolean);
-            console.log('📱 MOCK: Programmes débloqués:', unlockedPrograms);
+            console.log('🔓 Programmes débloqués:', unlockedPrograms);
           }
+          */
         }
       }
 
-      console.log('📱 MOCK: Finalisation réussie !');
+      console.log('✅ Finalisation réussie !');
 
       return {
-        sessionId: sessionRef.id,
+        sessionId: newSessionRef.id,
         score,
         percentage,
         levelCompleted,
@@ -197,8 +244,8 @@ export const WorkoutProvider = ({ children }) => {
         unlockedPrograms,
         exercises: exercisesCompleted,
         xpEarned,
-        startTime: workoutStartTime,
-        endTime: new Date(),
+        startTime: workoutStartTime || new Date(), // Date JS pour UI
+        endTime: new Date(), // Date JS pour UI
         userProgress: {
           currentLevel: levelCompleted ? workoutData.level.id + 1 : workoutData.level.id,
           unlockedLevels: levelCompleted ? [1, 2, 3, workoutData.level.id + 1].slice(0, workoutData.level.id + 1) : [1, 2, 3].slice(0, workoutData.level.id)
@@ -206,7 +253,7 @@ export const WorkoutProvider = ({ children }) => {
       };
 
     } catch (error) {
-      console.error('Erreur sauvegarde séance:', error);
+      console.error('❌ Erreur sauvegarde séance:', error);
       throw error;
     }
   };
@@ -215,8 +262,15 @@ export const WorkoutProvider = ({ children }) => {
    * Met à jour la progression utilisateur
    */
   const updateUserProgress = async (programId, completedLevelId) => {
+    // ✅ PROTECTION GUEST MODE
+    if (isGuest || !user?.uid) {
+      console.log('👤 Mode invité - Skip updateUserProgress');
+      return;
+    }
+
     try {
-      const progressRef = firestore().collection('userProgress').doc(`${user.uid}_${programId}`);
+      const fs = firestore();
+      const progressRef = fs.collection('userProgress').doc(`${user.uid}_${programId}`);
       
       // Charger la progression actuelle
       const progressDoc = await progressRef.get();
@@ -238,16 +292,16 @@ export const WorkoutProvider = ({ children }) => {
         nextLevel <= 6 ? nextLevel : completedLevelId
       );
 
-      await progressRef.update({
+      await updateDoc(progressRef, {
         currentLevel: newCurrentLevel,
         unlockedLevels: newUnlockedLevels,
         completedLevels: newCompletedLevels,
         totalSessions: (currentProgress?.totalSessions || 0) + 1,
-        lastSessionAt: firestore.FieldValue.serverTimestamp()
+        lastSessionAt: serverTimestamp()
       });
 
     } catch (error) {
-      console.error('Erreur mise à jour progression:', error);
+      console.error('❌ Erreur mise à jour progression:', error);
     }
   };
 
@@ -255,8 +309,15 @@ export const WorkoutProvider = ({ children }) => {
    * Met à jour les XP de l'utilisateur
    */
   const updateUserXP = async (xpToAdd) => {
+    // ✅ PROTECTION GUEST MODE
+    if (isGuest || !user?.uid) {
+      console.log('👤 Mode invité - Skip updateUserXP');
+      return;
+    }
+
     try {
-      const userRef = firestore().collection('users').doc(user.uid);
+      const fs = firestore();
+      const userRef = fs.collection('users').doc(user.uid);
       const userDoc = await userRef.get();
       const currentXP = userDoc.data()?.totalXP || 0;
 
@@ -265,7 +326,7 @@ export const WorkoutProvider = ({ children }) => {
         lastXPUpdate: firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
-      console.error('Erreur mise à jour XP:', error);
+      console.error('❌ Erreur mise à jour XP:', error);
     }
   };
 

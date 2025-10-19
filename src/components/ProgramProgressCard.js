@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, Button, Chip, ProgressBar } from 'react-native-paper';
 import { colors } from '../theme/colors';
 import { getTopCumulativeStats } from '../utils/programStats';
-import programs from '../data/programs.json';
 
 const ProgramProgressCard = ({ 
   program, 
@@ -34,20 +33,13 @@ const ProgramProgressCard = ({
   const progressPercentageDisplay = Math.round(progressPercentage * 100);
 
   // Calculer les top 3 stats cumulées
-  // Si program.programs existe, c'est une catégorie complète
-  // Sinon, chercher la catégorie complète dans programs.json
+  // Si program.programs existe, c'est une catégorie complète avec les skills
   let topStats = [];
   if (program.programs) {
     topStats = getTopCumulativeStats(program);
-  } else if (program.id) {
-    // Chercher la catégorie parente dans programs.json
-    const parentCategory = programs.categories.find(cat => 
-      cat.programs?.some(p => p.id === program.id)
-    );
-    if (parentCategory) {
-      topStats = getTopCumulativeStats(parentCategory);
-    }
   }
+  // Note: Avec la nouvelle architecture, les stats principales sont dans program.primaryStats
+  // getTopCumulativeStats nécessiterait d'être adapté pour la nouvelle architecture
 
   // Création du background gradient simulé avec superposition
   const cardBackgroundColor = color + '15'; // Transparence légère

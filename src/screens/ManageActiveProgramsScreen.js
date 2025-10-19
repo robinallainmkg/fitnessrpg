@@ -16,7 +16,7 @@ import {
 } from 'react-native-paper';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
-import programs from '../data/programs.json';
+import { loadProgramsMeta } from '../data/programsLoader';
 import {
   getAllUserPrograms,
   activateProgram,
@@ -32,6 +32,7 @@ import {
 const ManageActiveProgramsScreen = ({ navigation }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [programs, setPrograms] = useState({ categories: [] });
   const [activePrograms, setActivePrograms] = useState([]);
   const [inactivePrograms, setInactivePrograms] = useState([]);
   const [processingId, setProcessingId] = useState(null);
@@ -45,14 +46,16 @@ const ManageActiveProgramsScreen = ({ navigation }) => {
 
     try {
       setLoading(true);
-      const { active, inactive } = await getAllUserPrograms(user.uid);
+      const [meta, { active, inactive }] = await Promise.all([
+        loadProgramsMeta(),
+        getAllUserPrograms(user.uid)
+      ]);
+
+      setPrograms(meta);
 
       // Enrichir avec les détails des programmes
       const enrichProgram = (programId) => {
-        const program = programs.categories
-          .flatMap(cat => cat.programs)
-          .find(p => p.id === programId);
-        
+        const program = meta.categories.find(cat => cat.id === programId);
         return program ? { ...program, programId } : null;
       };
 
@@ -126,9 +129,7 @@ const ManageActiveProgramsScreen = ({ navigation }) => {
   };
 
   const handleMaxReached = (newProgramId) => {
-    const newProgram = programs.categories
-      .flatMap(cat => cat.programs)
-      .find(p => p.id === newProgramId);
+    const newProgram = programs.categories.find(cat => cat.id === newProgramId);
 
     Alert.alert(
       `Maximum ${MAX_PROGRAMS} programmes actifs`,

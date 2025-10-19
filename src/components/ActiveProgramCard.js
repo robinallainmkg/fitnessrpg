@@ -1,24 +1,35 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Text, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { rpgTheme } from '../theme/rpgTheme';
+
+// Mapping des images de programmes
+const PROGRAM_IMAGES = {
+  'assets/programmes/StreetWorkout.jpg': require('../../assets/programmes/StreetWorkout.jpg'),
+  'assets/programmes/running-5.jpg': require('../../assets/programmes/running-5.jpg'),
+};
 
 /**
  * Carte d'affichage d'un programme actif avec image de fond immersive
  * Style RPG/Manga avec overlay gradient et bordure néon
  */
 const ActiveProgramCard = ({ program, onPress, onManage }) => {
-  const { name, icon, color, status = 'active', completedSkills = 0, totalSkills = 0 } = program;
+  const { name, icon, color, status = 'active', completedSkills = 0, totalSkills = 0, backgroundImage } = program;
   
   const progress = totalSkills > 0 ? completedSkills / totalSkills : 0;
   const progressPercent = Math.round(progress * 100);
   const isCompleted = completedSkills >= totalSkills && totalSkills > 0;
 
+  // ⭐ CORRECTION: Utiliser l'image du programme ou fallback
+  const imageSource = backgroundImage && PROGRAM_IMAGES[backgroundImage] 
+    ? PROGRAM_IMAGES[backgroundImage]
+    : require('../../assets/programmes/StreetWorkout.jpg');
+
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.cardContainer}>
       <ImageBackground
-        source={require('../../assets/programmes/StreetWorkout.jpg')}
+        source={imageSource}
         style={styles.card}
         imageStyle={styles.cardImage}
       >
@@ -46,6 +57,18 @@ const ActiveProgramCard = ({ program, onPress, onManage }) => {
                 {completedSkills} / {totalSkills} compétences
               </Text>
             )}
+            
+            {/* Bouton voir l'arbre */}
+            <Button
+              mode="contained"
+              onPress={onPress}
+              style={styles.viewButton}
+              buttonColor={rpgTheme.colors.neon.blue}
+              compact
+              icon="tree"
+            >
+              Voir l'arbre
+            </Button>
             
             {/* Badge Actif/Terminé en bas */}
             <View style={[
@@ -131,6 +154,11 @@ const styles = StyleSheet.create({
     color: rpgTheme.colors.text.secondary,
     marginBottom: rpgTheme.spacing.sm,
     fontWeight: rpgTheme.typography.weights.medium,
+  },
+  
+  viewButton: {
+    marginVertical: rpgTheme.spacing.sm,
+    borderRadius: rpgTheme.borderRadius.md,
   },
   
   statusBadge: {

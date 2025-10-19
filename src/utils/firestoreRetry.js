@@ -22,7 +22,10 @@ export const retryFirestoreOperation = async (operation, maxRetries = 2, baseDel
       lastError = error;
       
       // Only retry on unavailable errors
-      if (error.code === 'firestore/unavailable' && attempt < maxRetries) {
+      const errorCode = error?.code || error?.message || '';
+      const isUnavailable = errorCode.includes('unavailable') || errorCode.includes('firestore/unavailable');
+      
+      if (isUnavailable && attempt < maxRetries) {
         const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff: 500ms, 1s
         // Silent retry - no logs to avoid console spam
         await sleep(delay);

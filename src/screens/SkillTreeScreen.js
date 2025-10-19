@@ -9,30 +9,42 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   SafeAreaView,
-  Animated
+  Animated,
+  ImageBackground
 } from 'react-native';
 import { Modal, Portal } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Line as SvgLine, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useAuth } from '../contexts/AuthContext';
 import SkillNode from '../components/SkillNode';
-import programs from '../data/programs.json';
+import { loadProgramsMeta } from '../data/programsLoader';
+import { loadProgramTree } from '../utils/programLoader';
 import { colors } from '../theme/colors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// 🖼️ Mapping des images de background par programme
+const PROGRAM_BACKGROUND_IMAGES = {
+  'assets/programmes/StreetWorkout.jpg': require('../../assets/programmes/StreetWorkout.jpg'),
+  'assets/programmes/running-5.jpg': require('../../assets/programmes/running-5.jpg'),
+};
+
 // Dimensions responsives de l'arbre
 const NODE_SIZE = 80;
 const PADDING = 40;
-// Calcul responsive : largeur disponible / 5 colonnes
-const COLUMN_WIDTH = Math.max(180, (screenWidth - PADDING * 2) / 5);
+// Calcul responsive : largeur disponible / 5 colonnes - réduit pour plus de densité
+const COLUMN_WIDTH = Math.max(150, (screenWidth - PADDING * 2) / 5.5); // Réduit de 180 à 150
 // Hauteur réduite pour rapprocher les blocs verticalement
-const ROW_HEIGHT = Math.max(140, COLUMN_WIDTH * 1.0);
+const ROW_HEIGHT = Math.max(110, COLUMN_WIDTH * 0.75); // Réduit de 1.0 à 0.75 et 140 à 110
 const TREE_WIDTH = 5 * COLUMN_WIDTH + PADDING * 2; // Inclut le padding des deux côtés
 const TREE_HEIGHT = 15 * ROW_HEIGHT + PADDING * 2; // Inclut le padding des deux côtés
 
-const SkillTreeScreen = ({ navigation }) => {
+const SkillTreeScreen = ({ navigation, route }) => {
   const { user } = useAuth();
   const userId = user?.uid;
+  
+  // ⭐ CORRECTION: Lire le programId des params, fallback sur 'street'
+  const programId = route.params?.programId || 'street';
   const [userProgress, setUserProgress] = useState({});
   const [completedPrograms, setCompletedPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +52,8 @@ const SkillTreeScreen = ({ navigation }) => {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [animatedLines, setAnimatedLines] = useState(new Map()); // Map pour les animations de lignes
+  const [currentCategory, setCurrentCategory] = useState(null);
+  const [currentPrograms, setCurrentPrograms] = useState([]);
   
   // Refs pour le scroll horizontal
   const horizontalScrollRef = useRef(null);
@@ -54,14 +68,43 @@ const SkillTreeScreen = ({ navigation }) => {
     currentTier: 0
   });
 
-  // Récupère le programme Street Workout
-  const streetCategory = programs.categories.find(cat => cat.id === 'street');
-  const streetPrograms = streetCategory?.programs || [];
+  // Charger les métadonnées de la catégorie et le tree
+  useEffect(() => {
+    const loadCategoryData = async () => {
+      try {
+        console.log(`🌳 [SkillTree] Chargement ${programId}...`);
+        
+        // Charger métadonnées
+        const meta = await loadProgramsMeta();
+        const category = meta.categories.find(cat => cat.id === programId);
+        
+        if (!category) {
+          console.error(`❌ [SkillTree] Catégorie ${programId} non trouvée`);
+          return;
+        }
+        
+        setCurrentCategory(category);
+        
+        // Charger le tree
+        const treeData = await loadProgramTree(programId);
+        if (treeData && treeData.tree) {
+          setCurrentPrograms(treeData.tree);
+          console.log(`✅ [SkillTree] ${programId} chargé: ${treeData.tree.length} programmes`);
+        }
+      } catch (error) {
+        console.error(`❌ [SkillTree] Erreur chargement ${programId}:`, error);
+      }
+    };
+    
+    loadCategoryData();
+  }, [programId]);
   
   console.log('📱 DEBUG ARBRE:', {
-    streetCategory: !!streetCategory,
-    streetProgramsCount: streetPrograms.length,
-    firstProgram: streetPrograms[0]?.name,
+    programId,
+    categoryFound: !!currentCategory,
+    categoryName: currentCategory?.name,
+    programsCount: currentPrograms.length,
+    firstProgram: currentPrograms[0]?.name,
     loading,
     dataLoaded
   });
@@ -103,13 +146,13 @@ const SkillTreeScreen = ({ navigation }) => {
       // Calcule les statistiques
       const totalCompleted = completed.length;
       const totalXP = completed.reduce((sum, programId) => {
-        const program = streetPrograms.find(p => p.id === programId);
+        const program = currentPrograms.find(p => p.id === programId);
         return sum + (program?.xpReward || 0);
       }, 0);
 
       // Calcule le tier actuel (le plus haut tier débloqué)
       let currentTier = 0;
-      streetPrograms.forEach(program => {
+      currentPrograms.forEach(program => {
         const isUnlocked = program.prerequisites.length === 0 || 
           program.prerequisites.every(prereq => completed.includes(prereq));
         if (isUnlocked && program.position.tier > currentTier) {
@@ -140,9 +183,9 @@ const SkillTreeScreen = ({ navigation }) => {
 
   // Centrage automatique sur la première compétence
   useEffect(() => {
-    if (!loading && streetPrograms.length > 0 && horizontalScrollRef.current && verticalScrollRef.current) {
+    if (!loading && currentPrograms.length > 0 && horizontalScrollRef.current && verticalScrollRef.current) {
       // Trouver "Fondations Débutant" ou la première compétence
-      const firstProgram = streetPrograms.find(p => p.id === 'beginner-foundation') || streetPrograms[0];
+      const firstProgram = currentPrograms.find(p => p.id === 'beginner-foundation') || currentPrograms[0];
       
       if (firstProgram) {
         const SKILLNODE_CONTAINER_WIDTH = 100;
@@ -170,7 +213,7 @@ const SkillTreeScreen = ({ navigation }) => {
         }, 100);
       }
     }
-  }, [loading, streetPrograms]);
+  }, [loading, currentPrograms]);
 
   // Détermine l'état d'un programme
   const getProgramState = useCallback((program) => {
@@ -201,7 +244,7 @@ const SkillTreeScreen = ({ navigation }) => {
   }, [completedPrograms, userProgress, isAdmin]);
 
   // Gère le tap sur un nœud
-  const handleNodePress = useCallback((program) => {
+  const handleNodePress = useCallback(async (program) => {
     console.log('🔥 CLIC DÉTECTÉ sur:', program.name, 'ID:', program.id);
     
     const state = getProgramState(program);
@@ -210,17 +253,29 @@ const SkillTreeScreen = ({ navigation }) => {
     
     console.log('🔥 Clic sur programme:', program.name, 'État:', state, 'Débloqué:', isUnlocked);
     
+    // Charger les détails complets du programme (avec levels)
+    const { loadProgramDetails } = require('../data/programsLoader');
+    const programDetails = await loadProgramDetails(programId, program.id);
+    
+    console.log('📥 Détails chargés pour', program.id, ':', programDetails);
+    
+    // Fusionner les données du tree avec les détails
+    const fullProgram = {
+      ...program,
+      ...programDetails
+    };
+    
     // Navigate dans TOUS les cas (locked ou unlocked)
     navigation.navigate('ProgramDetail', {
-      program,
-      category: streetCategory?.name || 'Street Workout',
+      program: fullProgram,
+      category: currentCategory || { name: 'Street Workout' },
       userProgress: progress || null,
       isLocked: !isUnlocked, // NOUVEAU : passe l'info locked/unlocked
       programState: state,
       completedPrograms,
-      allPrograms: streetPrograms
+      allPrograms: currentPrograms
     });
-  }, [getProgramState, completedPrograms, streetPrograms, navigation, streetCategory, userProgress]);
+  }, [getProgramState, completedPrograms, currentPrograms, navigation, currentCategory, userProgress, programId]);
 
   // Gère le long press sur un nœud
   const handleNodeLongPress = useCallback((program) => {
@@ -231,7 +286,7 @@ const SkillTreeScreen = ({ navigation }) => {
   // Obtient les compétences prérequises avec leurs statuts
   const getPrerequisitesWithStatus = useCallback((program) => {
     return program.prerequisites.map(prereqId => {
-      const prereqProgram = streetPrograms.find(p => p.id === prereqId);
+      const prereqProgram = currentPrograms.find(p => p.id === prereqId);
       const isCompleted = completedPrograms.includes(prereqId);
       return {
         id: prereqId,
@@ -239,18 +294,18 @@ const SkillTreeScreen = ({ navigation }) => {
         completed: isCompleted
       };
     });
-  }, [streetPrograms, completedPrograms]);
+  }, [currentPrograms, completedPrograms]);
 
   // Obtient les compétences que cette compétence débloque
   const getUnlockedPrograms = useCallback((program) => {
     return program.unlocks?.map(unlockedId => {
-      const unlockedProgram = streetPrograms.find(p => p.id === unlockedId);
+      const unlockedProgram = currentPrograms.find(p => p.id === unlockedId);
       return {
         id: unlockedId,
         name: unlockedProgram?.name || unlockedId
       };
     }) || [];
-  }, [streetPrograms]);
+  }, [currentPrograms]);
 
   // Ferme la modal
   const closeModal = useCallback(() => {
@@ -280,10 +335,10 @@ const SkillTreeScreen = ({ navigation }) => {
 
   // Détecte les changements d'état des compétences pour animer les lignes
   useEffect(() => {
-    streetPrograms.forEach((program) => {
+    currentPrograms.forEach((program) => {
       if (program.unlocks && program.unlocks.length > 0) {
         program.unlocks.forEach(unlockedId => {
-          const unlockedProgram = streetPrograms.find(p => p.id === unlockedId);
+          const unlockedProgram = currentPrograms.find(p => p.id === unlockedId);
           if (unlockedProgram) {
             const toState = getProgramState(unlockedProgram);
             const lineId = `${program.id}-${unlockedId}`;
@@ -297,7 +352,7 @@ const SkillTreeScreen = ({ navigation }) => {
         });
       }
     });
-  }, [completedPrograms, userProgress, animateLineUnlock, streetPrograms, getProgramState, animatedLines]);
+  }, [completedPrograms, userProgress, animateLineUnlock, currentPrograms, getProgramState, animatedLines]);
 
   // Calcul précis des positions de lignes avec compensation des marges SkillNode
   const calculateConnectionLine = useCallback((fromProgram, toProgram) => {
@@ -339,101 +394,92 @@ const SkillTreeScreen = ({ navigation }) => {
     };
   }, []);
 
-  // Rend les connexions entre les nœuds avec styles améliorés
-  const renderConnections = useCallback(() => {
-    const connections = [];
+  // Rend les connexions entre les nœuds avec SVG pour les traits pointillés
+  const renderConnectionsSvg = useCallback(() => {
+    const lines = [];
 
-    streetPrograms.forEach((program, index) => {
+    currentPrograms.forEach((program) => {
       if (program.unlocks && program.unlocks.length > 0) {
         program.unlocks.forEach(unlockedId => {
-          const unlockedProgram = streetPrograms.find(p => p.id === unlockedId);
+          const unlockedProgram = currentPrograms.find(p => p.id === unlockedId);
           if (unlockedProgram) {
-            const lineStyle = calculateConnectionLine(program, unlockedProgram);
             const fromState = getProgramState(program);
             const toState = getProgramState(unlockedProgram);
-            
-            // Détermine si la ligne mène à un nœud débloqué
             const isUnlocked = toState === 'UNLOCKED' || toState === 'IN_PROGRESS' || toState === 'COMPLETED';
+
+            // Calcul des positions
+            const SKILLNODE_CONTAINER_WIDTH = 100;
+            const SKILLNODE_MARGIN = 8;
+            const nodeOffset = (SKILLNODE_CONTAINER_WIDTH - NODE_SIZE) / 2;
             
-            // Style de ligne selon l'état
-            const lineColor = program.color || '#4D9EFF';
-            const opacity = isUnlocked ? 0.9 : 0.3; // Lignes vers locked sont semi-transparentes
-            const gradientColors = isUnlocked 
-              ? ['#4D9EFF', '#7B61FF']  // Bleu-violet pour débloqué
-              : ['#555', '#444'];        // Gris pour verrouillé
+            const fromContainerX = program.position.x * COLUMN_WIDTH + (COLUMN_WIDTH - SKILLNODE_CONTAINER_WIDTH) / 2 + PADDING;
+            const fromContainerY = program.position.y * ROW_HEIGHT + (ROW_HEIGHT - NODE_SIZE) / 2 + PADDING;
+            const toContainerX = unlockedProgram.position.x * COLUMN_WIDTH + (COLUMN_WIDTH - SKILLNODE_CONTAINER_WIDTH) / 2 + PADDING;
+            const toContainerY = unlockedProgram.position.y * ROW_HEIGHT + (ROW_HEIGHT - NODE_SIZE) / 2 + PADDING;
             
-            // Style unifié pour toutes les lignes
+            const fromCenterX = fromContainerX + nodeOffset + NODE_SIZE / 2;
+            const fromCenterY = fromContainerY + SKILLNODE_MARGIN + NODE_SIZE / 2;
+            const toCenterX = toContainerX + nodeOffset + NODE_SIZE / 2;
+            const toCenterY = toContainerY + SKILLNODE_MARGIN + NODE_SIZE / 2;
+
             const lineId = `${program.id}-${unlockedId}`;
-            const animatedOpacity = animatedLines.get(lineId);
-            
-            if (animatedOpacity && isUnlocked) {
-              // Ligne animée avec gradient (uniquement pour débloquées)
-              connections.push(
-                <Animated.View
-                  key={lineId}
-                  style={[
-                    lineStyle,
-                    {
-                      overflow: 'hidden',
-                      borderRadius: 2,
-                      opacity: animatedOpacity,
-                    }
-                  ]}
-                >
-                  <LinearGradient
-                    colors={gradientColors}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      shadowColor: '#4D9EFF',
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.6,
-                      shadowRadius: 4,
-                      elevation: 2,
-                    }}
-                  />
-                </Animated.View>
-              );
-            } else {
-              // Ligne statique avec gradient (wrapper View nécessaire pour transform)
-              connections.push(
-                <View
-                  key={lineId}
-                  style={[
-                    lineStyle,
-                    {
-                      overflow: 'hidden',
-                      borderRadius: 2,
-                      opacity: opacity,
-                    }
-                  ]}
-                >
-                  <LinearGradient
-                    colors={gradientColors}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      shadowColor: isUnlocked ? '#4D9EFF' : '#000',
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: isUnlocked ? 0.6 : 0.2,
-                      shadowRadius: isUnlocked ? 4 : 2,
-                      elevation: isUnlocked ? 2 : 1,
-                    }}
-                  />
-                </View>
-              );
-            }
+            const strokeColor = isUnlocked ? '#4D9EFF' : '#999';
+            const strokeOpacity = isUnlocked ? 0.8 : 0.3;
+            const strokeWidth = isUnlocked ? 2.5 : 1.5;
+
+            lines.push({
+              x1: fromCenterX,
+              y1: fromCenterY,
+              x2: toCenterX,
+              y2: toCenterY,
+              color: strokeColor,
+              opacity: strokeOpacity,
+              width: strokeWidth,
+              isUnlocked,
+              lineId,
+            });
           }
         });
       }
     });
 
-    return connections;
-  }, [streetPrograms, calculateConnectionLine, getProgramState, animatedLines]);
+    if (lines.length === 0) return null;
+
+    return (
+      <Svg
+        width={TREE_WIDTH}
+        height={TREE_HEIGHT}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: 1,
+          pointerEvents: 'none',
+        }}
+      >
+        <Defs>
+          <SvgLinearGradient id="unlockedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#4D9EFF" stopOpacity="1" />
+            <Stop offset="100%" stopColor="#7B61FF" stopOpacity="1" />
+          </SvgLinearGradient>
+        </Defs>
+        {lines.map((line) => (
+          <SvgLine
+            key={line.lineId}
+            x1={line.x1}
+            y1={line.y1}
+            x2={line.x2}
+            y2={line.y2}
+            stroke={line.isUnlocked ? 'url(#unlockedGradient)' : line.color}
+            strokeWidth={line.width}
+            strokeOpacity={line.opacity}
+            strokeDasharray={line.isUnlocked ? '0' : '4,3'}
+            strokeLinecap="round"
+          />
+        ))}
+      </Svg>
+    );
+  }, [currentPrograms, getProgramState]);
 
   // Modal de détails avec React Native Paper
   const renderModal = () => {
@@ -458,11 +504,8 @@ const SkillTreeScreen = ({ navigation }) => {
             <Text style={styles.modalCloseIcon}>✕</Text>
           </TouchableOpacity>
 
-          {/* Header avec icône et titre */}
+          {/* Header avec icône et titre */a}
           <View style={styles.modalHeader}>
-            <View style={[styles.modalIconContainer, { borderColor: selectedProgram.color }]}>
-              <Text style={styles.modalIcon}>{selectedProgram.icon}</Text>
-            </View>
             <Text style={styles.modalTitle}>{selectedProgram.name}</Text>
             <View style={[styles.difficultyBadge, { backgroundColor: selectedProgram.color }]}>
               <Text style={styles.difficultyText}>{selectedProgram.difficulty}</Text>
@@ -550,35 +593,49 @@ const SkillTreeScreen = ({ navigation }) => {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      {/* Header avec gradient - style identique à SkillDetailScreen */}
-      <LinearGradient
-        colors={['#7B61FF', '#1A1A1A']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.header}
+      {/* Header avec image de background - DYNAMIQUE selon le programme */}
+      <ImageBackground
+        source={
+          currentCategory?.backgroundImage && PROGRAM_BACKGROUND_IMAGES[currentCategory.backgroundImage]
+            ? PROGRAM_BACKGROUND_IMAGES[currentCategory.backgroundImage]
+            : require('../../assets/programmes/StreetWorkout.jpg')
+        }
+        style={styles.headerBackground}
+        imageStyle={styles.headerBackgroundImage}
       >
-        <View style={styles.headerIconContainer}>
-          <Text style={styles.headerIcon}>🏋️</Text>
-        </View>
-        <Text style={styles.headerTitle}>Street Workout</Text>
-        <Text style={styles.headerDescription}>Arbre de progression</Text>
-        <View style={styles.badgesContainer}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeLabel}>Compétences</Text>
-            <Text style={styles.badgeValue}>
-              {userStats.totalCompleted}/{streetPrograms.length}
-            </Text>
+        {/* Overlay sombre avec gradient pour la lisibilité */}
+        <LinearGradient
+          colors={[
+            'rgba(0, 0, 0, 0.7)',
+            'rgba(0, 0, 0, 0.85)',
+            'rgba(15, 23, 42, 0.95)'
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.headerOverlay}
+        >
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>{currentCategory?.name || 'Programme'}</Text>
+            <Text style={styles.headerDescription}>Arbre de progression</Text>
+            <View style={styles.badgesContainer}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeLabel}>Compétences</Text>
+                <Text style={styles.badgeValue}>
+                  {userStats.totalCompleted}/{currentPrograms.length}
+                </Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeLabel}>XP Total</Text>
+                <Text style={styles.badgeValue}>{userStats.totalXP}</Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeLabel}>Tier Max</Text>
+                <Text style={styles.badgeValue}>{userStats.currentTier}</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeLabel}>XP Total</Text>
-            <Text style={styles.badgeValue}>{userStats.totalXP}</Text>
-          </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeLabel}>Tier Max</Text>
-            <Text style={styles.badgeValue}>{userStats.currentTier}</Text>
-          </View>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
+      </ImageBackground>
 
       {/* Badge Admin */}
       {isAdmin && (
@@ -607,11 +664,11 @@ const SkillTreeScreen = ({ navigation }) => {
         >
           <View style={styles.treeContainer}>
 
-            {/* Connexions */}
-            {renderConnections()}
+            {/* Connexions SVG */}
+            {renderConnectionsSvg()}
 
             {/* Nœuds */}
-            {streetPrograms.map(program => {
+            {currentPrograms.map(program => {
               let state = getProgramState(program);
               const progress = userProgress[program.id];
               
@@ -680,65 +737,74 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16
   },
-  header: {
+  // 🖼️ Header avec image de background
+  headerBackground: {
+    width: '100%',
+    overflow: 'hidden',
+  },
+  headerBackgroundImage: {
+    resizeMode: 'cover',
+  },
+  headerOverlay: {
+    width: '100%',
     paddingTop: 60,
     paddingHorizontal: 24,
     paddingBottom: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
-  headerIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
+  headerContent: {
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  headerIcon: {
-    fontSize: 40,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
     color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+    letterSpacing: 0.5,
   },
   headerDescription: {
     fontSize: 14,
-    color: '#AAAAAA',
+    color: '#CBD5E1',
     lineHeight: 20,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   badgesContainer: {
     flexDirection: 'row',
     gap: 12,
   },
   badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
-    minWidth: 80,
+    minWidth: 85,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   badgeLabel: {
     fontSize: 11,
-    color: '#AAAAAA',
+    color: '#94A3B8',
     marginBottom: 4,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   badgeValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   backButton: {

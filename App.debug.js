@@ -12,7 +12,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
-      <Text style={styles.text}>🏋️ Fitness RPG</Text>
+      <Text style={styles.text}>🏋️ Hybrid RPG</Text>
       <Text style={styles.debug}>Debug Mode - App is running!</Text>
       <Text style={styles.version}>Version: 1.0.0</Text>
     </View>

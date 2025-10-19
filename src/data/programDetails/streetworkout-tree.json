@@ -1,0 +1,335 @@
+{
+  "id": "street",
+  "tree": [
+    {
+      "id": "beginner-foundation",
+      "name": "Fondations Débutant",
+      "icon": "🌱",
+      "color": "#4CAF50",
+      "difficulty": "Débutant",
+      "position": { "x": 2, "y": 0 },
+      "prerequisites": [],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 7,
+        "power": 3,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "hanging-hollow",
+      "name": "Hollow Body Hanging",
+      "icon": "🎯",
+      "color": "#2196F3",
+      "difficulty": "Débutant",
+      "position": { "x": 1, "y": 1 },
+      "prerequisites": ["beginner-foundation"],
+      "totalLevels": 3,
+      "statBonuses": {
+        "strength": 8,
+        "power": 2,
+        "endurance": 3
+      }
+    },
+    {
+      "id": "strict-pullups",
+      "name": "Tractions Strictes",
+      "icon": "💪",
+      "color": "#6C63FF",
+      "difficulty": "Débutant",
+      "position": { "x": 3, "y": 1 },
+      "prerequisites": ["beginner-foundation"],
+      "totalLevels": 5,
+      "statBonuses": {
+        "strength": 9,
+        "power": 4,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "lsit-hold",
+      "name": "L-Sit Hold",
+      "icon": "📐",
+      "color": "#FF9800",
+      "difficulty": "Débutant+",
+      "position": { "x": 0, "y": 2 },
+      "prerequisites": ["hanging-hollow"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 9,
+        "power": 3,
+        "endurance": 4
+      }
+    },
+    {
+      "id": "pullup-negatives",
+      "name": "Tractions Négatives",
+      "icon": "⬇️",
+      "color": "#9C27B0",
+      "difficulty": "Débutant+",
+      "position": { "x": 2, "y": 2 },
+      "prerequisites": ["hanging-hollow"],
+      "totalLevels": 3,
+      "statBonuses": {
+        "strength": 10,
+        "power": 4,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "chest-to-bar",
+      "name": "Chest-to-Bar Pull-Ups",
+      "icon": "🎯",
+      "color": "#F44336",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 2, "y": 3 },
+      "prerequisites": ["strict-pullups", "pullup-negatives"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 11,
+        "power": 5,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "straight-bar-dips",
+      "name": "Straight Bar Dips",
+      "icon": "🔥",
+      "color": "#FF5722",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 4, "y": 3 },
+      "prerequisites": ["strict-pullups"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 12,
+        "power": 6,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "hanging-leg-raises",
+      "name": "Hanging Leg Raises",
+      "icon": "🦵",
+      "color": "#00BCD4",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 1, "y": 3 },
+      "prerequisites": ["hanging-hollow"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 9,
+        "power": 4,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "muscleup-strict",
+      "name": "Muscle-Up Strict",
+      "icon": "⚡",
+      "color": "#FFD700",
+      "difficulty": "Intermédiaire",
+      "position": { "x": 3, "y": 4 },
+      "prerequisites": ["chest-to-bar", "straight-bar-dips"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 8,
+        "power": 12,
+        "speed": 5
+      }
+    },
+    {
+      "id": "lsit-pullups",
+      "name": "L-Sit Pull-Ups",
+      "icon": "🔱",
+      "color": "#3F51B5",
+      "difficulty": "Intermédiaire+",
+      "position": { "x": 0, "y": 4 },
+      "prerequisites": ["lsit-hold", "hanging-leg-raises"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 11,
+        "power": 4,
+        "endurance": 3
+      }
+    },
+    {
+      "id": "toes-to-bar",
+      "name": "Toes-to-Bar Strict",
+      "icon": "🎪",
+      "color": "#E91E63",
+      "difficulty": "Intermédiaire+",
+      "position": { "x": 1, "y": 4 },
+      "prerequisites": ["hanging-leg-raises"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 10,
+        "power": 5,
+        "flexibility": 2
+      }
+    },
+    {
+      "id": "front-lever-beginner",
+      "name": "Front Lever (Débutant)",
+      "icon": "🦾",
+      "color": "#FF6B6B",
+      "difficulty": "Avancé",
+      "position": { "x": 0, "y": 5 },
+      "prerequisites": ["lsit-pullups", "toes-to-bar"],
+      "totalLevels": 5,
+      "statBonuses": {
+        "strength": 10,
+        "power": 3,
+        "endurance": 4
+      }
+    },
+    {
+      "id": "explosive-pullups",
+      "name": "Explosive Pull-Ups",
+      "icon": "💥",
+      "color": "#FF5722",
+      "difficulty": "Avancé",
+      "position": { "x": 2, "y": 5 },
+      "prerequisites": ["muscleup-strict", "chest-to-bar"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 8,
+        "power": 14,
+        "speed": 5
+      }
+    },
+    {
+      "id": "highbar-muscleup",
+      "name": "High Bar Muscle-Up",
+      "icon": "🚀",
+      "color": "#9C27B0",
+      "difficulty": "Avancé",
+      "position": { "x": 4, "y": 5 },
+      "prerequisites": ["muscleup-strict", "straight-bar-dips"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 9,
+        "power": 13,
+        "speed": 5
+      }
+    },
+    {
+      "id": "muscleup-advanced",
+      "name": "Muscle-Up Advanced",
+      "icon": "⚡⚡",
+      "color": "#FFD700",
+      "difficulty": "Avancé",
+      "position": { "x": 3, "y": 6 },
+      "prerequisites": ["explosive-pullups", "highbar-muscleup"],
+      "totalLevels": 5,
+      "statBonuses": {
+        "strength": 9,
+        "power": 11,
+        "endurance": 7
+      }
+    },
+    {
+      "id": "front-lever-advanced",
+      "name": "Front Lever (Avancé)",
+      "icon": "🦾✨",
+      "color": "#FF1744",
+      "difficulty": "Avancé+",
+      "position": { "x": 1, "y": 6 },
+      "prerequisites": ["front-lever-beginner"],
+      "totalLevels": 6,
+      "statBonuses": {
+        "strength": 12,
+        "power": 4,
+        "endurance": 5
+      }
+    },
+    {
+      "id": "back-lever",
+      "name": "Back Lever",
+      "icon": "🔄",
+      "color": "#00BCD4",
+      "difficulty": "Avancé+",
+      "position": { "x": 0, "y": 6 },
+      "prerequisites": ["front-lever-beginner"],
+      "totalLevels": 5,
+      "statBonuses": {
+        "strength": 11,
+        "power": 7,
+        "flexibility": 4
+      }
+    },
+    {
+      "id": "archer-pullups",
+      "name": "Archer Pull-Ups",
+      "icon": "🏹",
+      "color": "#8E24AA",
+      "difficulty": "Expert",
+      "position": { "x": 2, "y": 7 },
+      "prerequisites": ["explosive-pullups", "muscleup-advanced"],
+      "totalLevels": 5,
+      "statBonuses": {
+        "strength": 14,
+        "power": 7,
+        "flexibility": 3
+      }
+    },
+    {
+      "id": "typewriter-pullups",
+      "name": "Typewriter Pull-Ups",
+      "icon": "⌨️",
+      "color": "#673AB7",
+      "difficulty": "Expert",
+      "position": { "x": 4, "y": 7 },
+      "prerequisites": ["muscleup-advanced"],
+      "totalLevels": 4,
+      "statBonuses": {
+        "strength": 13,
+        "power": 8,
+        "flexibility": 4
+      }
+    },
+    {
+      "id": "hefesto",
+      "name": "Hefesto",
+      "icon": "🔱",
+      "color": "#D32F2F",
+      "difficulty": "Elite",
+      "position": { "x": 0, "y": 7 },
+      "prerequisites": ["front-lever-advanced", "back-lever"],
+      "totalLevels": 6,
+      "statBonuses": {
+        "strength": 20,
+        "power": 15,
+        "speed": 6
+      }
+    },
+    {
+      "id": "one-arm-pullup",
+      "name": "One Arm Pull-Up",
+      "icon": "💎",
+      "color": "#1976D2",
+      "difficulty": "Elite",
+      "position": { "x": 3, "y": 8 },
+      "prerequisites": ["archer-pullups", "typewriter-pullups"],
+      "totalLevels": 6,
+      "statBonuses": {
+        "strength": 25,
+        "power": 8,
+        "endurance": 0
+      }
+    },
+    {
+      "id": "master-street",
+      "name": "MASTER STREET",
+      "icon": "👑",
+      "color": "#FFD700",
+      "difficulty": "LEGEND",
+      "position": { "x": 2, "y": 9 },
+      "prerequisites": ["one-arm-pullup", "hefesto"],
+      "totalLevels": 2,
+      "statBonuses": {
+        "strength": 18,
+        "power": 15,
+        "endurance": 10
+      }
+    }
+  ]
+}

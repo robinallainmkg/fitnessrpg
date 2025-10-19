@@ -1,6 +1,7 @@
+// ✅ ANCIENNE API FIREBASE (cohérente avec firebase.js)
 import firestore from '@react-native-firebase/firestore';
 import { getWithRetry } from '../utils/firestoreRetry';
-import programs from '../data/programs.json';
+import { getCategoryWithDetails } from '../utils/programLoader';
 
 /**
  * Service de gestion de la queue de séances
@@ -10,11 +11,11 @@ import programs from '../data/programs.json';
 /**
  * Génère la queue initiale pour un programme (première compétence, niveau 1)
  * @param {string} programId - ID du programme (ex: 'street', 'calisthenics')
- * @returns {Array} Liste des séances de départ
+ * @returns {Promise<Array>} Liste des séances de départ
  */
-export const generateInitialQueue = (programId) => {
-  // Trouver le programme dans programs.json
-  const category = programs.categories.find(cat => cat.id === programId);
+export const generateInitialQueue = async (programId) => {
+  // Charger la catégorie avec ses détails complets
+  const category = await getCategoryWithDetails(programId);
   
   if (!category || !category.programs || category.programs.length === 0) {
     console.warn(`Programme ${programId} non trouvé ou vide`);
@@ -40,6 +41,7 @@ export const generateInitialQueue = (programId) => {
     programId,
     programName: category.name || programId,
     programIcon: category.icon || '🎯',
+    programColor: category.color || '#4D9EFF',
     skillId: firstSkill.id,
     skillName: firstSkill.name,
     levelId: firstLevel.id,
@@ -66,100 +68,106 @@ export const generateInitialQueue = (programId) => {
  * @param {string} programId - ID du programme
  * @param {Object} userProgress - Progression de l'utilisateur pour ce programme
  * @param {number} maxSessions - Nombre max de séances à retourner (défaut: 4)
- * @returns {Array} Liste des séances débloquées et non complétées
+ * @returns {Promise<Array>} Liste des séances débloquées et non complétées
  */
-export const generateAvailableSessions = (programId, userProgress = {}, maxSessions = 4) => {
-  const category = programs.categories.find(cat => cat.id === programId);
-  
-  if (!category || !category.programs) {
-    console.log(`❌ Programme ${programId} non trouvé`);
-    return [];
-  }
-
-  const completedSkills = userProgress.completedSkills || []; // Liste des IDs de compétences 100% complétées
-  const skillProgress = userProgress.skillProgress || {}; // { skillId: { completedLevels: [1, 2, 3], currentLevel: 4 } }
-  const sessions = [];
-
-  console.log(`🔍 Génération séances pour ${programId}:`, { completedSkills, skillProgress });
-
-  // Parcourir toutes les compétences (skills) du programme
-  for (const skill of category.programs) {
-    if (!skill.levels || skill.levels.length === 0) continue;
-
-    const skillId = skill.id;
-    const skillData = skillProgress[skillId] || { completedLevels: [], currentLevel: 1 };
+export const generateAvailableSessions = async (programId, userProgress = {}, maxSessions = 4) => {
+  try {
+    const category = await getCategoryWithDetails(programId);
     
-    // Vérifier si cette compétence est déjà 100% complétée
-    if (completedSkills.includes(skillId)) {
-      console.log(`✅ ${skillId} déjà complétée, skip`);
-      continue;
+    if (!category || !category.programs) {
+      console.log(`❌ Programme ${programId} non trouvé`);
+      return [];
     }
 
-    // Vérifier si les prérequis (prerequisites) sont remplis
-    const prerequisites = skill.prerequisites || [];
-    const prerequisitesMet = prerequisites.every(prereqId => 
-      completedSkills.includes(prereqId)
-    );
+    const completedSkills = userProgress.completedSkills || []; // Liste des IDs de compétences 100% complétées
+    const skillProgress = userProgress.skillProgress || {}; // { skillId: { completedLevels: [1, 2, 3], currentLevel: 4 } }
+    const sessions = [];
 
-    // Si les prérequis ne sont pas remplis, skip cette compétence
-    if (prerequisites.length > 0 && !prerequisitesMet) {
-      console.log(`🔒 ${skillId} verrouillée, prérequis manquants:`, prerequisites);
-      continue;
-    }
+    console.log(`🔍 Génération séances pour ${programId}:`, { completedSkills, skillProgress });
 
-    // Cette compétence est accessible ! Trouver le prochain niveau non complété
-    const completedLevels = skillData.completedLevels || [];
-    
-    // Chercher le premier niveau non complété (séquentiel)
-    let nextLevelIndex = -1;
-    for (let i = 0; i < skill.levels.length; i++) {
-      const levelNumber = i + 1;
-      if (!completedLevels.includes(levelNumber)) {
-        nextLevelIndex = i;
-        break;
+    // Parcourir toutes les compétences (skills) du programme
+    for (const skill of category.programs) {
+      if (!skill.levels || skill.levels.length === 0) continue;
+
+      const skillId = skill.id;
+      const skillData = skillProgress[skillId] || { completedLevels: [], currentLevel: 1 };
+      
+      // Vérifier si cette compétence est déjà 100% complétée
+      if (completedSkills.includes(skillId)) {
+        console.log(`✅ ${skillId} déjà complétée, skip`);
+        continue;
+      }
+
+      // Vérifier si les prérequis (prerequisites) sont remplis
+      const prerequisites = skill.prerequisites || [];
+      const prerequisitesMet = prerequisites.every(prereqId => 
+        completedSkills.includes(prereqId)
+      );
+
+      // Si les prérequis ne sont pas remplis, skip cette compétence
+      if (prerequisites.length > 0 && !prerequisitesMet) {
+        console.log(`🔒 ${skillId} verrouillée, prérequis manquants:`, prerequisites);
+        continue;
+      }
+
+      // Cette compétence est accessible ! Trouver le prochain niveau non complété
+      const completedLevels = skillData.completedLevels || [];
+      
+      // Chercher le premier niveau non complété (séquentiel)
+      let nextLevelIndex = -1;
+      for (let i = 0; i < skill.levels.length; i++) {
+        const levelNumber = i + 1;
+        if (!completedLevels.includes(levelNumber)) {
+          nextLevelIndex = i;
+          break;
+        }
+      }
+
+      // Si tous les niveaux sont complétés mais pas marqué comme completedSkills, c'est une incohérence
+      if (nextLevelIndex === -1) {
+        console.log(`⚠️ ${skillId} tous niveaux complétés mais pas dans completedSkills`);
+        continue;
+      }
+
+      const level = skill.levels[nextLevelIndex];
+      const levelNumber = nextLevelIndex + 1;
+      const sessionId = `${programId}-${skillId}-${levelNumber}`;
+
+      console.log(`🎯 Séance disponible: ${skillId} niveau ${levelNumber}`);
+
+      sessions.push({
+        id: sessionId,
+        programId,
+        programName: category.name || programId,
+        programIcon: category.icon || '🎯',
+        programColor: category.color || '#4D9EFF',
+        skillId: skill.id,
+        skillName: skill.name,
+        levelId: level.id,
+        levelNumber: levelNumber,
+        totalLevels: skill.levels.length,
+        name: level.name || `${skill.name} - Niveau ${levelNumber}`,
+        subtitle: level.subtitle || '',
+        type: skill.category || 'Force',
+        status: 'available',
+        exercises: level.exercises || [],
+        xpReward: level.xpReward || 100,
+        statsReward: skill.statBonuses || {},
+        prerequisites,
+      });
+
+      // Limiter le nombre de séances retournées
+      if (sessions.length >= maxSessions) {
+        return sessions;
       }
     }
 
-    // Si tous les niveaux sont complétés mais pas marqué comme completedSkills, c'est une incohérence
-    if (nextLevelIndex === -1) {
-      console.log(`⚠️ ${skillId} tous niveaux complétés mais pas dans completedSkills`);
-      continue;
-    }
-
-    const level = skill.levels[nextLevelIndex];
-    const levelNumber = nextLevelIndex + 1;
-    const sessionId = `${programId}-${skillId}-${levelNumber}`;
-
-    console.log(`🎯 Séance disponible: ${skillId} niveau ${levelNumber}`);
-
-    sessions.push({
-      id: sessionId,
-      programId,
-      programName: category.name || programId,
-      programIcon: category.icon || '🎯',
-      skillId: skill.id,
-      skillName: skill.name,
-      levelId: level.id,
-      levelNumber: levelNumber,
-      totalLevels: skill.levels.length,
-      name: level.name || `${skill.name} - Niveau ${levelNumber}`,
-      subtitle: level.subtitle || '',
-      type: skill.category || 'Force',
-      status: 'available',
-      exercises: level.exercises || [],
-      xpReward: level.xpReward || 100,
-      statsReward: skill.statBonuses || {},
-      prerequisites,
-    });
-
-    // Limiter le nombre de séances retournées
-    if (sessions.length >= maxSessions) {
-      return sessions;
-    }
+    console.log(`📋 ${sessions.length} séances disponibles pour ${programId}`);
+    return sessions;
+  } catch (error) {
+    console.error(`❌ Erreur génération séances pour ${programId}:`, error.message);
+    return [];
   }
-
-  console.log(`📋 ${sessions.length} séances disponibles pour ${programId}`);
-  return sessions;
 };
 
 /**
@@ -169,10 +177,9 @@ export const generateAvailableSessions = (programId, userProgress = {}, maxSessi
  */
 export const getUserSessionQueue = async (userId) => {
   try {
-    const userRef = firestore().collection('users').doc(userId);
-    const userDoc = await getWithRetry(userRef);
+    const userDoc = await firestore().collection('users').doc(userId).get();
     
-    if (!userDoc.exists()) {
+    if (!userDoc.exists) {
       console.warn('Utilisateur non trouvé');
       return [];
     }
@@ -191,22 +198,29 @@ export const getUserSessionQueue = async (userId) => {
 
     // Générer les séances pour chaque programme actif
     for (const activeProgramId of activePrograms) {
-      // Récupérer la progression du programme
-      const programProgress = userData.programs?.[activeProgramId] || {
-        completedSkills: [], // Liste des compétences 100% complétées
-        skillProgress: {}, // { skillId: { completedLevels: [1,2,3], currentLevel: 4 } }
-        xp: 0,
-        level: 1
-      };
+      try {
+        // Récupérer la progression du programme
+        const programProgress = userData.programs?.[activeProgramId] || {
+          completedSkills: [], // Liste des compétences 100% complétées
+          skillProgress: {}, // { skillId: { completedLevels: [1,2,3], currentLevel: 4 } }
+          xp: 0,
+          level: 1
+        };
 
-      console.log(`📊 Progression pour ${activeProgramId}:`, programProgress);
+        console.log(`📊 Progression pour ${activeProgramId}:`, programProgress);
 
-      // Générer les séances disponibles (max 3-4 par programme)
-      const programSessions = generateAvailableSessions(activeProgramId, programProgress, 3);
-      allSessions = [...allSessions, ...programSessions];
+        // Générer les séances disponibles (max 3-4 par programme)
+        const programSessions = await generateAvailableSessions(activeProgramId, programProgress, 3);
+        allSessions = [...allSessions, ...programSessions];
+      } catch (programError) {
+        // Si le chargement d'un programme échoue, on continue avec les autres
+        console.warn(`⚠️ Impossible de charger les séances pour ${activeProgramId}:`, programError.message);
+        continue;
+      }
     }
 
     console.log(`📋 Total: ${allSessions.length} séances disponibles`);
+
 
     // Limiter à 4 séances au total pour l'affichage
     return allSessions.slice(0, 4);
@@ -225,10 +239,9 @@ export const getUserSessionQueue = async (userId) => {
  */
 export const getCompletedSessions = async (userId, limit = 3) => {
   try {
-    const userRef = firestore().collection('users').doc(userId);
-    const userDoc = await getWithRetry(userRef);
+    const userDoc = await firestore().collection('users').doc(userId).get();
     
-    if (!userDoc.exists()) {
+    if (!userDoc.exists) {
       return [];
     }
 
@@ -254,10 +267,10 @@ export const getCompletedSessions = async (userId, limit = 3) => {
  */
 export const activateProgram = async (userId, programId) => {
   try {
-    const userDocRef = firestore().collection('users').doc(userId);
-    const userDoc = await userDocRef.get();
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await userRef.get();
     
-    if (!userDoc.exists()) {
+    if (!userDoc.exists) {
       throw new Error('Utilisateur non trouvé');
     }
 
@@ -275,8 +288,8 @@ export const activateProgram = async (userId, programId) => {
       return true;
     }
 
-    // Ajouter le programme aux programmes actifs
-    await userDocRef.update({
+    // Ajouter le programme aux programmes actifs - ANCIENNE API
+    await userRef.update({
       activePrograms: firestore.FieldValue.arrayUnion(programId),
       // Initialiser la progression si elle n'existe pas
       [`programs.${programId}`]: userData.programs?.[programId] || {
@@ -304,10 +317,10 @@ export const activateProgram = async (userId, programId) => {
  */
 export const deactivateProgram = async (userId, programId) => {
   try {
-    const userDocRef = firestore().collection('users').doc(userId);
-    const userDoc = await userDocRef.get();
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await userRef.get();
     
-    if (!userDoc.exists()) {
+    if (!userDoc.exists) {
       throw new Error('Utilisateur non trouvé');
     }
 
@@ -317,7 +330,7 @@ export const deactivateProgram = async (userId, programId) => {
     // Retirer le programme des programmes actifs
     const updatedActivePrograms = activePrograms.filter(id => id !== programId);
     
-    await userDocRef.update({
+    await userRef.update({
       activePrograms: updatedActivePrograms
     });
 
@@ -339,10 +352,10 @@ export const deactivateProgram = async (userId, programId) => {
  */
 export const completeSession = async (userId, session, sessionData) => {
   try {
-    const userDocRef = firestore().collection('users').doc(userId);
-    const userDoc = await userDocRef.get();
+    const userRef = firestore().collection('users').doc(userId);
+    const userDoc = await userRef.get();
     
-    if (!userDoc.exists()) {
+    if (!userDoc.exists) {
       throw new Error('Utilisateur non trouvé');
     }
 
@@ -389,8 +402,8 @@ export const completeSession = async (userId, session, sessionData) => {
     programData.level = Math.floor(Math.sqrt(programData.xp / 100)) + 1;
     programData.lastSession = new Date().toISOString();
 
-    // Sauvegarder dans Firestore
-    await userDocRef.update({
+    // Sauvegarder dans Firestore - ANCIENNE API
+    await userRef.update({
       [`programs.${programId}`]: programData,
       lastSessionDate: new Date(),
       lastActivity: new Date(),
@@ -407,3 +420,5 @@ export const completeSession = async (userId, session, sessionData) => {
     throw error;
   }
 };
+
+

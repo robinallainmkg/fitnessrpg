@@ -35,10 +35,12 @@ import DebugOnboardingScreen from './src/screens/DebugOnboardingScreen';
 import DebugScreen from './src/screens/DebugScreen';
 import ManageActiveProgramsScreen from './src/screens/ManageActiveProgramsScreen';
 import FirestoreDiagnosticScreen from './src/screens/FirestoreDiagnosticScreen';
+import DevDiagnosticScreen from './src/screens/DevDiagnosticScreen';
 
 // Components
 import FirebaseDebug from './src/components/FirebaseDebug';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import FirebaseDiagnostic from './src/components/FirebaseDiagnostic';
 
 // Theme
 import { colors } from './src/theme/colors';
@@ -195,8 +197,9 @@ const AppNavigator = () => {
 
   // PRIORITÉ 1: Si onboarding pas complété, afficher Onboarding + ProgramSelection
   // Ceci permet aux nouveaux utilisateurs de découvrir l'app en mode guest
-  if (!isOnboardingCompleted) {
-    console.log('→ Showing Onboarding screen (onboarding not completed)');
+  // ET aussi pour les utilisateurs qui se sont déconnectés
+  if (!isOnboardingCompleted || (!user && !isGuest)) {
+    console.log('→ Showing Onboarding screen (onboarding not completed OR logged out)');
     return (
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false, headerBackVisible: true }}>
@@ -219,20 +222,7 @@ const AppNavigator = () => {
     );
   }
 
-  // PRIORITÉ 2: Si onboarding complété MAIS pas d'user ET pas guest
-  // = Utilisateur qui s'est déconnecté et veut se reconnecter
-  if (!user && !isGuest) {
-    console.log('→ Showing Auth screen (onboarding done, but no user and no guest - returning user)');
-    return (
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Auth" component={AuthScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    );
-  }
-
-  // PRIORITÉ 3: Main app (user connecté OU en mode guest)
+  // Si on arrive ici, c'est qu'on a user OU isGuest = true
   console.log('→ Showing Main app', user ? '(authenticated)' : '(guest mode)');
   return (
     <NavigationContainer>
@@ -377,6 +367,22 @@ const AppNavigator = () => {
           }}
         />
         <Stack.Screen
+          name="FirebaseDiagnostic"
+          component={FirebaseDiagnostic}
+          options={{ 
+            title: '🔥 Firebase Diagnostic',
+            headerStyle: {
+              backgroundColor: '#f59e0b',
+              elevation: 4,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+            },
+          }}
+        />
+        <Stack.Screen
           name="DebugOnboarding"
           component={DebugOnboardingScreen}
           options={{ 
@@ -408,102 +414,38 @@ const AppNavigator = () => {
             },
           }}
         />
+        <Stack.Screen
+          name="DevDiagnostic"
+          component={DevDiagnosticScreen}
+          options={{ 
+            title: '🔧 Developer Diagnostics',
+            headerStyle: {
+              backgroundColor: '#FF9800',
+              elevation: 6,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+            },
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
-};
-
-// Composant de chargement Firebase
-const FirebaseInitializer = ({ children }) => {
-  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
-
-  useEffect(() => {
-    const initFirebase = async () => {
-      try {
-        // Run quick Firestore diagnostic (only in development)
-        if (__DEV__) {
-          console.log('\n🔍 === FIRESTORE CONNECTION TEST ===');
-          const firestore = require('@react-native-firebase/firestore').default;
-          const auth = require('@react-native-firebase/auth').default;
-          
-          try {
-            // Wait for auth to be ready first
-            const currentUser = auth().currentUser;
-            
-            if (!currentUser) {
-              console.log('⏭️  Skipping Firestore test - user not authenticated yet\n');
-              setIsFirebaseReady(true);
-              return;
-            }
-            
-            // Quick test with user's own document (authorized by rules)
-            const testPromise = firestore().collection('users').doc(currentUser.uid).get();
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('TIMEOUT')), 3000)
-            );
-            
-            await Promise.race([testPromise, timeoutPromise]);
-            console.log('✅ Firestore CONNECTED - app will work normally\n');
-            
-          } catch (error) {
-            if (error.message === 'TIMEOUT' || error.code === 'firestore/unavailable') {
-              console.warn('\n⚠️  ========================================');
-              console.warn('⚠️  FIRESTORE UNAVAILABLE');
-              console.warn('⚠️  ========================================');
-              console.warn('');
-              console.warn('📋 CHECKLIST:');
-              console.warn('   1. Vérifier connexion internet');
-              console.warn('   2. Firebase Console → Firestore Database');
-              console.warn('      → Créer la base si nécessaire');
-              console.warn('   3. Vérifier Security Rules (test mode)');
-              console.warn('   4. Vérifier google-services.json');
-              console.warn('');
-              console.warn("💡 L'app fonctionne en MODE DEGRADÉ");
-              console.warn('   (données par défaut affichées)\n');
-              console.warn('📖 Guide complet: FIRESTORE_UNAVAILABLE_FIX_GUIDE.md');
-              console.warn('⚠️  ========================================\n');
-            } else if (error.code === 'firestore/permission-denied') {
-              console.error('\n🔒 PERMISSION DENIED - Firestore rules blocking');
-              console.error('💡 Set test mode rules in Firebase Console\n');
-            }
-          }
-        }
-        
-        setIsFirebaseReady(true);
-      } catch (error) {
-        console.error('Firebase init error:', error);
-        setIsFirebaseReady(true); // Continue anyway
-      }
-    };
-    
-    initFirebase();
-  }, []);
-
-  if (!isFirebaseReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 16, color: colors.text }}>Initialisation...</Text>
-      </View>
-    );
-  }
-
-  return children;
 };
 
 export default function App() {
   return (
     <ErrorBoundary>
       <PaperProvider theme={theme}>
-        <FirebaseInitializer>
-          <AuthProvider>
-            <WorkoutProvider>
-              <StatusBar style="light" backgroundColor={colors.primary} />
-              <AppNavigator />
-              <FirebaseDebug />
-            </WorkoutProvider>
-          </AuthProvider>
-        </FirebaseInitializer>
+        <AuthProvider>
+          <WorkoutProvider>
+            <StatusBar style="light" backgroundColor={colors.primary} />
+            <AppNavigator />
+            <FirebaseDebug />
+          </WorkoutProvider>
+        </AuthProvider>
       </PaperProvider>
     </ErrorBoundary>
   );

@@ -1,0 +1,1088 @@
+{
+  "id": "running",
+  "name": "Run 10k - 45min",
+  "description": "Programme complet pour courir 10km en 45 minutes. Du débutant absolu au runner confirmé.",
+  "icon": "🏃",
+  "color": "#FF6B35",
+  "backgroundImage": "assets/programmes/running-5.jpg",
+  "type": "skill-tree",
+  "programs": [
+    {
+      "id": "couch-to-5k",
+      "name": "Couch to 5K",
+      "difficulty": "Débutant",
+      "description": "Premier pas dans la course. De 0 à 5km sans s'arrêter.",
+      "icon": "🌱",
+      "color": "#4CAF50",
+      "position": {
+        "x": 2,
+        "y": 0,
+        "tier": 0
+      },
+      "prerequisites": [],
+      "unlocks": ["5k-consolidation", "tempo-runs-intro", "easy-runs-base"],
+      "totalWeeks": 8,
+      "xpReward": 300,
+      "statBonuses": {
+        "endurance": 10,
+        "speed": 2
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "Premiers pas",
+          "subtitle": "Alterner marche et course",
+          "xpReward": 100,
+          "exercises": [
+            {
+              "name": "Warm-up dynamique",
+              "description": "5min marche active + gammes légères",
+              "type": "time",
+              "sets": 1,
+              "target": 300,
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Commence par marcher vite, puis ajoute quelques talons-fesses et montées de genoux"
+            },
+            {
+              "name": "Run/Walk intervals",
+              "description": "1min course / 2min marche - Répète 8 fois",
+              "type": "time",
+              "sets": 8,
+              "target": 60,
+              "rest": 120,
+              "rpe": "RPE 5/10",
+              "tips": "La course doit être confortable, tu peux parler"
+            },
+            {
+              "name": "Retour au calme",
+              "description": "5 minutes de marche lente",
+              "type": "time",
+              "sets": 1,
+              "target": 300,
+              "rest": 0,
+              "rpe": "RPE 2/10",
+              "tips": "Respire profondément, étire légèrement"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5k-consolidation",
+      "name": "5K Consolidation",
+      "difficulty": "Débutant+",
+      "description": "Solidifier ton 5K et améliorer ton temps.",
+      "icon": "💪",
+      "color": "#2196F3",
+      "position": {
+        "x": 1,
+        "y": 1,
+        "tier": 1
+      },
+      "prerequisites": ["couch-to-5k"],
+      "unlocks": ["5k-to-10k", "speed-work-basic"],
+      "totalWeeks": 4,
+      "xpReward": 350,
+      "statBonuses": {
+        "endurance": 12,
+        "speed": 4,
+        "power": 2
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "5K régulier",
+          "subtitle": "Rendre le 5K facile",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Échauffement progressif",
+              "description": "10min course lente + 3 accélérations de 100m",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10",
+              "tips": "Augmente progressivement l'allure, termine par 3 accélérations courtes"
+            },
+            {
+              "name": "Easy 5K",
+              "description": "5km à allure confortable",
+              "type": "distance",
+              "sets": 1,
+              "target": 5000,
+              "rest": 0,
+              "rpe": "RPE 6/10",
+              "tips": "Objectif: ~35-32 minutes. Concentre-toi sur la régularité"
+            },
+            {
+              "name": "Cool down",
+              "description": "5 minutes de marche + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 300,
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Étirements mollets, quadriceps, ischio"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tempo-runs-intro",
+      "name": "Tempo Runs - Introduction",
+      "difficulty": "Débutant+",
+      "description": "Apprendre à courir à différentes allures. Base de la vitesse.",
+      "icon": "⚡",
+      "color": "#FF9800",
+      "position": {
+        "x": 3,
+        "y": 1,
+        "tier": 1
+      },
+      "prerequisites": ["couch-to-5k"],
+      "unlocks": ["tempo-runs-advanced", "speed-work-basic"],
+      "totalWeeks": 4,
+      "xpReward": 350,
+      "statBonuses": {
+        "power": 5,
+        "endurance": 8,
+        "speed": 6
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "Découverte tempo",
+          "subtitle": "Comprendre les allures",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up complet",
+              "description": "10min course facile + gammes (talons-fesses, montées genoux, pas chassés)",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Les gammes préparent tes muscles aux efforts plus intenses"
+            },
+            {
+              "name": "Tempo run",
+              "description": "10 minutes à allure soutenue",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 7/10",
+              "tips": "Allure 'confortablement inconfortable' - tu peux parler avec difficulté"
+            },
+            {
+              "name": "Cool down",
+              "description": "10 minutes facile + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Retour au calme progressif"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "easy-runs-base",
+      "name": "Easy Runs - Base d'endurance",
+      "difficulty": "Débutant+",
+      "description": "Construire ton endurance avec des courses faciles.",
+      "icon": "🐢",
+      "color": "#00BCD4",
+      "position": {
+        "x": 2,
+        "y": 2,
+        "tier": 1
+      },
+      "prerequisites": ["couch-to-5k"],
+      "unlocks": ["long-runs-endurance"],
+      "totalWeeks": 4,
+      "xpReward": 300,
+      "statBonuses": {
+        "endurance": 15,
+        "speed": 1
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "Easy 6K",
+          "subtitle": "Volume progressif",
+          "xpReward": 100,
+          "exercises": [
+            {
+              "name": "Warm-up léger",
+              "description": "5min marche rapide + 5min course très lente",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Commence doucement pour préparer ton corps"
+            },
+            {
+              "name": "Easy run 6K",
+              "description": "6km à allure conversationnelle",
+              "type": "distance",
+              "sets": 1,
+              "target": 6000,
+              "rest": 0,
+              "rpe": "RPE 5-6/10",
+              "tips": "Tu dois pouvoir parler facilement pendant toute la course"
+            },
+            {
+              "name": "Cool down",
+              "description": "5min marche + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 300,
+              "rest": 0,
+              "rpe": "RPE 2/10",
+              "tips": "Hydrate-toi bien après"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Easy 8K",
+          "subtitle": "Augmentation volume",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up progressif",
+              "description": "10min course facile progressive",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10",
+              "tips": "Commence très lent, augmente progressivement"
+            },
+            {
+              "name": "Easy run 8K",
+              "description": "8km à allure facile",
+              "type": "distance",
+              "sets": 1,
+              "target": 8000,
+              "rest": 0,
+              "rpe": "RPE 6/10",
+              "tips": "Garde une allure régulière, ne pars pas trop vite"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tempo-runs-advanced",
+      "name": "Tempo Runs - Avancé",
+      "difficulty": "Intermédiaire",
+      "description": "Séances tempo structurées pour améliorer ton seuil lactique.",
+      "icon": "🔥",
+      "color": "#E91E63",
+      "position": {
+        "x": 4,
+        "y": 2,
+        "tier": 2
+      },
+      "prerequisites": ["tempo-runs-intro"],
+      "unlocks": ["race-pace-10k"],
+      "totalWeeks": 6,
+      "xpReward": 450,
+      "statBonuses": {
+        "power": 8,
+        "endurance": 10,
+        "speed": 8
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "4 x 1km Tempo",
+          "subtitle": "Intervalles longs",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up complet",
+              "description": "15min course facile + gammes complètes (talons-fesses, montées genoux, foulées bondissantes)",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Prends ton temps pour bien t'échauffer, c'est crucial"
+            },
+            {
+              "name": "4 x 1km @ allure 10K",
+              "description": "1km à allure tempo / 2min récup jogging lent",
+              "type": "reps",
+              "sets": 4,
+              "target": 1000,
+              "rest": 120,
+              "rpe": "RPE 8/10",
+              "tips": "Vise ~5:00-5:30/km selon ton niveau. Régularité clé!"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min jogging facile + étirements complets",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10",
+              "tips": "Bien récupérer après l'effort"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "4 x 6min Tempo",
+          "subtitle": "Tempo au temps",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up dynamique",
+              "description": "15min progressif + gammes + 3 x 100m accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Monte en intensité progressivement"
+            },
+            {
+              "name": "4 x 6min @ tempo pace",
+              "description": "6min effort tempo / 2min récup active",
+              "type": "reps",
+              "sets": 4,
+              "target": 360,
+              "rest": 120,
+              "rpe": "RPE 8/10",
+              "tips": "Maintiens l'effort constant sur les 6 minutes"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10",
+              "tips": "Hydrate-toi bien"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "4 x 8min Tempo",
+          "subtitle": "Endurance tempo",
+          "xpReward": 200,
+          "exercises": [
+            {
+              "name": "Warm-up long",
+              "description": "20min progressif + gammes complètes",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Échauffe-toi bien pour les longs efforts"
+            },
+            {
+              "name": "4 x 8min @ tempo",
+              "description": "8min tempo / 2min30 récup",
+              "type": "reps",
+              "sets": 4,
+              "target": 480,
+              "rest": 150,
+              "rpe": "RPE 8-9/10",
+              "tips": "Effort soutenu mais soutenable - allure 10K/semi"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "2 x 5km Tempo",
+          "subtitle": "Long tempo continu",
+          "xpReward": 250,
+          "exercises": [
+            {
+              "name": "Warm-up complet",
+              "description": "20min progressif + gammes + 4 x 100m accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Prépare ton corps pour un gros effort"
+            },
+            {
+              "name": "2 x 5km @ tempo pace",
+              "description": "5km tempo / 5min récup jogging",
+              "type": "reps",
+              "sets": 2,
+              "target": 5000,
+              "rest": 300,
+              "rpe": "RPE 8-9/10",
+              "tips": "Mentalement dur! Allure semi-marathon. Vise 25-27min/5km"
+            },
+            {
+              "name": "Cool down",
+              "description": "15min facile + étirements complets",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 4/10",
+              "tips": "Séance intense - récupère bien les jours suivants"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "speed-work-basic",
+      "name": "Speed Work - Fractionnés courts",
+      "difficulty": "Intermédiaire",
+      "description": "Fractionnés courts pour développer ta VMA.",
+      "icon": "🚀",
+      "color": "#F44336",
+      "position": {
+        "x": 1,
+        "y": 3,
+        "tier": 2
+      },
+      "prerequisites": ["5k-consolidation", "tempo-runs-intro"],
+      "unlocks": ["speed-work-advanced"],
+      "totalWeeks": 5,
+      "xpReward": 450,
+      "statBonuses": {
+        "power": 8,
+        "speed": 10,
+        "endurance": 5
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "10 x 400m",
+          "subtitle": "Sprints longs",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up complet",
+              "description": "15min facile + gammes (talons-fesses, montées genoux, pas chassés) + 4 x 100m accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Échauffe-toi bien avant les sprints!"
+            },
+            {
+              "name": "10 x 400m @ 95% VMA",
+              "description": "400m rapide / 90sec récup jogging",
+              "type": "reps",
+              "sets": 10,
+              "target": 400,
+              "rest": 90,
+              "rpe": "RPE 9/10",
+              "tips": "Vise ~1:50-2:00/400m. Rapide mais contrôlé!"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min jogging lent + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "8 x 600m",
+          "subtitle": "Distance intermédiaire",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up dynamique",
+              "description": "15min + gammes complètes + 5 accélérations progressives",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 5/10"
+            },
+            {
+              "name": "8 x 600m @ VMA",
+              "description": "600m rapide / 2min récup",
+              "type": "reps",
+              "sets": 8,
+              "target": 600,
+              "rest": 120,
+              "rpe": "RPE 9/10",
+              "tips": "Allure 5K race pace. Vise ~2:50-3:10/600m"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "6 x 800m",
+          "subtitle": "VMA longue",
+          "xpReward": 200,
+          "exercises": [
+            {
+              "name": "Warm-up long",
+              "description": "20min progressif + gammes + 6 accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10"
+            },
+            {
+              "name": "6 x 800m @ allure 5K",
+              "description": "800m rapide / 2min30 récup",
+              "type": "reps",
+              "sets": 6,
+              "target": 800,
+              "rest": 150,
+              "rpe": "RPE 9/10",
+              "tips": "Vise ~3:50-4:20/800m selon ton niveau"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "speed-work-advanced",
+      "name": "Speed Work - Pyramides",
+      "difficulty": "Avancé",
+      "description": "Fractionnés complexes avec pyramides et variations.",
+      "icon": "⚡",
+      "color": "#9C27B0",
+      "position": {
+        "x": 0,
+        "y": 4,
+        "tier": 3
+      },
+      "prerequisites": ["speed-work-basic"],
+      "unlocks": ["race-pace-10k"],
+      "totalWeeks": 5,
+      "xpReward": 500,
+      "statBonuses": {
+        "power": 10,
+        "speed": 12,
+        "endurance": 6
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "Pyramide courte",
+          "subtitle": "200-400-600-800-600-400-200",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up complet",
+              "description": "20min progressif + gammes complètes + 6 accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10"
+            },
+            {
+              "name": "Pyramide: 200-400-600-800-600-400-200m",
+              "description": "Récup = moitié temps d'effort. Plus court = plus vite!",
+              "type": "custom",
+              "sets": 1,
+              "target": 0,
+              "rest": 0,
+              "rpe": "RPE 9/10",
+              "tips": "200m @ 100% VMA, 400-600m @ 95%, 800m @ 90%"
+            },
+            {
+              "name": "Cool down",
+              "description": "15min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Fartlek avancé",
+          "subtitle": "Jeu de vitesse structuré",
+          "xpReward": 200,
+          "exercises": [
+            {
+              "name": "Warm-up",
+              "description": "15min + gammes + accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 5/10"
+            },
+            {
+              "name": "Fartlek 30min",
+              "description": "30min avec variations: 2min vite / 2min facile / 1min sprint / 3min facile (répète)",
+              "type": "time",
+              "sets": 1,
+              "target": 1800,
+              "rest": 0,
+              "rpe": "RPE 8/10",
+              "tips": "Varie les allures naturellement, écoute ton corps"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "long-runs-endurance",
+      "name": "Long Runs - Endurance fondamentale",
+      "difficulty": "Intermédiaire",
+      "description": "Sorties longues pour construire ton endurance aérobie.",
+      "icon": "🦁",
+      "color": "#795548",
+      "position": {
+        "x": 2,
+        "y": 3,
+        "tier": 2
+      },
+      "prerequisites": ["easy-runs-base"],
+      "unlocks": ["5k-to-10k"],
+      "totalWeeks": 6,
+      "xpReward": 400,
+      "statBonuses": {
+        "endurance": 18,
+        "power": 3
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "Long run 10K",
+          "subtitle": "Base aérobie",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up léger",
+              "description": "10min course très lente",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            },
+            {
+              "name": "Long run 10km",
+              "description": "10km allure conversationnelle",
+              "type": "distance",
+              "sets": 1,
+              "target": 10000,
+              "rest": 0,
+              "rpe": "RPE 6/10",
+              "tips": "L'objectif est le volume, pas la vitesse. ~60-70min"
+            },
+            {
+              "name": "Cool down",
+              "description": "5min marche + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 300,
+              "rest": 0,
+              "rpe": "RPE 3/10"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "Long run 12K",
+          "subtitle": "Progression volume",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up",
+              "description": "10min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            },
+            {
+              "name": "Long run 12km",
+              "description": "12km allure easy",
+              "type": "distance",
+              "sets": 1,
+              "target": 12000,
+              "rest": 0,
+              "rpe": "RPE 6/10",
+              "tips": "~72-84min. Pense à t'hydrater pendant la course"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "Long run 15K",
+          "subtitle": "Endurance avancée",
+          "xpReward": 200,
+          "exercises": [
+            {
+              "name": "Warm-up progressif",
+              "description": "15min très progressif",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            },
+            {
+              "name": "Long run 15km",
+              "description": "15km allure confortable",
+              "type": "distance",
+              "sets": 1,
+              "target": 15000,
+              "rest": 0,
+              "rpe": "RPE 6-7/10",
+              "tips": "~90-105min. Ravitaille-toi vers 8-10km (gel ou boisson)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5k-to-10k",
+      "name": "5K to 10K Transition",
+      "difficulty": "Intermédiaire",
+      "description": "Doubler la distance. De 5K à 10K progressivement.",
+      "icon": "📈",
+      "color": "#009688",
+      "position": {
+        "x": 1,
+        "y": 4,
+        "tier": 3
+      },
+      "prerequisites": ["5k-consolidation", "long-runs-endurance"],
+      "unlocks": ["race-pace-10k"],
+      "totalWeeks": 6,
+      "xpReward": 450,
+      "statBonuses": {
+        "endurance": 15,
+        "speed": 3,
+        "power": 2
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "Transition 7K",
+          "subtitle": "Augmentation progressive",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up",
+              "description": "10min facile + 3 accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            },
+            {
+              "name": "Run 7K",
+              "description": "7km allure régulière",
+              "type": "distance",
+              "sets": 1,
+              "target": 7000,
+              "rest": 0,
+              "rpe": "RPE 6/10",
+              "tips": "~42-49min. Garde une allure constante"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "8K steady",
+          "subtitle": "Approche des 10K",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up",
+              "description": "12min progressif",
+              "type": "time",
+              "sets": 1,
+              "target": 720,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            },
+            {
+              "name": "Run 8K",
+              "description": "8km steady pace",
+              "type": "distance",
+              "sets": 1,
+              "target": 8000,
+              "rest": 0,
+              "rpe": "RPE 6-7/10",
+              "tips": "~48-56min. Tu y es presque!"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "Premier 10K",
+          "subtitle": "Objectif atteint!",
+          "xpReward": 250,
+          "exercises": [
+            {
+              "name": "Warm-up complet",
+              "description": "15min progressif + 3 accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            },
+            {
+              "name": "10K run",
+              "description": "10km - TU L'AS FAIT! 🎉",
+              "type": "distance",
+              "sets": 1,
+              "target": 10000,
+              "rest": 0,
+              "rpe": "RPE 7/10",
+              "tips": "~60-70min. Incroyable progression! De 0 à 10K!"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min marche + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "Célèbre cette victoire!"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "race-pace-10k",
+      "name": "Race Pace 10K - Sub 45min",
+      "difficulty": "Avancé",
+      "description": "Séances spécifiques pour courir 10km en moins de 45 minutes.",
+      "icon": "🏆",
+      "color": "#FFC107",
+      "position": {
+        "x": 2,
+        "y": 5,
+        "tier": 4
+      },
+      "prerequisites": ["5k-to-10k", "tempo-runs-advanced", "speed-work-advanced"],
+      "unlocks": [],
+      "totalWeeks": 8,
+      "xpReward": 600,
+      "statBonuses": {
+        "endurance": 20,
+        "speed": 15,
+        "power": 10
+      },
+      "levels": [
+        {
+          "id": 1,
+          "name": "3 x 2km @ race pace",
+          "subtitle": "Spécifique 10K",
+          "xpReward": 150,
+          "exercises": [
+            {
+              "name": "Warm-up race prep",
+              "description": "20min progressif + gammes complètes + 6 accélérations progressives",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "Prépare-toi mentalement pour l'allure race"
+            },
+            {
+              "name": "3 x 2km @ 4:30/km",
+              "description": "2km à allure objectif 10K / 3min récup",
+              "type": "reps",
+              "sets": 3,
+              "target": 2000,
+              "rest": 180,
+              "rpe": "RPE 8-9/10",
+              "tips": "Vise 9:00/2km (4:30/km) pour un 10K en 45min"
+            },
+            {
+              "name": "Cool down",
+              "description": "15min facile + étirements",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "5km tempo + 3km race pace",
+          "subtitle": "Simulation race",
+          "xpReward": 200,
+          "exercises": [
+            {
+              "name": "Warm-up long",
+              "description": "20min + gammes + accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10"
+            },
+            {
+              "name": "5km tempo + 3km race pace",
+              "description": "5km à allure soutenue puis directement 3km à allure objectif",
+              "type": "custom",
+              "sets": 1,
+              "target": 0,
+              "rest": 0,
+              "rpe": "RPE 9/10",
+              "tips": "5km @ 4:45/km puis 3km @ 4:30/km. Dur mentalement!"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "8km @ race pace",
+          "subtitle": "Endurance race pace",
+          "xpReward": 200,
+          "exercises": [
+            {
+              "name": "Warm-up",
+              "description": "20min progressif + gammes + 4 accélérations",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10"
+            },
+            {
+              "name": "8km @ 4:30/km",
+              "description": "8km continu à allure objectif 10K",
+              "type": "distance",
+              "sets": 1,
+              "target": 8000,
+              "rest": 0,
+              "rpe": "RPE 9/10",
+              "tips": "Vise 36:00 pour 8km. Si tu tiens, le 10K en 45min est à portée!"
+            },
+            {
+              "name": "Cool down",
+              "description": "10min facile",
+              "type": "time",
+              "sets": 1,
+              "target": 600,
+              "rest": 0,
+              "rpe": "RPE 4/10"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "10K Time Trial - Sub 45",
+          "subtitle": "GO TIME! 🏁",
+          "xpReward": 300,
+          "exercises": [
+            {
+              "name": "Warm-up race day",
+              "description": "20min facile + gammes + 6 accélérations progressives",
+              "type": "time",
+              "sets": 1,
+              "target": 1200,
+              "rest": 0,
+              "rpe": "RPE 5/10",
+              "tips": "C'est le jour J! Reste calme et concentré"
+            },
+            {
+              "name": "10K RACE @ 4:30/km",
+              "description": "10km - Objectif: SUB 45 MINUTES! 🏆",
+              "type": "distance",
+              "sets": 1,
+              "target": 10000,
+              "rest": 0,
+              "rpe": "RPE 9-10/10",
+              "tips": "Vise 4:30/km constant. Premier 5K en 22:30, deuxième 5K en 22:30. TU PEUX LE FAIRE!"
+            },
+            {
+              "name": "Cool down champion",
+              "description": "15min marche/jogging facile + célébration!",
+              "type": "time",
+              "sets": 1,
+              "target": 900,
+              "rest": 0,
+              "rpe": "RPE 3/10",
+              "tips": "🎉🎉🎉 FÉLICITATIONS! Tu as accompli quelque chose d'extraordinaire!"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
