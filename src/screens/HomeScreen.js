@@ -20,10 +20,10 @@ import {
 import firestore from '@react-native-firebase/firestore';
 
 import { useAuth } from '../contexts/AuthContext';
-import { colors } from '../theme/colors';
+import { colors, getProgramColor } from '../theme/colors';
+import { rpgTheme } from '../theme/rpgTheme';
 import UserHeader from '../components/UserHeader';
-import ActiveProgramCard from '../components/ActiveProgramCard';
-import MissionCard from '../components/MissionCard';
+import { ProgramCard, WorkoutCard } from '../components/cards';
 import { useUserPrograms } from '../hooks/useUserPrograms';
 import { getUserSessionQueue } from '../services/sessionQueueService';
 import { loadProgramsMeta } from '../data/programsLoader';
@@ -609,9 +609,10 @@ const HomeScreen = ({ navigation, route }) => {
                 <Text style={styles.sectionTitle}>⚔️ Quêtes disponibles</Text>
               </View>
               {sessionQueue.slice(0, 5).map(session => (
-                <MissionCard
+                <WorkoutCard
                   key={session.id}
                   session={session}
+                  programColor={getProgramColor(session.programId)}
                   onPreview={() => handlePreviewSession(session)}
                   onStart={() => handleStartSession(session)}
                   disabled={session.status === 'completed'}
@@ -640,10 +641,10 @@ const HomeScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
               {activePrograms.map(program => (
-                <ActiveProgramCard
+                <ProgramCard
                   key={program.id}
                   program={program}
-                  onPress={() => handleViewActiveProgram(program.id)}
+                  onViewTree={() => handleViewActiveProgram(program.id)}
                 />
               ))}
             </View>
