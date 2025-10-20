@@ -31,6 +31,8 @@ import { getProgramColor } from '../../theme/colors';
 const ProgramCard = ({
   program = {},
   onViewTree,
+  onSelect,
+  isSelected = false,
   disabled = false,
   style,
   showDescription = false,
@@ -123,28 +125,32 @@ const ProgramCard = ({
         </View>
       ) : null}
 
-      {/* ═══ Action Button ═══ */}
-      <ActionButton
-        onPress={onViewTree}
-        icon={rpgTheme.componentStyles.viewTreeButton.icon}
-        color="primary"
-        size="medium"
-        fullWidth
-        disabled={disabled}
-        style={[
-          styles.viewTreeButton,
-          {
-            backgroundColor: rpgTheme.componentStyles.viewTreeButton.backgroundColor,
-            borderWidth: rpgTheme.componentStyles.viewTreeButton.borderWidth,
-            borderColor: rpgTheme.componentStyles.viewTreeButton.borderColor,
-          }
-        ]}
-      >
-        Voir l'arbre
-      </ActionButton>
-
-      {/* Decorative corner */}
-      <View style={[styles.cornerAccent, { borderColor: programColor }]} />
+      {/* ═══ Action Buttons (Row) ═══ */}
+      <View style={styles.buttonContainer}>
+        <ActionButton
+          onPress={onViewTree}
+          icon={rpgTheme.componentStyles.viewTreeButton.icon}
+          color="primary"
+          size="small"
+          disabled={disabled}
+          style={styles.viewTreeButton}
+        >
+          Voir l'arbre
+        </ActionButton>
+        
+        {onSelect && (
+          <ActionButton
+            onPress={onSelect}
+            icon="check-circle"
+            color="success"
+            size="small"
+            disabled={disabled}
+            style={styles.selectButton}
+          >
+            {isSelected ? 'Désélectionner' : 'Sélectionner'}
+          </ActionButton>
+        )}
+      </View>
     </>
   );
 
@@ -332,12 +338,20 @@ const styles = StyleSheet.create({
   },
 
   // ════════════ Button ════════════
-  viewTreeButton: {
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: rpgTheme.spacing.sm,
     marginTop: rpgTheme.spacing.sm,
-    borderRadius: rpgTheme.componentStyles.viewTreeButton.borderRadius,
-    paddingVertical: rpgTheme.componentStyles.viewTreeButton.paddingVertical,
-    paddingHorizontal: rpgTheme.componentStyles.viewTreeButton.paddingHorizontal,
-    ...rpgTheme.effects.shadows.glow,
+  },
+
+  viewTreeButton: {
+    flex: 1,
+    marginTop: 0,
+  },
+
+  selectButton: {
+    flex: 1,
+    marginTop: 0,
   },
 
   // ════════════ Decorative ════════════

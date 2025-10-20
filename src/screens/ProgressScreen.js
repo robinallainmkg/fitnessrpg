@@ -14,9 +14,8 @@ import {
 } from '@react-native-firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { getWithRetry } from '../utils/firestoreRetry';
-import UserHeader from '../components/UserHeader';
 import { rpgTheme } from '../theme/rpgTheme';
-import { Flame, Zap, Wind, Activity } from 'lucide-react-native';
+import { Flame, Zap, Wind, Activity, Dumbbell } from 'lucide-react-native';
 
 const ProgressScreen = () => {
   const [loading, setLoading] = useState(true);
@@ -34,7 +33,7 @@ const ProgressScreen = () => {
     try {
       setLoading(true);
       
-      // ? NOUVELLE API: Charger les données utilisateur
+      // âœ… NOUVELLE API: Charger les donnÃ©es utilisateur
       const fs = firestore();
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
@@ -45,9 +44,9 @@ const ProgressScreen = () => {
         if (data.stats) setStats(data.stats);
       }
       
-      // ? NOUVELLE API: Charger les sessions depuis la collection racine
+      // âœ… NOUVELLE API: Charger les sessions depuis la collection racine
       try {
-        console.log('?? Début chargement sessions pour userId:', user.uid);
+        console.log('ðŸ”¥ DÃ©but chargement sessions pour userId:', user.uid);
         
         const sessionsRef = collection(firestore, 'workoutSessions');
         const q = query(
@@ -57,38 +56,38 @@ const ProgressScreen = () => {
           limit(10)
         );
         
-        console.log('?? Requête Firestore construite');
+        console.log('ðŸ”¥ RequÃªte Firestore construite');
         
         const sessionsSnapshot = await getDocs(q);
         
-        console.log('?? Snapshot reçu, nombre de docs:', sessionsSnapshot.size);
+        console.log('ðŸ”¥ Snapshot reÃ§u, nombre de docs:', sessionsSnapshot.size);
         
         const sessions = sessionsSnapshot.docs.map(doc => {
           const data = doc.data();
-          console.log('?? Session trouvée:', doc.id, 'Score:', data.score, 'UserId:', data.userId);
+          console.log('ðŸ”¥ Session trouvÃ©e:', doc.id, 'Score:', data.score, 'UserId:', data.userId);
           return {
             id: doc.id,
             ...data
           };
         });
         
-        console.log('?? Total sessions chargées:', sessions.length);
+        console.log('ðŸ”¥ Total sessions chargÃ©es:', sessions.length);
         setSessionHistory(sessions);
       } catch (e) {
         console.error('? Erreur chargement sessions:', e);
         console.error('? Message:', e.message);
         console.error('? Code:', e.code);
         
-        // Si erreur d'index manquant, afficher le lien pour le créer
+        // Si erreur d'index manquant, afficher le lien pour le crÃ©er
         if (e.message?.includes('index') || e.code === 'failed-precondition') {
-          console.warn('?? INDEX FIRESTORE MANQUANT !');
-          console.warn('?? Créez l\'index dans la console Firebase:');
+          console.warn('ðŸ”¥ INDEX FIRESTORE MANQUANT !');
+          console.warn('ðŸ”¥ CrÃ©ez l\'index dans la console Firebase:');
           console.warn('   Collection: workoutSessions');
           console.warn('   Champ 1: userId (Ascending)');
           console.warn('   Champ 2: createdAt (Descending)');
           
           // Essayer sans orderBy en fallback
-          console.log('?? Tentative sans orderBy...');
+          console.log('ðŸ”¥ Tentative sans orderBy...');
           try {
             const simpleQuery = query(
               collection(firestore, 'workoutSessions'),
@@ -100,10 +99,10 @@ const ProgressScreen = () => {
               id: doc.id,
               ...doc.data()
             }));
-            console.log('? Sessions chargées sans orderBy:', sessions.length);
+            console.log('âŒ Sessions chargÃ©es sans orderBy:', sessions.length);
             setSessionHistory(sessions);
           } catch (e2) {
-            console.error('? Même sans orderBy, échec:', e2);
+            console.error('âŒ MÃªme sans orderBy, Ã©chec:', e2);
             setSessionHistory([]);
           }
         } else {
@@ -111,7 +110,7 @@ const ProgressScreen = () => {
         }
       }
     } catch (error) {
-      console.error('? Erreur chargement données:', error);
+      console.error('âŒ Erreur chargement donnÃ©es:', error);
     } finally {
       setLoading(false);
     }
@@ -124,12 +123,11 @@ const ProgressScreen = () => {
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: '#0F172A' }}>
-      <UserHeader username={userData?.username || user?.email?.split('@')[0] || 'Guerrier'} globalLevel={userData?.globalLevel || 0} globalXP={userData?.globalXP || 0} title={userData?.title || 'Débutant'} avatarId={userData?.avatarId || 0} streak={userData?.streak || 0} />
-      <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
+      <View style={{ marginHorizontal: 16, marginBottom: 24, marginTop: 16 }}>
         <Text style={{ fontSize: 20, fontWeight: '700', color: '#FFF', marginBottom: 16 }}>Statistiques</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
           {[
-            { label: 'Force', value: stats.strength, color: '#EF4444', icon: '??' },
+            { label: 'Force', value: stats.strength, color: '#EF4444', iconComp: <Dumbbell size={24} color="#EF4444" strokeWidth={2.5} /> },
             { label: 'Endurance', value: stats.endurance, color: '#10B981', iconComp: <Activity size={24} color="#10B981" strokeWidth={2.5} /> },
             { label: 'Vitesse', value: stats.speed, color: '#FBBF24', iconComp: <Zap size={24} color="#FBBF24" strokeWidth={2.5} /> },
             { label: 'Souplesse', value: stats.flexibility, color: '#8B5CF6', iconComp: <Wind size={24} color="#8B5CF6" strokeWidth={2.5} /> },
@@ -149,12 +147,12 @@ const ProgressScreen = () => {
         </View>
       </View>
       <View style={{ marginHorizontal: 16, marginBottom: 24 }}>
-        <Text style={{ fontSize: 20, fontWeight: '700', color: '#FFF', marginBottom: 16 }}> Historique des séances</Text>
+        <Text style={{ fontSize: 20, fontWeight: '700', color: '#FFF', marginBottom: 16 }}>Historique des sÃ©ances</Text>
         {sessionHistory.length === 0 ? (
           <View style={{ paddingVertical: 48, alignItems: 'center' }}>
             <Text style={{ fontSize: 64, marginBottom: 16 }}></Text>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFF', marginBottom: 8 }}>Aucune séance effectuée</Text>
-            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Commence ton premier entraînement !</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: '#FFF', marginBottom: 8 }}>Aucune sÃ©ance effectuÃ©e</Text>
+            <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)' }}>Commence ton premier entraÃ®nement !</Text>
           </View>
         ) : (
           <View style={{ gap: 12 }}>
@@ -165,7 +163,7 @@ const ProgressScreen = () => {
                     <Text style={{ fontSize: 24 }}>{s.programIcon || ''}</Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFF', marginBottom: 4 }} numberOfLines={1}>{s.skillName || s.workoutName || 'Séance'}</Text>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFF', marginBottom: 4 }} numberOfLines={1}>{s.skillName || s.workoutName || 'SÃ©ance'}</Text>
                     <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{formatDate(s.createdAt || s.endTime)}</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
@@ -175,7 +173,7 @@ const ProgressScreen = () => {
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
                   {[
-                    { label: 'XP gagné', value: '+' + (s.xpEarned || 0) },
+                    { label: 'XP gagnÃ©', value: '+' + (s.xpEarned || 0) },
                     { label: 'Exercices', value: (s.exercises?.length || 0) },
                     { label: 'Niveau', value: (s.levelNumber || 1) }
                   ].map(st => (

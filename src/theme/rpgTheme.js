@@ -235,21 +235,9 @@ export const componentStyles = {
   // ========== BUTTONS ==========
   // Bouton "Voir l'arbre" (action secondaire sur les cartes)
   viewTreeButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: rpgTheme.borderRadius.md,
-    backgroundColor: rpgTheme.colors.neon.blue,
-    borderWidth: 1.5,
-    borderColor: rpgTheme.colors.neon.cyan,
     icon: 'tree',
-    textColor: rpgTheme.colors.text.primary,
-    fontSize: 14,
-    fontWeight: rpgTheme.typography.weights.semibold,
-    shadowColor: rpgTheme.colors.neon.blue,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 5,
+    // Propriétés du style sans backgroundColor/borderColor 
+    // (gérées par ActionButton et ses props)
   }
 };
 

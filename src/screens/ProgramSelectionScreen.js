@@ -452,11 +452,8 @@ const ProgramSelectionScreen = ({ navigation }) => {
         };
 
         return (
-          <TouchableOpacity
+          <View
             key={category.id}
-            activeOpacity={0.8}
-            disabled={isDisabled}
-            onPress={() => !isDisabled && handleSelectProgram(category.id)}
             style={[
               styles.programCardWrapper,
               isSelected && styles.programCardWrapperSelected,
@@ -465,24 +462,16 @@ const ProgramSelectionScreen = ({ navigation }) => {
           >
             <ProgramCard
               program={programData}
-              onViewTree={() => !isDisabled && handleSelectProgram(category.id)}
+              onViewTree={() => navigation.navigate('Main', { screen: 'SkillTree', params: { programId: category.id } })}
+              onSelect={() => !isDisabled && handleSelectProgram(category.id)}
+              isSelected={isSelected}
               disabled={isDisabled}
               showDescription={true}
               showStats={true}
               primaryStats={getPrimaryStats(category)}
               style={styles.programCardCustom}
             />
-            
-            {/* Badge sélection en overlay */}
-            {isSelected && (
-              <View style={styles.selectedOverlay}>
-                <View style={styles.selectedBadge}>
-                  <Text style={styles.selectedBadgeEmoji}>✓</Text>
-                  <Text style={styles.selectedBadgeText}>SÉLECTIONNÉ</Text>
-                </View>
-              </View>
-            )}
-          </TouchableOpacity>
+          </View>
         );
       })}
 
@@ -659,11 +648,12 @@ const styles = StyleSheet.create({
   // ════════════ Program Card Wrapper (with ProgramCard component) ════════════
   programCardWrapper: {
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 8,
     opacity: 1,
   },
   
   programCardWrapperSelected: {
+    opacity: 1,
     shadowColor: '#00E5FF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
@@ -672,18 +662,11 @@ const styles = StyleSheet.create({
   },
   
   programCardWrapperDisabled: {
-    opacity: 0.4,
+    opacity: 0.5,
   },
 
   programCardCustom: {
     minHeight: 320,
-  },
-
-  selectedOverlay: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    zIndex: 10,
   },
 
   cardContainer: {
@@ -724,27 +707,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   topContent: {},
-  selectedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 229, 255, 0.25)',
-    borderWidth: 2,
-    borderColor: '#00E5FF',
-  },
-  selectedBadgeEmoji: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  selectedBadgeText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#00E5FF',
-    letterSpacing: 0.5,
-  },
   bottomContent: {},
   programName: {
     fontSize: 24,
