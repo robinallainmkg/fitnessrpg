@@ -470,7 +470,6 @@ const ProgramSelectionScreen = ({ navigation }) => {
               showDescription={true}
               showStats={true}
               primaryStats={getPrimaryStats(category)}
-              style={styles.programCardCustom}
             />
           </View>
         );
@@ -643,9 +642,10 @@ const styles = StyleSheet.create({
     color: '#4D9EFF',
   },
 
-  // ✅ PROGRAMME CARD WRAPPER - SPACING ULTRA RÉDUIT
+  // ✅ PROGRAMME CARD WRAPPER - SPACING COHÉRENT
   programCardWrapper: {
-    marginBottom: 2, // ✅ SUPER RÉDUIT: 12 → 6
+    marginHorizontal: 16,
+    marginBottom: 8,
     opacity: 1,
   },
   
@@ -654,10 +654,6 @@ const styles = StyleSheet.create({
   
   programCardWrapperDisabled: {
     opacity: 0.5,
-  },
-
-  programCardCustom: {
-    minHeight: 320,
   },
 
   // ✅ FIXED BOTTOM CONTAINER

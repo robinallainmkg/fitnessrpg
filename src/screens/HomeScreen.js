@@ -724,8 +724,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   programCardWrapper: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   manageButton: {
     flexDirection: 'row',

@@ -246,6 +246,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: 'transparent',
     elevation: 0,
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
   },
 
   // ════════════ Status Badge Position ════════════
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: rpgTheme.spacing.sm,
-    marginTop: rpgTheme.spacing.sm,
+    marginTop: 8,
   },
 
   viewTreeButton: {
