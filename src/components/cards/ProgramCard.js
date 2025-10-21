@@ -5,28 +5,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { rpgTheme } from '../../theme/rpgTheme';
 import { ActionButton } from '../buttons';
-import { StatusBadge, ProgramStatBadge } from '../badges';
+import { StatusBadge } from '../badges';
 import { getProgramColor } from '../../theme/colors';
 
 /**
  * 📚 ProgramCard - Carte programme unifié pour HomeScreen et ProgramSelection
  * 
  * Design features:
- * - Image de fond pour chaque programme avec gradient overlay
+ * - Image de fond VISIBLE avec gradient overlay subtil
  * - Structure flexible: titre + description optionnelle + progression/stats
  * - Bouton "Voir l'arbre" stylisé du thème
  * - Badge "Actif" positionné top-right
- * - Bordure 1.5px avec couleur du programme
+ * - Pas de bordure visible - juste glow/shadow
  * - Adaptatif: HomeScreen (compact) vs ProgramSelection (détaillé)
- * 
- * Utilisation:
- * <ProgramCard
- *   program={programData}
- *   onViewTree={handleViewTree}
- *   showDescription={true}
- *   showStats={true}
- *   primaryStats={['strength', 'endurance']}
- * />
  */
 const ProgramCard = ({
   program = {},
@@ -96,12 +87,11 @@ const ProgramCard = ({
       {showStats && primaryStats.length > 0 ? (
         <View style={styles.statsSection}>
           {primaryStats.map(stat => (
-            <ProgramStatBadge
-              key={stat}
-              stat={stat}
-              size="small"
-              variant="filled"
-            />
+            <View key={stat} style={styles.statBadge}>
+              <Text style={styles.statBadgeText}>
+                {stat}
+              </Text>
+            </View>
           ))}
         </View>
       ) : totalSkills > 0 ? (
@@ -168,9 +158,9 @@ const ProgramCard = ({
           imageStyle={styles.backgroundImage}
           resizeMode="cover"
         >
-          {/* ═══ Dark overlay for readability - Modern Gaming Style ═══ */}
+          {/* ═══ MODIFIED: Overlay beaucoup plus transparent pour voir l'image ═══ */}
           <LinearGradient
-            colors={['rgba(10, 14, 39, 0.92)', 'rgba(15, 23, 42, 0.95)']}
+            colors={['rgba(10, 14, 39, 0.65)', 'rgba(15, 23, 42, 0.75)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -208,7 +198,7 @@ const styles = StyleSheet.create({
   // ════════════ Container ════════════
   cardContainer: {
     marginHorizontal: rpgTheme.spacing.md,
-    marginBottom: rpgTheme.spacing.sm,
+    marginBottom: 8, // ✅ RÉDUIT: était rpgTheme.spacing.sm (8), maintenant 8 direct
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
   },
@@ -285,7 +275,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: rpgTheme.spacing.xs,
-    marginBottom: rpgTheme.spacing.sm,
+    marginBottom: rpgTheme.spacing.md,
   },
 
   statBadge: {

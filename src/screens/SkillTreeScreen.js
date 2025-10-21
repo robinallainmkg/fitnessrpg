@@ -457,7 +457,7 @@ const SkillTreeScreen = ({ navigation, route }) => {
           position: 'absolute',
           top: 0,
           left: 0,
-          zIndex: 1,
+          zIndex: 5,
           pointerEvents: 'none',
         }}
       >
@@ -664,9 +664,6 @@ const SkillTreeScreen = ({ navigation, route }) => {
         >
           <View style={styles.treeContainer}>
 
-            {/* Connexions SVG */}
-            {renderConnectionsSvg()}
-
             {/* Nœuds */}
             {currentPrograms.map(program => {
               let state = getProgramState(program);
@@ -699,6 +696,10 @@ const SkillTreeScreen = ({ navigation, route }) => {
                 </View>
               );
             })}
+
+            {/* Connexions SVG - RENDU APRÈS les nœuds avec z-index supérieur */}
+            {renderConnectionsSvg()}
+
           </View>
         </ScrollView>
       </ScrollView>
@@ -854,7 +855,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: NODE_SIZE,
     height: NODE_SIZE,
-    zIndex: 10 // Au-dessus des lignes
+    zIndex: 2
   },
   connectionLine: {
     position: 'absolute',

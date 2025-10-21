@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Déjà bon
   },
   backButton: {
     position: 'absolute',
@@ -544,12 +544,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(77, 158, 255, 0.15)', // Plus transparent
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(77, 158, 255, 0.4)',
   },
   backButtonText: {
     fontSize: 28,
@@ -579,14 +579,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: 'rgba(77, 158, 255, 0.3)',
+    borderRadius: 12, // Réduit de 16 à 12
+    // ❌ SUPPRIMÉ: borderWidth
+    // ❌ SUPPRIMÉ: borderColor bleu
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 4, // Réduit de 5 à 4
   },
   title: {
     fontSize: 28,
@@ -623,17 +623,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
-    borderWidth: 2,
+    // ❌ SUPPRIMÉ: borderWidth
     borderColor: 'rgba(148, 163, 184, 0.4)',
-    backgroundColor: 'rgba(148, 163, 184, 0.1)',
+    backgroundColor: 'rgba(148, 163, 184, 0.08)', // Réduit opacité 0.1 → 0.08
   },
   selectionChipActive: {
     borderColor: '#4D9EFF',
-    backgroundColor: 'rgba(77, 158, 255, 0.15)',
+    backgroundColor: 'rgba(77, 158, 255, 0.1)', // Réduit 0.15 → 0.1
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
+    shadowOpacity: 0.3, // Réduit 0.5 → 0.3
+    shadowRadius: 6, // Réduit 8 → 6
   },
   selectionChipText: {
     fontSize: 13,
@@ -646,20 +646,20 @@ const styles = StyleSheet.create({
     color: '#4D9EFF',
   },
 
-  // ════════════ Program Card Wrapper (with ProgramCard component) ════════════
+  // 🎮 PROGRAMME CARD WRAPPER - SPACING RÉDUIT
   programCardWrapper: {
     marginHorizontal: 16,
-    marginBottom: 0,
+    marginBottom: 12, // ✅ RÉDUIT: 16 → 12
     opacity: 1,
   },
   
   programCardWrapperSelected: {
     opacity: 1,
-    shadowColor: '#00E5FF',
+    shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 15,
-    elevation: 10,
+    shadowOpacity: 0.4, // Réduit 0.7 → 0.4
+    shadowRadius: 12, // Réduit 15 → 12
+    elevation: 6, // Réduit 10 → 6
   },
   
   programCardWrapperDisabled: {
@@ -670,77 +670,7 @@ const styles = StyleSheet.create({
     minHeight: 320,
   },
 
-  cardContainer: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  programCard: {
-    height: 320,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'rgba(77, 158, 255, 0.3)',
-  },
-  cardImage: {
-    borderRadius: 14,
-    resizeMode: 'cover',
-    width: '100%',
-    height: '100%',
-  },
-  cardOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  programCardSelected: {
-    borderColor: '#00E5FF',
-    borderWidth: 3,
-    shadowColor: '#00E5FF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 15,
-    elevation: 10,
-  },
-  programCardDisabled: {
-    opacity: 0.4,
-  },
-  cardContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  topContent: {},
-  bottomContent: {},
-  programName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 6,
-    lineHeight: 28,
-  },
-  programDescription: {
-    fontSize: 14,
-    color: '#CBD5E1',
-    marginBottom: 12,
-    lineHeight: 20,
-    fontWeight: '500',
-  },
-  programInfo: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  statBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    backgroundColor: 'rgba(123, 97, 255, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(123, 97, 255, 0.4)',
-  },
-  statBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#B8C5D6',
-  },
+  // 🎯 FIXED BOTTOM CONTAINER - MODERNE
   fixedBottomContainer: {
     position: 'absolute',
     bottom: 0,
@@ -749,7 +679,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.95)',
     paddingBottom: 20,
     paddingTop: 12,
-    borderTopWidth: 2,
+    // ❌ SUPPRIMÉ: borderTopWidth
     borderTopColor: 'rgba(77, 158, 255, 0.3)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -757,27 +687,29 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
   },
+
+  // ⚔️ VALIDATE BUTTON - GAMING MODERNE
   validateButton: {
     marginHorizontal: 16,
     marginVertical: 8,
-    paddingVertical: 18,
+    paddingVertical: 16, // Réduit 18 → 16
     paddingHorizontal: 20,
-    borderRadius: 16,
+    borderRadius: 12, // Réduit 16 → 12
     backgroundColor: '#4D9EFF',
-    borderWidth: 3,
-    borderColor: '#7B61FF',
+    // ❌ SUPPRIMÉ: borderWidth: 3
+    // ❌ SUPPRIMÉ: borderColor bleu
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.5, // Réduit 0.6 → 0.5
+    shadowRadius: 10, // Réduit 12 → 10
+    elevation: 6, // Réduit 8 → 6
     alignItems: 'center',
     justifyContent: 'center',
   },
   validateButtonDisabled: {
     backgroundColor: 'rgba(148, 163, 184, 0.3)',
     borderColor: 'rgba(148, 163, 184, 0.5)',
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15, // Réduit 0.2 → 0.15
     elevation: 2,
   },
   validateButtonText: {
@@ -800,5 +732,38 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
+
+// ============================================
+// ⭐ 2️⃣ MODIFIER LA SECTION SCROLL VIEW
+// ============================================
+// Dans le JSX, remplace cette ligne:
+// <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 160 }}>
+// Par:
+// <ScrollView 
+//   style={styles.container} 
+//   contentContainerStyle={{ paddingBottom: 160 }}
+//   scrollEventThrottle={16}
+//   showsVerticalScrollIndicator={false}
+// >
+
+// ============================================
+// ⭐ 3️⃣ OPTIONAL: HELPER FUNCTION POUR MODERN LOOK
+// ============================================
+// Ajoute cette fonction si tu utilises ProgramCard custom
+
+const getModernProgramStyle = (isSelected, isDisabled) => {
+  return {
+    borderRadius: 14,
+    backgroundColor: 'rgba(26, 34, 68, 0.8)', // Semi-transparent cosmique
+    overflow: 'hidden',
+    shadowColor: isSelected ? '#4D9EFF' : '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: isSelected ? 0.4 : 0.2,
+    shadowRadius: isSelected ? 12 : 8,
+    elevation: isSelected ? 6 : 3,
+    // ❌ PAS DE BORDER VISIBLE
+    // Juste le glow/shadow pour l'effet moderne
+  };
+};
 
 export default ProgramSelectionScreen;
