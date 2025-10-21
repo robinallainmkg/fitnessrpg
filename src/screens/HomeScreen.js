@@ -660,7 +660,6 @@ const HomeScreen = ({ navigation, route }) => {
                   />
                 </View>
               ))}
-              ))}
             </View>
           ) : (
             <Card style={[styles.sectionCard, styles.emptyStateCard]}>

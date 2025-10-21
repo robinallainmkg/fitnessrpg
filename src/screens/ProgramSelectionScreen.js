@@ -403,7 +403,11 @@ const ProgramSelectionScreen = ({ navigation }) => {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      <ScrollView style={styles.container}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       {/* Header avec style gaming */}
       <View style={styles.header}>
         <Text style={styles.title}>
@@ -557,7 +561,11 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: 40, // ✅ RÉDUIT de 60 à 30
+    paddingTop: 40,
+  },
+  scrollContent: {
+    paddingBottom: 200,
+    paddingHorizontal: 0,
   },
   loadingContainer: {
     flex: 1,
@@ -650,6 +658,9 @@ const styles = StyleSheet.create({
   },
   
   programCardWrapperSelected: {
+    borderWidth: 3,
+    borderColor: '#00FF94',
+    borderRadius: 16,
   },
   
   programCardWrapperDisabled: {
