@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { rpgTheme } from '../../theme/rpgTheme';
 import { ActionButton } from '../buttons';
-import { StatusBadge } from '../badges';
+import { StatusBadge, ProgramStatBadge } from '../badges';
 import { getProgramColor } from '../../theme/colors';
 
 /**
@@ -96,11 +96,12 @@ const ProgramCard = ({
       {showStats && primaryStats.length > 0 ? (
         <View style={styles.statsSection}>
           {primaryStats.map(stat => (
-            <View key={stat} style={styles.statBadge}>
-              <Text style={styles.statBadgeText}>
-                {stat}
-              </Text>
-            </View>
+            <ProgramStatBadge
+              key={stat}
+              stat={stat}
+              size="small"
+              variant="filled"
+            />
           ))}
         </View>
       ) : totalSkills > 0 ? (
@@ -156,7 +157,7 @@ const ProgramCard = ({
 
   return (
     <TouchableOpacity
-      activeOpacity={0.9}
+      activeOpacity={0.7}
       disabled={disabled}
       style={[styles.cardContainer, style]}
     >
@@ -167,16 +168,16 @@ const ProgramCard = ({
           imageStyle={styles.backgroundImage}
           resizeMode="cover"
         >
-          {/* ═══ Dark overlay for readability ═══ */}
+          {/* ═══ Dark overlay for readability - Modern Gaming Style ═══ */}
           <LinearGradient
-            colors={['rgba(10, 14, 39, 0.85)', 'rgba(26, 34, 68, 0.90)']}
+            colors={['rgba(10, 14, 39, 0.92)', 'rgba(15, 23, 42, 0.95)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
               styles.card,
               {
-                borderColor: isCompleted ? rpgTheme.colors.text.muted : programColor,
-                borderWidth: 1.5,
+                borderColor: 'transparent',
+                borderWidth: 0,
               },
             ]}
           >
@@ -185,14 +186,14 @@ const ProgramCard = ({
         </ImageBackground>
       ) : (
         <LinearGradient
-          colors={['rgba(26, 34, 68, 0.95)', 'rgba(15, 23, 42, 0.90)']}
+          colors={['rgba(26, 34, 68, 0.8)', 'rgba(15, 23, 42, 0.85)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[
             styles.card,
             {
-              borderColor: isCompleted ? rpgTheme.colors.text.muted : programColor,
-              borderWidth: 1.5,
+              borderColor: 'transparent',
+              borderWidth: 0,
             },
           ]}
         >
@@ -207,7 +208,7 @@ const styles = StyleSheet.create({
   // ════════════ Container ════════════
   cardContainer: {
     marginHorizontal: rpgTheme.spacing.md,
-    marginBottom: rpgTheme.spacing.md,
+    marginBottom: rpgTheme.spacing.sm,
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
   },
@@ -229,7 +230,11 @@ const styles = StyleSheet.create({
     padding: rpgTheme.spacing.md,
     minHeight: 180,
     justifyContent: 'space-between',
-    ...rpgTheme.effects.shadows.card,
+    shadowColor: '#4D9EFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
 
   // ════════════ Status Badge Position ════════════
@@ -280,7 +285,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: rpgTheme.spacing.xs,
-    marginBottom: rpgTheme.spacing.md,
+    marginBottom: rpgTheme.spacing.sm,
   },
 
   statBadge: {
@@ -364,7 +369,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     borderRightWidth: 2,
     borderTopRightRadius: 14,
-    opacity: 0.6,
+    opacity: 0.4,
   },
 });
 

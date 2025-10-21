@@ -33,9 +33,9 @@ const ProgressScreen = () => {
     try {
       setLoading(true);
       
-      // ✅ NOUVELLE API: Charger les données utilisateur
-      const fs = firestore();
-      const userDocRef = doc(firestore, 'users', user.uid);
+      // ✅ Utiliser firestore() comme instance DB pour la modular API
+      const db = firestore();
+      const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       
       if (userDoc.exists()) {
@@ -44,11 +44,11 @@ const ProgressScreen = () => {
         if (data.stats) setStats(data.stats);
       }
       
-      // ✅ NOUVELLE API: Charger les sessions depuis la collection racine
+      // ✅ Charger les sessions depuis la collection racine
       try {
         console.log('🔥 Début chargement sessions pour userId:', user.uid);
         
-        const sessionsRef = collection(firestore, 'workoutSessions');
+        const sessionsRef = collection(db, 'workoutSessions');
         const q = query(
           sessionsRef,
           where('userId', '==', user.uid),
@@ -90,7 +90,7 @@ const ProgressScreen = () => {
           console.log('🔥 Tentative sans orderBy...');
           try {
             const simpleQuery = query(
-              collection(firestore, 'workoutSessions'),
+              collection(db, 'workoutSessions'),
               where('userId', '==', user.uid),
               limit(10)
             );

@@ -4,3 +4,4 @@
 
 export { default as StatBadge } from './StatBadge';
 export { default as StatusBadge } from './StatusBadge';
+export { default as ProgramStatBadge } from './ProgramStatBadge';

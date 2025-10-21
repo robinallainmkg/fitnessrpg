@@ -13,6 +13,7 @@ import { loadProgramsMeta } from '../data/programsLoader';
 import { loadProgramTree } from '../utils/programLoader';
 import { colors } from '../theme/colors';
 import { ProgramCard } from '../components/cards';
+import { ProgramStatBadge } from '../components/badges';
 import { rpgTheme } from '../theme/rpgTheme';
 
 // ═══ Pattern images: {categoryId}-bg.jpg
@@ -47,7 +48,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
         elevation: 8,
         shadowColor: '#4D9EFF',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 8,
       },
       headerTintColor: '#FFFFFF',
@@ -462,7 +463,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
           >
             <ProgramCard
               program={programData}
-              onViewTree={() => navigation.navigate('Main', { screen: 'SkillTree', params: { programId: category.id } })}
+              onViewTree={() => navigation.navigate('SkillTree', { programId: category.id })}
               onSelect={() => !isDisabled && handleSelectProgram(category.id)}
               isSelected={isSelected}
               disabled={isDisabled}
@@ -488,7 +489,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
         
         {/* Bouton validation avec style gaming */}
         <TouchableOpacity
-          activeOpacity={0.8}
+          activeOpacity={0.7}
           disabled={selectedPrograms.length === 0 || loading}
           onPress={() => {
             console.log('🔘 Bouton validation cliqué, selectedPrograms:', selectedPrograms);
@@ -574,9 +575,9 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 40,
     marginHorizontal: 16,
-    marginBottom: 24,
+    marginBottom: 16,
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 16,
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
     borderRadius: 16,
     borderWidth: 2,
@@ -590,7 +591,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 8,
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 1,
@@ -600,7 +601,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    marginBottom: 8,
+    marginBottom: 4,
     color: '#B8C5D6',
     textAlign: 'center',
     fontWeight: '500',
@@ -608,7 +609,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 14,
     color: '#94A3B8',
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: 8
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
   // ════════════ Program Card Wrapper (with ProgramCard component) ════════════
   programCardWrapper: {
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 0,
     opacity: 1,
   },
   
