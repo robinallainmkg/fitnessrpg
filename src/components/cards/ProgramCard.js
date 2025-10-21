@@ -183,7 +183,6 @@ const ProgramCard = ({
         >
           {/* ═══ MODIFIED: Overlay beaucoup plus transparent pour voir l'image ═══ */}
           <LinearGradient
-            colors={['rgba(10, 14, 39, 0.35)', 'rgba(15, 23, 42, 0.45)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -220,8 +219,8 @@ const ProgramCard = ({
 const styles = StyleSheet.create({
   // ════════════ Container ════════════
   cardContainer: {
-    marginHorizontal: rpgTheme.spacing.md,
-    marginBottom: 8, // ✅ RÉDUIT: était rpgTheme.spacing.sm (8), maintenant 8 direct
+    marginHorizontal: 0,
+    marginBottom: 4,
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
   },
@@ -241,13 +240,10 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
-    padding: 8,
+    padding: 12,
     minHeight: 150,
     justifyContent: 'space-between',
-    shadowColor: '#4D9EFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    backgroundColor: 'transparent',
     elevation: 5,
   },
 
