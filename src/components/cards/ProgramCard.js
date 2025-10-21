@@ -181,8 +181,9 @@ const ProgramCard = ({
           imageStyle={styles.backgroundImage}
           resizeMode="cover"
         >
-          {/* ═══ MODIFIED: Overlay beaucoup plus transparent pour voir l'image ═══ */}
+          {/* ═══ MODIFIED: Overlay transparent avec couleurs invisibles ═══ */}
           <LinearGradient
+            colors={['rgba(0, 0, 0, 0.15)', 'rgba(0, 0, 0, 0.20)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
   // ════════════ Container ════════════
   cardContainer: {
     marginHorizontal: 0,
-    marginBottom: 4,
+    marginBottom: 0,
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
   },
@@ -240,11 +241,11 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
-    padding: 12,
-    minHeight: 150,
+    padding: 16,
+    minHeight: 280,
     justifyContent: 'space-between',
     backgroundColor: 'transparent',
-    elevation: 5,
+    elevation: 0,
   },
 
   // ════════════ Status Badge Position ════════════
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
 
   // ════════════ Header ════════════
   topContent: {
-    marginBottom: 10,
+    marginBottom: 14,
   },
 
   header: {
@@ -269,17 +270,17 @@ const styles = StyleSheet.create({
   },
 
   programIcon: {
-    fontSize: 24,
-    lineHeight: 24,
+    fontSize: 28,
+    lineHeight: 28,
   },
 
   programName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: rpgTheme.typography.weights.semibold,
     color: rpgTheme.colors.text.primary,
     flex: 1,
     letterSpacing: 0.2,
-    lineHeight: 22,
+    lineHeight: 24,
   },
 
   programDescription: {
@@ -294,8 +295,8 @@ const styles = StyleSheet.create({
   statsSection: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: rpgTheme.spacing.xs,
-    marginBottom: 8,
+    gap: rpgTheme.spacing.sm,
+    marginBottom: 12,
   },
 
   statBadge: {
@@ -339,27 +340,27 @@ const styles = StyleSheet.create({
 
   // ════════════ Progress ════════════
   progressSection: {
-    marginBottom: 10,
+    marginBottom: 14,
   },
 
   progressText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: rpgTheme.typography.weights.bold,
     color: rpgTheme.colors.text.primary,
-    marginBottom: 2,
+    marginBottom: 4,
   },
 
   progressTotal: {
     color: rpgTheme.colors.text.secondary,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: rpgTheme.typography.weights.medium,
   },
 
   progressLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: rpgTheme.colors.text.secondary,
     fontWeight: rpgTheme.typography.weights.medium,
-    marginBottom: rpgTheme.spacing.xs,
+    marginBottom: rpgTheme.spacing.sm,
   },
 
   // Progress Bar

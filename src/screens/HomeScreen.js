@@ -653,11 +653,13 @@ const HomeScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
               {activePrograms.map(program => (
-                <ProgramCard
-                  key={program.id}
-                  program={program}
-                  onViewTree={() => handleViewActiveProgram(program.id)}
-                />
+                <View key={program.id} style={styles.programCardWrapper}>
+                  <ProgramCard
+                    program={program}
+                    onViewTree={() => handleViewActiveProgram(program.id)}
+                  />
+                </View>
+              ))}
               ))}
             </View>
           ) : (
@@ -708,7 +710,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
-  section: { marginTop: 16, marginBottom: 8 },
+  section: { marginTop: 8, marginBottom: 0, marginHorizontal: 16 },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -719,6 +721,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginHorizontal: 16,
+    marginBottom: 12,
+  },
+  programCardWrapper: {
+    paddingHorizontal: 16,
     marginBottom: 12,
   },
   manageButton: {
