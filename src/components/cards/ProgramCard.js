@@ -70,16 +70,6 @@ const ProgramCard = ({
 
   const cardContent = (
     <>
-      {/* ═══ Status Badge (top-right) ═══ */}
-      {(isActive || isCompleted) && (
-        <StatusBadge
-          status={status}
-          size="small"
-          position="absolute"
-          style={styles.statusBadgePosition}
-        />
-      )}
-
       {/* ═══ TOP CONTENT: Titre + Description ═══ */}
       <View style={styles.topContent}>
         <View style={styles.header}>
@@ -174,45 +164,42 @@ const ProgramCard = ({
       disabled={disabled}
       style={[styles.cardContainer, style]}
     >
-      {imageSource ? (
-        <ImageBackground
-          source={imageSource}
-          style={styles.imageBackground}
-          imageStyle={styles.backgroundImage}
-          resizeMode="cover"
-        >
-          {/* ═══ MODIFIED: Overlay transparent avec couleurs invisibles ═══ */}
-          <LinearGradient
-            colors={['rgba(0, 0, 0, 0.15)', 'rgba(0, 0, 0, 0.20)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[
-              styles.card,
-              {
-                borderColor: 'transparent',
-                borderWidth: 0,
-              },
-            ]}
+      <View style={styles.cardContent}>
+        {/* ═══ PARTIE 1: IMAGE (60%) ═══ */}
+        {imageSource ? (
+          <ImageBackground
+            source={imageSource}
+            style={styles.imageSection}
+            imageStyle={styles.backgroundImage}
+            resizeMode="cover"
           >
-            {cardContent}
-          </LinearGradient>
-        </ImageBackground>
-      ) : (
+            {/* Overlay très léger sur l'image */}
+            <LinearGradient
+              colors={['rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.1)']}
+              style={styles.imageOverlay}
+            />
+            
+            {/* Status badge positionné en haut-droit de l'image */}
+            {(isActive || isCompleted) && (
+              <StatusBadge
+                status={status}
+                size="small"
+                style={styles.imageBadgePosition}
+              />
+            )}
+          </ImageBackground>
+        ) : (
+          <View style={styles.imagePlaceholder} />
+        )}
+
+        {/* ═══ PARTIE 2: TEXTE & BOUTONS (40%) ═══ */}
         <LinearGradient
-          colors={['rgba(26, 34, 68, 0.8)', 'rgba(15, 23, 42, 0.85)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[
-            styles.card,
-            {
-              borderColor: 'transparent',
-              borderWidth: 0,
-            },
-          ]}
+          colors={['rgba(26, 34, 68, 0.85)', 'rgba(15, 23, 42, 0.95)']}
+          style={styles.textSection}
         >
           {cardContent}
         </LinearGradient>
-      )}
+      </View>
     </TouchableOpacity>
   );
 };
@@ -226,92 +213,107 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  // ════════════ Background Image ════════════
-  imageBackground: {
+  // ════════════ Card Content (Flex Column Layout) ════════════
+  cardContent: {
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
-  },
-
-  backgroundImage: {
-    borderRadius: rpgTheme.borderRadius.lg,
-  },
-
-  // ════════════ Card ════════════
-  // ════════════ Card ════════════
-  card: {
-    borderRadius: rpgTheme.borderRadius.lg,
-    overflow: 'hidden',
-    padding: 16,
     minHeight: 280,
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     backgroundColor: 'transparent',
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOpacity: 0,
   },
 
-  // ════════════ Status Badge Position ════════════
-  statusBadgePosition: {
+  // ════════════ Image Section (60% hauteur) ════════════
+  imageSection: {
+    flex: 0.6,
+    minHeight: 170,
+    justifyContent: 'flex-end',
+    position: 'relative',
+  },
+
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  imageBadgePosition: {
     position: 'absolute',
     top: rpgTheme.spacing.sm,
     right: rpgTheme.spacing.sm,
     margin: 0,
+    zIndex: 10,
+  },
+
+  imagePlaceholder: {
+    flex: 0.6,
+    minHeight: 170,
+    backgroundColor: 'rgba(26, 34, 68, 0.8)',
+  },
+
+  // ════════════ Background Image ════════════
+  backgroundImage: {
+    borderRadius: rpgTheme.borderRadius.lg,
+  },
+
+  // ════════════ Text Section (40% hauteur) ════════════
+  textSection: {
+    flex: 0.4,
+    padding: rpgTheme.spacing.md,
+    justifyContent: 'space-between',
   },
 
   // ════════════ Header ════════════
   topContent: {
-    marginBottom: 14,
+    marginBottom: 8,
   },
 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: rpgTheme.spacing.sm,
-    marginBottom: rpgTheme.spacing.sm,
-    marginTop: 24, // Space for status badge
+    marginBottom: rpgTheme.spacing.xs,
+    marginTop: 0,
   },
 
   programIcon: {
-    fontSize: 28,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 20,
   },
 
   programName: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: rpgTheme.typography.weights.semibold,
     color: rpgTheme.colors.text.primary,
     flex: 1,
     letterSpacing: 0.2,
-    lineHeight: 24,
+    lineHeight: 20,
   },
 
   programDescription: {
-    fontSize: 12,
+    fontSize: 11,
     color: rpgTheme.colors.text.secondary,
     fontWeight: rpgTheme.typography.weights.regular,
-    lineHeight: 16,
-    marginTop: rpgTheme.spacing.xs,
+    lineHeight: 14,
+    marginTop: 2,
   },
 
   // ════════════ Stats ════════════
   statsSection: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: rpgTheme.spacing.sm,
-    marginBottom: 12,
+    gap: rpgTheme.spacing.xs,
+    marginBottom: 6,
   },
 
   statBadge: {
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
     backgroundColor: 'rgba(77, 158, 255, 0.15)',
-    borderRadius: rpgTheme.borderRadius.sm,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(77, 158, 255, 0.3)',
   },
 
   statBadgeText: {
-    fontSize: 11,
+    fontSize: 10,
     color: rpgTheme.colors.neon.blue,
     fontWeight: rpgTheme.typography.weights.semibold,
   },
@@ -320,80 +322,82 @@ const styles = StyleSheet.create({
   statBadgeImproved: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: rpgTheme.borderRadius.sm,
+    gap: 2,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
 
   statBadgeIcon: {
-    fontSize: 13,
-    lineHeight: 13,
+    fontSize: 11,
+    lineHeight: 11,
   },
 
   statBadgeLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     textTransform: 'capitalize',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
 
   // ════════════ Progress ════════════
   progressSection: {
-    marginBottom: 14,
+    marginBottom: 6,
   },
 
   progressText: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: rpgTheme.typography.weights.bold,
     color: rpgTheme.colors.text.primary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   progressTotal: {
     color: rpgTheme.colors.text.secondary,
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: rpgTheme.typography.weights.medium,
   },
 
   progressLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: rpgTheme.colors.text.secondary,
     fontWeight: rpgTheme.typography.weights.medium,
-    marginBottom: rpgTheme.spacing.sm,
+    marginBottom: rpgTheme.spacing.xs,
   },
 
   // Progress Bar
   progressBarContainer: {
-    height: 6,
+    height: 4,
     backgroundColor: rpgTheme.colors.background.secondary,
-    borderRadius: 3,
+    borderRadius: 2,
     overflow: 'hidden',
-    marginTop: rpgTheme.spacing.xs,
+    marginTop: 4,
   },
 
   progressBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 2,
   },
 
   // ════════════ Button ════════════
   buttonContainer: {
     flexDirection: 'row',
-    gap: rpgTheme.spacing.sm,
-    marginTop: 8,
+    gap: rpgTheme.spacing.xs,
+    marginTop: 0,
   },
 
   viewTreeButton: {
     flex: 1,
     marginTop: 0,
+    paddingVertical: 6,
   },
 
   selectButton: {
     flex: 1,
     marginTop: 0,
+    paddingVertical: 6,
   },
 
   // ════════════ Decorative ════════════
