@@ -403,7 +403,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
         <Text style={styles.backButtonText}>←</Text>
       </TouchableOpacity>
 
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 160 }}>
+      <ScrollView style={styles.container}>
       {/* Header avec style gaming */}
       <View style={styles.header}>
         <Text style={styles.title}>
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   },
   backgroundOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Déjà bon
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
   },
   backButton: {
     position: 'absolute',
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(77, 158, 255, 0.15)', // Plus transparent
+    backgroundColor: 'rgba(77, 158, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 100,
@@ -558,7 +558,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: 60,
+    paddingTop: 40, // ✅ RÉDUIT de 60 à 30
   },
   loadingContainer: {
     flex: 1,
@@ -572,26 +572,24 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontWeight: '600'
   },
+  
+  // ✅ HEADER ÉPURÉ (sans fond)
   header: {
-    marginTop: 40,
+    marginTop: 100, // ✅ RÉDUIT de 40 à 20
     marginHorizontal: 16,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: 12, // Réduit de 16 à 12
-    // ❌ SUPPRIMÉ: borderWidth
-    // ❌ SUPPRIMÉ: borderColor bleu
-    shadowColor: '#4D9EFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4, // Réduit de 5 à 4
+    marginBottom: 8, // ✅ RÉDUIT de 16 à 8
+    paddingHorizontal: 0, // ✅ RÉDUIT de 16 à 0
+    paddingVertical: 0, // ✅ RÉDUIT de 16 à 0
+    // ❌ SUPPRIMÉ backgroundColor
+    // ❌ SUPPRIMÉ borderRadius
+    // ❌ SUPPRIMÉ shadowColor/shadowOpacity/elevation
+    // Juste le texte flottant sur le background!
   },
+  
   title: {
     fontSize: 28,
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: 4, // ✅ RÉDUIT de 8 à 4
     color: '#FFFFFF',
     textAlign: 'center',
     letterSpacing: 1,
@@ -600,43 +598,42 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: 4,
+    fontSize: 14, // ✅ RÉDUIT de 16 à 14
+    marginBottom: 2, // ✅ RÉDUIT de 4 à 2
     color: '#B8C5D6',
     textAlign: 'center',
     fontWeight: '500',
   },
   description: {
-    fontSize: 14,
+    fontSize: 12, // ✅ RÉDUIT de 14 à 12
     color: '#94A3B8',
-    marginBottom: 12,
+    marginBottom: 8, // ✅ RÉDUIT de 12 à 8
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18, // ✅ RÉDUIT de 20 à 18
     paddingHorizontal: 8
   },
   selectionInfo: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 8
+    marginTop: 4, // ✅ RÉDUIT de 8 à 4
   },
   selectionChip: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingHorizontal: 16, // ✅ RÉDUIT de 20 à 16
+    paddingVertical: 6, // ✅ RÉDUIT de 8 à 6
     borderRadius: 20,
-    // ❌ SUPPRIMÉ: borderWidth
     borderColor: 'rgba(148, 163, 184, 0.4)',
-    backgroundColor: 'rgba(148, 163, 184, 0.08)', // Réduit opacité 0.1 → 0.08
+    backgroundColor: 'rgba(148, 163, 184, 0.08)',
   },
   selectionChipActive: {
     borderColor: '#4D9EFF',
-    backgroundColor: 'rgba(77, 158, 255, 0.1)', // Réduit 0.15 → 0.1
+    backgroundColor: 'rgba(77, 158, 255, 0.1)',
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3, // Réduit 0.5 → 0.3
-    shadowRadius: 6, // Réduit 8 → 6
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   selectionChipText: {
-    fontSize: 13,
+    fontSize: 12, // ✅ RÉDUIT de 13 à 12
     fontWeight: '700',
     color: '#94A3B8',
     letterSpacing: 0.5,
@@ -646,20 +643,13 @@ const styles = StyleSheet.create({
     color: '#4D9EFF',
   },
 
-  // 🎮 PROGRAMME CARD WRAPPER - SPACING RÉDUIT
+  // ✅ PROGRAMME CARD WRAPPER - SPACING ULTRA RÉDUIT
   programCardWrapper: {
-    marginHorizontal: 16,
-    marginBottom: 12, // ✅ RÉDUIT: 16 → 12
+    marginBottom: 2, // ✅ SUPER RÉDUIT: 12 → 6
     opacity: 1,
   },
   
   programCardWrapperSelected: {
-    opacity: 1,
-    shadowColor: '#4D9EFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4, // Réduit 0.7 → 0.4
-    shadowRadius: 12, // Réduit 15 → 12
-    elevation: 6, // Réduit 10 → 6
   },
   
   programCardWrapperDisabled: {
@@ -670,7 +660,7 @@ const styles = StyleSheet.create({
     minHeight: 320,
   },
 
-  // 🎯 FIXED BOTTOM CONTAINER - MODERNE
+  // ✅ FIXED BOTTOM CONTAINER
   fixedBottomContainer: {
     position: 'absolute',
     bottom: 0,
@@ -679,7 +669,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.95)',
     paddingBottom: 20,
     paddingTop: 12,
-    // ❌ SUPPRIMÉ: borderTopWidth
     borderTopColor: 'rgba(77, 158, 255, 0.3)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -688,28 +677,26 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
 
-  // ⚔️ VALIDATE BUTTON - GAMING MODERNE
+  // ✅ VALIDATE BUTTON
   validateButton: {
     marginHorizontal: 16,
     marginVertical: 8,
-    paddingVertical: 16, // Réduit 18 → 16
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 12, // Réduit 16 → 12
+    borderRadius: 12,
     backgroundColor: '#4D9EFF',
-    // ❌ SUPPRIMÉ: borderWidth: 3
-    // ❌ SUPPRIMÉ: borderColor bleu
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5, // Réduit 0.6 → 0.5
-    shadowRadius: 10, // Réduit 12 → 10
-    elevation: 6, // Réduit 8 → 6
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
   validateButtonDisabled: {
     backgroundColor: 'rgba(148, 163, 184, 0.3)',
     borderColor: 'rgba(148, 163, 184, 0.5)',
-    shadowOpacity: 0.15, // Réduit 0.2 → 0.15
+    shadowOpacity: 0.15,
     elevation: 2,
   },
   validateButtonText: {
@@ -732,38 +719,5 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 });
-
-// ============================================
-// ⭐ 2️⃣ MODIFIER LA SECTION SCROLL VIEW
-// ============================================
-// Dans le JSX, remplace cette ligne:
-// <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 160 }}>
-// Par:
-// <ScrollView 
-//   style={styles.container} 
-//   contentContainerStyle={{ paddingBottom: 160 }}
-//   scrollEventThrottle={16}
-//   showsVerticalScrollIndicator={false}
-// >
-
-// ============================================
-// ⭐ 3️⃣ OPTIONAL: HELPER FUNCTION POUR MODERN LOOK
-// ============================================
-// Ajoute cette fonction si tu utilises ProgramCard custom
-
-const getModernProgramStyle = (isSelected, isDisabled) => {
-  return {
-    borderRadius: 14,
-    backgroundColor: 'rgba(26, 34, 68, 0.8)', // Semi-transparent cosmique
-    overflow: 'hidden',
-    shadowColor: isSelected ? '#4D9EFF' : '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: isSelected ? 0.4 : 0.2,
-    shadowRadius: isSelected ? 12 : 8,
-    elevation: isSelected ? 6 : 3,
-    // ❌ PAS DE BORDER VISIBLE
-    // Juste le glow/shadow pour l'effet moderne
-  };
-};
 
 export default ProgramSelectionScreen;

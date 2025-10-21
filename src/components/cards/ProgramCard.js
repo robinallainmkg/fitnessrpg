@@ -9,6 +9,19 @@ import { StatusBadge } from '../badges';
 import { getProgramColor } from '../../theme/colors';
 
 /**
+ * 🎮 Stat badges configuration avec couleurs et emojis
+ */
+const STAT_CONFIG = {
+  strength: { icon: '💪', color: '#FF6B6B', label: 'Strength' },
+  power: { icon: '⚡', color: '#FFD93D', label: 'Power' },
+  endurance: { icon: '🫀', color: '#4ECDC4', label: 'Endurance' },
+  speed: { icon: '🚀', color: '#95E1D3', label: 'Speed' },
+  flexibility: { icon: '🤸', color: '#C77DFF', label: 'Flexibility' },
+  mobility: { icon: '🧘', color: '#F472B6', label: 'Mobility' },
+  coordination: { icon: '🎯', color: '#06B6D4', label: 'Coordination' },
+};
+
+/**
  * 📚 ProgramCard - Carte programme unifié pour HomeScreen et ProgramSelection
  * 
  * Design features:
@@ -86,13 +99,23 @@ const ProgramCard = ({
       {/* ═══ MIDDLE CONTENT: Stats ou Progression ═══ */}
       {showStats && primaryStats.length > 0 ? (
         <View style={styles.statsSection}>
-          {primaryStats.map(stat => (
-            <View key={stat} style={styles.statBadge}>
-              <Text style={styles.statBadgeText}>
-                {stat}
-              </Text>
-            </View>
-          ))}
+          {primaryStats.map(stat => {
+            const config = STAT_CONFIG[stat] || { icon: '📊', color: '#4D9EFF', label: stat };
+            return (
+              <View
+                key={stat}
+                style={[
+                  styles.statBadgeImproved,
+                  { backgroundColor: `${config.color}20` },
+                ]}
+              >
+                <Text style={styles.statBadgeIcon}>{config.icon}</Text>
+                <Text style={[styles.statBadgeLabel, { color: config.color }]}>
+                  {config.label}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       ) : totalSkills > 0 ? (
         <View style={styles.progressSection}>
@@ -160,7 +183,7 @@ const ProgramCard = ({
         >
           {/* ═══ MODIFIED: Overlay beaucoup plus transparent pour voir l'image ═══ */}
           <LinearGradient
-            colors={['rgba(10, 14, 39, 0.65)', 'rgba(15, 23, 42, 0.75)']}
+            colors={['rgba(10, 14, 39, 0.35)', 'rgba(15, 23, 42, 0.45)']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[
@@ -214,11 +237,12 @@ const styles = StyleSheet.create({
   },
 
   // ════════════ Card ════════════
+  // ════════════ Card ════════════
   card: {
     borderRadius: rpgTheme.borderRadius.lg,
     overflow: 'hidden',
-    padding: rpgTheme.spacing.md,
-    minHeight: 180,
+    padding: 8,
+    minHeight: 150,
     justifyContent: 'space-between',
     shadowColor: '#4D9EFF',
     shadowOffset: { width: 0, height: 0 },
@@ -237,7 +261,7 @@ const styles = StyleSheet.create({
 
   // ════════════ Header ════════════
   topContent: {
-    marginBottom: rpgTheme.spacing.md,
+    marginBottom: 10,
   },
 
   header: {
@@ -275,7 +299,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: rpgTheme.spacing.xs,
-    marginBottom: rpgTheme.spacing.md,
+    marginBottom: 8,
   },
 
   statBadge: {
@@ -293,9 +317,33 @@ const styles = StyleSheet.create({
     fontWeight: rpgTheme.typography.weights.semibold,
   },
 
+  // ════════════ Stat Badges Améliorés (avec emoji et couleurs) ════════════
+  statBadgeImproved: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: rpgTheme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+
+  statBadgeIcon: {
+    fontSize: 13,
+    lineHeight: 13,
+  },
+
+  statBadgeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+    letterSpacing: 0.2,
+  },
+
   // ════════════ Progress ════════════
   progressSection: {
-    marginBottom: rpgTheme.spacing.md,
+    marginBottom: 10,
   },
 
   progressText: {
