@@ -1,4 +1,4 @@
-package com.hybridrpg
+package com.fitnessrpg.app
 
 import android.os.Build
 import android.os.Bundle

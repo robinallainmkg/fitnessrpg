@@ -1,4 +1,4 @@
-package com.hybridrpg
+package com.fitnessrpg.app
 
 import android.app.Application
 import android.content.res.Configuration
