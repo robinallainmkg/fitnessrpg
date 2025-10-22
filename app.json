@@ -34,7 +34,7 @@
     },
     "android": {
       "package": "com.hybridrpg.app",
-      "versionCode": 1,
+      "versionCode": 14,
       "enableDangerousExperimentalLeanBuilds": true
     }
   }
