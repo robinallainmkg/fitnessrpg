@@ -32,26 +32,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Generate Android native code
-        run: npx expo prebuild --platform android --clean
-
-      - name: Build Android APK
+      - name: Make Gradlew executable
         working-directory: ./android
-        run: ./gradlew assembleRelease
+        run: chmod +x gradlew
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
-
-      # Optionnel : Build AAB pour le Play Store
       - name: Build Android AAB
         working-directory: ./android
         run: ./gradlew bundleRelease
