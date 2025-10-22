@@ -27,9 +27,10 @@
         }
       ]
     ],
+    "owner": "robinouchallain",
     "extra": {
       "eas": {
-        "projectId": "fitness-rpg"
+        "projectId": "24efebe9-b486-47f2-8062-3a51d825175a"
       }
     },
     "android": {
