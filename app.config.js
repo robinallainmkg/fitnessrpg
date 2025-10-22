@@ -32,7 +32,7 @@ module.exports = {
     },
     android: {
       package: "com.hybridrpg.app",
-      versionCode: 14
+      versionCode: 15
     }
   }
 };
