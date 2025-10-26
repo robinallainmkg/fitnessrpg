@@ -69,7 +69,9 @@ const HomeScreen = ({ navigation, route }) => {
     if (user?.uid) {
       console.log('✅ Utilisateur authentifié détecté');
       loadAllData();
-      loadTodayChallenge(user.uid); // Charger le défi du jour
+      if (loadTodayChallenge) {
+        loadTodayChallenge(user.uid); // Charger le défi du jour
+      }
       startFadeAnimation();
     } else if (isGuest) {
       console.log('👤 Mode invité détecté');
@@ -89,7 +91,7 @@ const HomeScreen = ({ navigation, route }) => {
       console.log('⏳ En attente d\'authentification...');
       setLoading(false);
     }
-  }, [user, isGuest]);
+  }, [user, isGuest, loadTodayChallenge]);
 
   // Gestion des paramètres de navigation
   useEffect(() => {
@@ -611,13 +613,27 @@ const HomeScreen = ({ navigation, route }) => {
           />
 
           {/* DÉFI DU JOUR - En premier, juste après UserHeader */}
+          {console.log('🎯 DEBUG Challenge Card:', { 
+            isGuest, 
+            todayChallenge, 
+            loadingChallenge,
+            hasUseChallenge: !!loadTodayChallenge 
+          })}
           {!isGuest && (
-            <DailyChallengeCard
-              challenge={todayChallenge}
-              hasSubmitted={todayChallenge?.submitted || false}
-              loading={loadingChallenge}
-              onPress={() => navigation.navigate('Challenge')}
-            />
+            <Card style={{ margin: 16, backgroundColor: '#1E293B' }}>
+              <Card.Content>
+                <Text style={{ color: '#FFFFFF' }}>TEST CARD VISIBLE</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 12 }}>
+                  isGuest: {String(isGuest)}
+                </Text>
+                <Text style={{ color: '#94A3B8', fontSize: 12 }}>
+                  todayChallenge: {todayChallenge ? 'OUI' : 'NON'}
+                </Text>
+                <Text style={{ color: '#94A3B8', fontSize: 12 }}>
+                  loadingChallenge: {String(loadingChallenge)}
+                </Text>
+              </Card.Content>
+            </Card>
           )}
 
           <StreakCard streak={userStats?.streakDays || 0} />
