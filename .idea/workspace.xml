@@ -5,95 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="85828c1b-998c-423b-884c-76b033f439e4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/deviceManager.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ARCHITECTURE_MULTI_PROGRAMMES_COMPLETE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FIREBASE_FIX_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/GITHUB_URLS_IMPORTANTES.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/MIGRATION_GUIDE_v1.0.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SKILL_TREE_LUCIDE_REFONTE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SKILL_TREE_MODERNIZATION.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SKILL_TREE_UX_IMPROVEMENTS.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/SYSTEM_TEST_INTEGRATION.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WORKOUT_COMPLETION_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WORKOUT_REFACTORING_COMPLETE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WORKOUT_REFACTORING_SUMMARY.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WORKOUT_SCREEN_MODERNIZATION.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WORKOUT_SCREEN_SIMPLIFIED.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/WORKOUT_START_FIX.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/add_missing_skills.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/add_stat_bonuses.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/android/app/google-services.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/Home-BG-0.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/avatar (1).jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/avatar (2).jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/avatar (3).jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/avatar (4).jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/avatar (5).jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/avatar (6).jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/programmes/StreetWorkout.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/programmes/street-workout-bg.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/RPG_THEME_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/RPG_THEME_MIGRATION.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/SKILL_TREE_ICONS_GUIDE.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/userflow.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/metro.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/CompanionCreator.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/NativeCompanionViewer.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/ProgramProgressCard_Documentation.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/RpgThemeTest.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/SkillNode_Documentation.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/UserHeader_Documentation.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/components/UserStatsCard_Documentation.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/config/firebase.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/contexts/userflow.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/data/programs_backup.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/DebugScreen.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/HomeScreen_new.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/HomeScreen_simple.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/OnboardingScreen.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/ProgramsScreen.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/WorkoutScreen.js.backup" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/WorkoutScreen.new.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/screens/WorkoutScreen_refactored.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/theme/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/theme/rpgTheme.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/companionEvolution.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/programStats.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/skillIcons.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/testWorkoutCompletion.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/testWorkoutSummary.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.expo/devices.json" beforeDir="false" afterPath="$PROJECT_DIR$/.expo/devices.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/babel.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/babel.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ActiveProgramCard.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ActiveProgramCard.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ProgramProgressCard.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ProgramProgressCard.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SessionQueueCard.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SessionQueueCard.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SkillNode.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SkillNode.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/UserHeader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/UserHeader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contexts/AuthContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/contexts/AuthContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contexts/AuthContext_dev.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contexts/AuthContext_old.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contexts/WorkoutContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/contexts/WorkoutContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/programs.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/programs.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useUserPrograms.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useUserPrograms.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/AuthScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/AuthScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useCamera.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useCamera.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/ChallengeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ChallengeScreen.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/ProfileScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ProfileScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/ProgramSelectionScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ProgramSelectionScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/ProgressScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ProgressScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/SkillDetailScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SkillDetailScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/SkillTreeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SkillTreeScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/WorkoutScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/WorkoutScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/firebase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/firebase.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/sessionQueueService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/sessionQueueService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/theme/colors.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/colors.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,23 +33,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.Hybrid.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Unnamed.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/robin/Documents/RpgHybrid&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Application.Hybrid.executor": "Run",
+    "Application.Unnamed.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/robin/Documents/RpgHybrid",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="Hybrid" type="Application" factoryName="Application">
       <option name="ALTERNATIVE_JRE_PATH" value="Android API 36.0, extension level 17 Platform" />

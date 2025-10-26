@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
         setUser(firebaseUser);
         setIsGuest(false);
         
-        // Vérifier que le document existe
+        // Vérifier que le document existe (backup - normalement déjà créé par login/signup)
         try {
           const doc = await firestore()
             .collection('users')
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
             .get();
           
           if (!doc.exists) {
-            log('📝 Création du document utilisateur');
+            log('📝 Création du document utilisateur (onAuthStateChanged backup)');
             await firestore()
               .collection('users')
               .doc(firebaseUser.uid)
@@ -74,8 +74,8 @@ export const AuthProvider = ({ children }) => {
                 level: 1,
                 completedPrograms: [],
                 userProgress: {},
-                activePrograms: [],      // ⭐ CORRECTION
-                selectedPrograms: [],    // ⭐ CORRECTION
+                activePrograms: [],
+                selectedPrograms: [],
                 streak: 0,
                 lastWorkoutDate: null,
                 totalChallengesSubmitted: 0,
@@ -86,6 +86,7 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error('⚠️ Erreur document:', error);
+          // Non bloquant - l'utilisateur peut continuer
         }
       } else {
         log('ℹ️ Aucun utilisateur connecté');
@@ -179,7 +180,7 @@ export const AuthProvider = ({ children }) => {
   // LOGIN
   const login = async (email, password) => {
     try {
-      log('🔐 Connexion:', email);
+      log('🔐 Login:', email);
       
       if (!email || !password) {
         return { 
@@ -190,8 +191,47 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Se connecter
+      log('🔐 Connexion:', email);
       const userCredential = await auth().signInWithEmailAndPassword(email, password);
       const loggedUser = userCredential.user;
+      
+      log('✅ Firebase Auth OK, vérification document...');
+      
+      // Vérifier/créer le document utilisateur immédiatement
+      try {
+        const userDoc = await firestore()
+          .collection('users')
+          .doc(loggedUser.uid)
+          .get();
+        
+        if (!userDoc.exists) {
+          log('📝 Création document utilisateur (premier login)');
+          await firestore()
+            .collection('users')
+            .doc(loggedUser.uid)
+            .set({
+              email: loggedUser.email,
+              totalXP: 0,
+              level: 1,
+              completedPrograms: [],
+              userProgress: {},
+              activePrograms: [],
+              selectedPrograms: [],
+              streak: 0,
+              lastWorkoutDate: null,
+              totalChallengesSubmitted: 0,
+              totalChallengesApproved: 0,
+              lastSubmissionDate: null,
+              createdAt: firestore.FieldValue.serverTimestamp(),
+            });
+          log('✅ Document utilisateur créé');
+        } else {
+          log('✅ Document utilisateur existe déjà');
+        }
+      } catch (firestoreError) {
+        console.error('⚠️ Erreur Firestore (non bloquant):', firestoreError);
+        // Continue même si Firestore échoue - sera recréé par onAuthStateChanged
+      }
       
       // Nettoyer le mode invité
       await AsyncStorage.multiRemove([
@@ -203,7 +243,7 @@ export const AuthProvider = ({ children }) => {
       setIsGuest(false);
       setGuestData(null);
       
-      log('✅ Connexion réussie');
+      log('✅ Connexion complète');
       
       return { success: true, user: loggedUser };
       

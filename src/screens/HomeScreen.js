@@ -91,7 +91,8 @@ const HomeScreen = ({ navigation, route }) => {
       console.log('⏳ En attente d\'authentification...');
       setLoading(false);
     }
-  }, [user, isGuest, loadTodayChallenge]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isGuest]); // Retirer loadTodayChallenge pour éviter la loop infinie
 
   // Gestion des paramètres de navigation
   useEffect(() => {
@@ -613,27 +614,13 @@ const HomeScreen = ({ navigation, route }) => {
           />
 
           {/* DÉFI DU JOUR - En premier, juste après UserHeader */}
-          {console.log('🎯 DEBUG Challenge Card:', { 
-            isGuest, 
-            todayChallenge, 
-            loadingChallenge,
-            hasUseChallenge: !!loadTodayChallenge 
-          })}
           {!isGuest && (
-            <Card style={{ margin: 16, backgroundColor: '#1E293B' }}>
-              <Card.Content>
-                <Text style={{ color: '#FFFFFF' }}>TEST CARD VISIBLE</Text>
-                <Text style={{ color: '#94A3B8', fontSize: 12 }}>
-                  isGuest: {String(isGuest)}
-                </Text>
-                <Text style={{ color: '#94A3B8', fontSize: 12 }}>
-                  todayChallenge: {todayChallenge ? 'OUI' : 'NON'}
-                </Text>
-                <Text style={{ color: '#94A3B8', fontSize: 12 }}>
-                  loadingChallenge: {String(loadingChallenge)}
-                </Text>
-              </Card.Content>
-            </Card>
+            <DailyChallengeCard
+              challenge={todayChallenge}
+              hasSubmitted={todayChallenge?.submitted || false}
+              loading={loadingChallenge}
+              onPress={() => navigation.navigate('Challenge')}
+            />
           )}
 
           <StreakCard streak={userStats?.streakDays || 0} />

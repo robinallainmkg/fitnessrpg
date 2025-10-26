@@ -33,9 +33,11 @@ export const ChallengeScreen = () => {
     hasPermissions,
     requestPermissions,
     cameraRef,
+    onCameraReady,
     isRecording,
     recordedVideoUri,
     facing,
+    isCameraReady,
     startRecording,
     stopRecording,
     toggleCameraFacing,
@@ -178,8 +180,10 @@ export const ChallengeScreen = () => {
         ) : (
           <>
             <CameraView
+              ref={cameraRef}
               style={styles.camera}
               facing={facing}
+              onCameraReady={onCameraReady}
             />
             <View style={styles.cameraControls}>
               <TouchableOpacity
@@ -200,11 +204,17 @@ export const ChallengeScreen = () => {
                 style={[
                   styles.recordButton,
                   isRecording && styles.recordButtonActive,
+                  !isCameraReady && styles.recordButtonDisabled,
                 ]}
                 onPress={isRecording ? stopRecording : startRecording}
+                disabled={!isCameraReady}
               >
                 <Text style={styles.recordButtonText}>
-                  {isRecording ? '⏹ Arrêter' : '⏺ Enregistrer'}
+                  {!isCameraReady
+                    ? '⏳ Chargement...'
+                    : isRecording
+                    ? '⏹ Arrêter'
+                    : '⏺ Enregistrer'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -514,6 +524,10 @@ const styles = StyleSheet.create({
   },
   recordButtonActive: {
     backgroundColor: '#666',
+  },
+  recordButtonDisabled: {
+    backgroundColor: '#444',
+    opacity: 0.5,
   },
   recordButtonText: {
     color: '#fff',

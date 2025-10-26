@@ -15,6 +15,7 @@ export const useCamera = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedVideoUri, setRecordedVideoUri] = useState(null as string | null);
   const [facing, setFacing] = useState('front' as CameraType);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   
   const cameraRef = useRef(null as any);
   const recordingTimeoutRef = useRef(null as any);
@@ -59,6 +60,10 @@ export const useCamera = () => {
     try {
       if (!cameraRef.current) {
         throw new Error('Camera ref not ready');
+      }
+
+      if (!isCameraReady) {
+        throw new Error('Camera not ready yet, please wait a moment');
       }
 
       if (isRecording) {
@@ -143,6 +148,14 @@ export const useCamera = () => {
     return !!(cameraPermission?.granted && mediaLibraryPermission?.granted);
   };
 
+  /**
+   * Callback when camera is ready
+   */
+  const onCameraReady = () => {
+    log('📸 Camera is ready!');
+    setIsCameraReady(true);
+  };
+
   return {
     // Permissions
     cameraPermission,
@@ -152,11 +165,13 @@ export const useCamera = () => {
 
     // Camera ref
     cameraRef,
+    onCameraReady,
 
     // Recording state
     isRecording,
     recordedVideoUri,
     facing,
+    isCameraReady,
 
     // Actions
     startRecording,

@@ -37,8 +37,8 @@ import DebugScreen from './src/screens/DebugScreen';
 import ManageActiveProgramsScreen from './src/screens/ManageActiveProgramsScreen';
 import FirestoreDiagnosticScreen from './src/screens/FirestoreDiagnosticScreen';
 import DevDiagnosticScreen from './src/screens/DevDiagnosticScreen';
-import ChallengeScreen from './src/screens/ChallengeScreen';
-import AdminReviewScreen from './src/screens/AdminReviewScreen';
+import { ChallengeScreen } from './src/screens/ChallengeScreen';
+import { AdminReviewScreen } from './src/screens/AdminReviewScreen';
 
 // Components
 import FirebaseDebug from './src/components/FirebaseDebug';
