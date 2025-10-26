@@ -78,6 +78,9 @@ export const AuthProvider = ({ children }) => {
                 selectedPrograms: [],    // ⭐ CORRECTION
                 streak: 0,
                 lastWorkoutDate: null,
+                totalChallengesSubmitted: 0,
+                totalChallengesApproved: 0,
+                lastSubmissionDate: null,
                 createdAt: firestore.FieldValue.serverTimestamp(),
               });
           }
@@ -134,6 +137,9 @@ export const AuthProvider = ({ children }) => {
           selectedPrograms: [],    // ⭐ CORRECTION
           streak: 0,
           lastWorkoutDate: null,
+          totalChallengesSubmitted: 0,
+          totalChallengesApproved: 0,
+          lastSubmissionDate: null,
           createdAt: firestore.FieldValue.serverTimestamp(),
         });
       
@@ -376,6 +382,9 @@ export const AuthProvider = ({ children }) => {
           selectedPrograms: [],    // ⭐ CORRECTION
           streak: 0,
           lastWorkoutDate: null,
+          totalChallengesSubmitted: 0,
+          totalChallengesApproved: 0,
+          lastSubmissionDate: null,
           createdAt: firestore.FieldValue.serverTimestamp(),
           ...guestDataToMigrate,
         })

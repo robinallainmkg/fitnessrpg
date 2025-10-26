@@ -329,6 +329,17 @@ const ProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
             </>
           )}
+          
+          {/* Bouton Admin Review (visible si isAdmin = true) */}
+          {userStats?.isAdmin && (
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('AdminReview')}
+              style={[styles.resetButton, { backgroundColor: '#F59E0B', marginTop: 12 }]}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.resetButtonText}>🔍 Validation Défis</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

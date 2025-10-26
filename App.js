@@ -17,6 +17,7 @@ LogBox.ignoreLogs([
 // Contexts
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { WorkoutProvider } from './src/contexts/WorkoutContext';
+import { ChallengeProvider } from './src/contexts/ChallengeContext';
 
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
@@ -36,6 +37,8 @@ import DebugScreen from './src/screens/DebugScreen';
 import ManageActiveProgramsScreen from './src/screens/ManageActiveProgramsScreen';
 import FirestoreDiagnosticScreen from './src/screens/FirestoreDiagnosticScreen';
 import DevDiagnosticScreen from './src/screens/DevDiagnosticScreen';
+import ChallengeScreen from './src/screens/ChallengeScreen';
+import AdminReviewScreen from './src/screens/AdminReviewScreen';
 
 // Components
 import FirebaseDebug from './src/components/FirebaseDebug';
@@ -121,6 +124,14 @@ const TabNavigator = () => {
         options={{ 
           headerShown: false,
           tabBarButton: (props) => <CustomTabBarButton {...props} label="ACCUEIL" />,
+        }}
+      />
+      <Tab.Screen 
+        name="Challenge" 
+        component={ChallengeScreen}
+        options={{ 
+          title: 'Défi du Jour',
+          tabBarButton: (props) => <CustomTabBarButton {...props} label="DÉFI" />,
         }}
       />
       <Tab.Screen 
@@ -430,6 +441,27 @@ const AppNavigator = () => {
             },
           }}
         />
+        <Stack.Screen
+          name="AdminReview"
+          component={AdminReviewScreen}
+          options={{ 
+            title: '🔍 Validation Défis',
+            headerStyle: {
+              backgroundColor: '#F59E0B',
+              elevation: 6,
+              shadowColor: '#F59E0B',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -441,9 +473,11 @@ export default function App() {
       <PaperProvider theme={theme}>
         <AuthProvider>
           <WorkoutProvider>
-            <StatusBar style="light" backgroundColor={colors.primary} />
-            <AppNavigator />
-            <FirebaseDebug />
+            <ChallengeProvider>
+              <StatusBar style="light" backgroundColor={colors.primary} />
+              <AppNavigator />
+              <FirebaseDebug />
+            </ChallengeProvider>
           </WorkoutProvider>
         </AuthProvider>
       </PaperProvider>
