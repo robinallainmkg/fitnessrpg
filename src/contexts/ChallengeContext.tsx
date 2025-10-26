@@ -3,6 +3,14 @@ import { ChallengeSubmission, DailyChallenge } from '../types/Challenge';
 import { challengeService } from '../services/ChallengeService';
 import { storageService } from '../services/StorageService';
 
+// 🎭 MODE MOCK : Active les services mock pour tester sans Firebase
+// Mettre à true pour tester en local, false pour utiliser Firebase
+const USE_MOCK_SERVICES = true;
+
+// Import conditionnel des services mock
+import * as MockChallengeService from '../services/MockChallengeService';
+import * as MockStorageService from '../services/MockStorageService';
+
 const IS_DEV = __DEV__;
 const log = (...args: any[]) => IS_DEV && console.log('[ChallengeContext]', ...args);
 const logError = (...args: any[]) => console.error('[ChallengeContext]', ...args);
@@ -76,8 +84,13 @@ export const ChallengeProvider = ({ children }: any) => {
       setLoadingChallenge(true);
       setError(null);
 
-      const today = challengeService.getTodayKey();
-      const challenge = await challengeService.getOrCreateDailyChallenge(userId, today);
+      const today = USE_MOCK_SERVICES 
+        ? new Date().toISOString().split('T')[0]
+        : challengeService.getTodayKey();
+      
+      const challenge = USE_MOCK_SERVICES
+        ? await MockChallengeService.getOrCreateDailyChallenge(userId, today)
+        : await challengeService.getOrCreateDailyChallenge(userId, today);
 
       setTodayChallenge(challenge);
       log('✅ Today challenge loaded:', challenge.challengeType);
@@ -105,34 +118,62 @@ export const ChallengeProvider = ({ children }: any) => {
       log('Starting challenge submission...');
 
       // 1. Upload video to Storage
-      const { url, fileName } = await storageService.uploadChallengeVideo(
-        videoUri,
-        userId,
-        challengeType,
-        (progress) => setUploadProgress(progress)
-      );
+      let url: string;
+      let fileName: string;
+      
+      if (USE_MOCK_SERVICES) {
+        url = await MockStorageService.uploadChallengeVideo(
+          videoUri,
+          userId,
+          challengeType,
+          (progress) => setUploadProgress(progress)
+        );
+        fileName = url.split('/').pop() || 'mock_video.mp4';
+      } else {
+        const result = await storageService.uploadChallengeVideo(
+          videoUri,
+          userId,
+          challengeType,
+          (progress) => setUploadProgress(progress)
+        );
+        url = result.url;
+        fileName = result.fileName;
+      }
 
       log('Video uploaded:', url);
 
-      // 2. Create submission in Firestore
-      const submissionId = await challengeService.createSubmission({
-        userId,
-        challengeType,
-        videoURL: url,
-        videoFileName: fileName,
-        status: 'pending',
-        submittedAt: new Date(),
-        xpRewarded: 0, // Will be set by service
-      });
+      // 2. Create submission in Firestore/Mock
+      const submissionId = USE_MOCK_SERVICES
+        ? (await MockChallengeService.createSubmission(userId, challengeType as any, url)).id!
+        : await challengeService.createSubmission({
+            userId,
+            challengeType,
+            videoURL: url,
+            videoFileName: fileName,
+            status: 'pending',
+            submittedAt: new Date(),
+            xpRewarded: 0,
+          });
 
       log('Submission created:', submissionId);
 
       // 3. Update daily challenge
-      const today = challengeService.getTodayKey();
-      await challengeService.updateDailyChallengeSubmission(userId, today, submissionId);
+      const today = USE_MOCK_SERVICES
+        ? new Date().toISOString().split('T')[0]
+        : challengeService.getTodayKey();
+      
+      if (USE_MOCK_SERVICES) {
+        await MockChallengeService.markChallengeAsSubmitted(userId, today, submissionId);
+      } else {
+        await challengeService.updateDailyChallengeSubmission(userId, today, submissionId);
+      }
 
       // 4. Update user stats
-      await challengeService.updateUserStats(userId, 'pending');
+      if (USE_MOCK_SERVICES) {
+        await MockChallengeService.updateUserStats(userId, 'submitted');
+      } else {
+        await challengeService.updateUserStats(userId, 'pending');
+      }
 
       // 5. Reload today's challenge to reflect submitted status
       await loadTodayChallenge(userId);
@@ -158,7 +199,10 @@ export const ChallengeProvider = ({ children }: any) => {
       setLoadingPending(true);
       setError(null);
 
-      const submissions = await challengeService.getPendingSubmissions();
+      const submissions = USE_MOCK_SERVICES
+        ? await MockChallengeService.getPendingSubmissions()
+        : await challengeService.getPendingSubmissions();
+      
       setPendingSubmissions(submissions);
 
       log('✅ Loaded pending submissions:', submissions.length);
@@ -177,15 +221,19 @@ export const ChallengeProvider = ({ children }: any) => {
     try {
       setError(null);
 
-      await challengeService.updateSubmissionStatus(
-        submissionId,
-        'approved',
-        reviewerId
-      );
+      if (USE_MOCK_SERVICES) {
+        await MockChallengeService.approveSubmission(submissionId, reviewerId);
+      } else {
+        await challengeService.updateSubmissionStatus(
+          submissionId,
+          'approved',
+          reviewerId
+        );
+      }
 
       // Update local state
-      setPendingSubmissions((prev) =>
-        prev.filter((s) => s.id !== submissionId)
+      setPendingSubmissions((prev: any) =>
+        prev.filter((s: any) => s.id !== submissionId)
       );
 
       setSuccess('✅ Soumission approuvée !');
@@ -207,12 +255,16 @@ export const ChallengeProvider = ({ children }: any) => {
     try {
       setError(null);
 
-      await challengeService.updateSubmissionStatus(
-        submissionId,
-        'rejected',
-        reviewerId,
-        reason
-      );
+      if (USE_MOCK_SERVICES) {
+        await MockChallengeService.rejectSubmission(submissionId, reviewerId, reason);
+      } else {
+        await challengeService.updateSubmissionStatus(
+          submissionId,
+          'rejected',
+          reviewerId,
+          reason
+        );
+      }
 
       // Update local state
       setPendingSubmissions((prev: ChallengeSubmission[]) =>
