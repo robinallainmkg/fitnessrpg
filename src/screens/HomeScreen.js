@@ -20,9 +20,11 @@ import {
 import firestore from '@react-native-firebase/firestore';
 
 import { useAuth } from '../contexts/AuthContext';
+import { useChallenge } from '../contexts/ChallengeContext';
 import { colors, getProgramColor } from '../theme/colors';
 import { rpgTheme } from '../theme/rpgTheme';
 import UserHeader from '../components/UserHeader';
+import DailyChallengeCard from '../components/DailyChallengeCard';
 import { ProgramCard, WorkoutCard } from '../components/cards';
 import { useUserPrograms } from '../hooks/useUserPrograms';
 import { getUserSessionQueue } from '../services/sessionQueueService';
@@ -52,6 +54,7 @@ const HomeScreen = ({ navigation, route }) => {
   const [loadingQueue, setLoadingQueue] = useState(false);
   
   const { user, isGuest } = useAuth();
+  const { todayChallenge, loadingChallenge, loadTodayChallenge } = useChallenge();
   
   const { 
     userPrograms, 
@@ -66,6 +69,7 @@ const HomeScreen = ({ navigation, route }) => {
     if (user?.uid) {
       console.log('✅ Utilisateur authentifié détecté');
       loadAllData();
+      loadTodayChallenge(user.uid); // Charger le défi du jour
       startFadeAnimation();
     } else if (isGuest) {
       console.log('👤 Mode invité détecté');
@@ -605,6 +609,16 @@ const HomeScreen = ({ navigation, route }) => {
             streak={userStats?.streakDays || 0}
             avatarId={userStats?.avatarId || 0}
           />
+
+          {/* DÉFI DU JOUR - En premier, juste après UserHeader */}
+          {!isGuest && (
+            <DailyChallengeCard
+              challenge={todayChallenge}
+              hasSubmitted={todayChallenge?.submitted || false}
+              loading={loadingChallenge}
+              onPress={() => navigation.navigate('Challenge')}
+            />
+          )}
 
           <StreakCard streak={userStats?.streakDays || 0} />
 

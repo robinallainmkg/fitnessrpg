@@ -127,14 +127,6 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen 
-        name="Challenge" 
-        component={ChallengeScreen}
-        options={{ 
-          title: 'Défi du Jour',
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="DÉFI" />,
-        }}
-      />
-      <Tab.Screen 
         name="Progress" 
         component={ProgressScreen}
         options={{ 
@@ -310,6 +302,27 @@ const AppNavigator = () => {
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.4,
               shadowRadius: 8,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="Challenge"
+          component={ChallengeScreen}
+          options={{ 
+            title: '⚔️ Défi du Jour',
+            headerStyle: {
+              backgroundColor: '#F59E0B',
+              elevation: 6,
+              shadowColor: '#F59E0B',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
             },
             headerTintColor: '#FFFFFF',
             headerTitleStyle: {
