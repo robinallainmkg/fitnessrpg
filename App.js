@@ -22,6 +22,7 @@ import { ChallengeProvider } from './src/contexts/ChallengeContext';
 // Screens
 import AuthScreen from './src/screens/AuthScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import { PhoneLoginScreen } from './src/screens/PhoneLoginScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ProgramSelectionScreen from './src/screens/ProgramSelectionScreen';
 import ProgramsScreen from './src/screens/ProgramsScreen';
@@ -220,6 +221,14 @@ const AppNavigator = () => {
               gestureEnabled: false,
             }}
           />
+          <Stack.Screen 
+            name="PhoneLogin" 
+            component={PhoneLoginScreen}
+            options={{
+              title: 'Connexion',
+              gestureEnabled: false,
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     );
@@ -252,6 +261,14 @@ const AppNavigator = () => {
           name="Main"
           component={TabNavigator}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="PhoneLogin" 
+          component={PhoneLoginScreen}
+          options={{ 
+            title: 'Connexion',
+            gestureEnabled: false,
+          }}
         />
         <Stack.Screen 
           name="ProgramSelection" 

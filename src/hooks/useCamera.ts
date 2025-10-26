@@ -75,9 +75,10 @@ export const useCamera = () => {
       setIsRecording(true);
       setRecordedVideoUri(null);
 
-      // Start recording
+      // Start recording (video only, no audio)
       const video = await cameraRef.current.recordAsync({
         maxDuration: MAX_RECORDING_DURATION_MS / 1000, // Convert to seconds
+        mute: true, // 🔇 Pas d'audio
       });
 
       // Save to media library

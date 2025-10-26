@@ -36,7 +36,10 @@
     "android": {
       "package": "com.hybridrpg.app",
       "versionCode": 19,
-      "enableDangerousExperimentalLeanBuilds": true
+      "enableDangerousExperimentalLeanBuilds": true,
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     }
   }
 }

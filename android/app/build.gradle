@@ -87,14 +87,14 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.fitnessrpg.app'
+    namespace 'com.hybridrpg.app'
     defaultConfig {
-        applicationId "com.fitnessrpg.app"
+        applicationId 'com.hybridrpg.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 19
-        versionName "1.0"
-        
+        versionName "1.0.0"
+
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
     signingConfigs {
@@ -104,12 +104,6 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release {
-            storeFile file('hybridrpg-release.keystore')
-            storePassword '12031990Robin!'
-            keyAlias 'hybridrpg'
-            keyPassword '12031990Robin!'
-        }
     }
     buildTypes {
         debug {
@@ -118,7 +112,7 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debug
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
@@ -186,6 +180,3 @@ dependencies {
         implementation jscFlavor
     }
 }
-
-// Apply Google Services plugin (pour Firebase)
-apply plugin: 'com.google.gms.google-services'

@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
     // Écouter les changements d'authentification
     const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
-        log('✅ Utilisateur connecté:', firebaseUser.email);
+        log('✅ Utilisateur connecté:', firebaseUser.email || firebaseUser.phoneNumber);
         setUser(firebaseUser);
         setIsGuest(false);
         
@@ -69,7 +69,8 @@ export const AuthProvider = ({ children }) => {
               .collection('users')
               .doc(firebaseUser.uid)
               .set({
-                email: firebaseUser.email,
+                email: firebaseUser.email || null,
+                phoneNumber: firebaseUser.phoneNumber || null,
                 totalXP: 0,
                 level: 1,
                 completedPrograms: [],
@@ -177,27 +178,89 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // LOGIN
-  const login = async (email, password) => {
+  // PHONE AUTH - ENVOYER CODE SMS
+  const sendVerificationCode = async (phoneNumber) => {
     try {
-      log('🔐 Login:', email);
+      log('📱 Envoi code SMS à:', phoneNumber);
       
-      if (!email || !password) {
-        return { 
-          success: false, 
-          error: 'Email et mot de passe requis',
-          code: 'validation/missing-fields'
+      if (!phoneNumber || phoneNumber.length < 9) {
+        return {
+          success: false,
+          error: 'Numéro de téléphone invalide',
+          code: 'validation/invalid-phone'
         };
       }
       
-      // Se connecter
-      log('🔐 Connexion:', email);
-      const userCredential = await auth().signInWithEmailAndPassword(email, password);
+      // Formater le numéro (ajouter +33 si nécessaire)
+      let formattedPhone = phoneNumber.trim().replace(/\s/g, '');
+      
+      // Si commence pas par +, ajouter +33
+      if (!formattedPhone.startsWith('+')) {
+        // Si commence par 0, remplacer par +33
+        if (formattedPhone.startsWith('0')) {
+          formattedPhone = '+33' + formattedPhone.substring(1);
+        } else {
+          // Sinon (ex: 612345678), ajouter directement +33
+          formattedPhone = '+33' + formattedPhone;
+        }
+      }
+      
+      log('📱 Numéro formaté:', formattedPhone);
+      
+      // Appel Firebase avec timeout de 15s
+      log('⏳ Appel Firebase signInWithPhoneNumber...');
+      const signInPromise = auth().signInWithPhoneNumber(formattedPhone);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Firebase timeout après 15s')), 15000)
+      );
+      
+      const confirmation = await Promise.race([signInPromise, timeoutPromise]);
+      
+      log('✅ Code SMS envoyé');
+      
+      return {
+        success: true,
+        confirmation,
+        phoneNumber: formattedPhone
+      };
+      
+    } catch (error) {
+      logError('❌ Erreur envoi SMS:', error);
+      
+      let errorMessage = 'Erreur lors de l\'envoi du code';
+      if (error.code === 'auth/invalid-phone-number') {
+        errorMessage = 'Numéro de téléphone invalide';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Trop de tentatives. Réessayez plus tard.';
+      }
+      
+      return {
+        success: false,
+        error: errorMessage,
+        code: error.code
+      };
+    }
+  };
+
+  // PHONE AUTH - VÉRIFIER CODE SMS
+  const verifyCode = async (confirmation, code) => {
+    try {
+      log('🔐 Vérification code SMS:', code);
+      
+      if (!code || code.length !== 6) {
+        return {
+          success: false,
+          error: 'Code invalide (6 chiffres requis)',
+          code: 'validation/invalid-code'
+        };
+      }
+      
+      const userCredential = await confirmation.confirm(code);
       const loggedUser = userCredential.user;
       
-      log('✅ Firebase Auth OK, vérification document...');
+      log('✅ Code validé, utilisateur connecté:', loggedUser.uid);
       
-      // Vérifier/créer le document utilisateur immédiatement
+      // Créer/mettre à jour le document utilisateur
       try {
         const userDoc = await firestore()
           .collection('users')
@@ -205,32 +268,36 @@ export const AuthProvider = ({ children }) => {
           .get();
         
         if (!userDoc.exists) {
-          log('📝 Création document utilisateur (premier login)');
+          log('📝 Création document utilisateur...');
+          
+          // Récupérer les données invité si elles existent
+          const guestDataStr = await AsyncStorage.getItem('@fitnessrpg:guest_data');
+          const guestData = guestDataStr ? JSON.parse(guestDataStr) : null;
+          
           await firestore()
             .collection('users')
             .doc(loggedUser.uid)
             .set({
-              email: loggedUser.email,
-              totalXP: 0,
-              level: 1,
-              completedPrograms: [],
-              userProgress: {},
-              activePrograms: [],
-              selectedPrograms: [],
-              streak: 0,
-              lastWorkoutDate: null,
+              phoneNumber: loggedUser.phoneNumber,
+              totalXP: guestData?.totalXP || 0,
+              level: guestData?.level || 1,
+              completedPrograms: guestData?.completedPrograms || [],
+              userProgress: guestData?.userProgress || {},
+              activePrograms: guestData?.activePrograms || [],
+              selectedPrograms: guestData?.selectedPrograms || [],
+              streak: guestData?.streak || 0,
+              lastWorkoutDate: guestData?.lastWorkoutDate || null,
               totalChallengesSubmitted: 0,
               totalChallengesApproved: 0,
               lastSubmissionDate: null,
               createdAt: firestore.FieldValue.serverTimestamp(),
             });
-          log('✅ Document utilisateur créé');
+          log('✅ Document créé avec données invité');
         } else {
-          log('✅ Document utilisateur existe déjà');
+          log('✅ Document existe déjà');
         }
       } catch (firestoreError) {
-        console.error('⚠️ Erreur Firestore (non bloquant):', firestoreError);
-        // Continue même si Firestore échoue - sera recréé par onAuthStateChanged
+        logError('⚠️ Erreur Firestore (non bloquant):', firestoreError);
       }
       
       // Nettoyer le mode invité
@@ -243,9 +310,41 @@ export const AuthProvider = ({ children }) => {
       setIsGuest(false);
       setGuestData(null);
       
-      log('✅ Connexion complète');
+      log('✅ CONNEXION COMPLETE');
       
       return { success: true, user: loggedUser };
+      
+    } catch (error) {
+      logError('❌ Erreur vérification code:', error);
+      
+      let errorMessage = 'Code incorrect';
+      if (error.code === 'auth/invalid-verification-code') {
+        errorMessage = 'Code invalide ou expiré';
+      } else if (error.code === 'auth/code-expired') {
+        errorMessage = 'Code expiré. Demandez-en un nouveau.';
+      }
+      
+      return {
+        success: false,
+        error: errorMessage,
+        code: error.code
+      };
+    }
+  };
+
+  // LOGIN (OLD - KEEP FOR COMPATIBILITY)
+  const login = async (email, password) => {
+    try {
+      log('🔐 Login START (EMAIL - DEPRECATED):', email);
+      
+      // � EMAIL AUTH NE MARCHE PAS - TIMEOUT
+      // Redirige vers Phone Auth à la place
+      return {
+        success: false,
+        error: 'Email auth temporairement indisponible. Utilise Phone Auth.',
+        code: 'auth/email-deprecated',
+        usePhoneAuth: true
+      };
       
     } catch (error) {
       console.error('❌ Erreur connexion:', error);
@@ -515,6 +614,8 @@ export const AuthProvider = ({ children }) => {
       loading, 
       isGuest,
       guestData,
+      sendVerificationCode,
+      verifyCode,
       signup, 
       login, 
       logout,

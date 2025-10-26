@@ -8,7 +8,7 @@ import firestore from '@react-native-firebase/firestore';
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
-import SignupModal from '../components/SignupModal';
+import PhoneAuthModal from '../components/PhoneAuthModal';
 import { loadProgramsMeta } from '../data/programsLoader';
 import { loadProgramTree } from '../utils/programLoader';
 import { colors } from '../theme/colors';
@@ -522,7 +522,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
     </ImageBackground>
 
       {/* Signup Modal */}
-      <SignupModal
+      <PhoneAuthModal
         visible={showSignupModal}
         onClose={handleContinueAsGuest}
         onSuccess={handleSignupSuccess}

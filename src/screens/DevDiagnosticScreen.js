@@ -47,13 +47,13 @@ const DevDiagnosticScreen = ({ navigation }) => {
     // 2. Test Firestore Read
     try {
       const fs = firestore();
-      const testDoc = await getDoc(doc(firestore, 'users', user.uid));
+      const testDoc = await fs.collection('users').doc(user.uid).get();
       
       results.firestore = {
         status: 'success',
-        message: `Firestore accessible - User doc ${testDoc.exists() ? 'exists' : 'not found'}`
+        message: `Firestore accessible - User doc ${testDoc.exists ? 'exists' : 'not found'}`
       };
-      logger.success('Firestore OK', { exists: testDoc.exists() });
+      logger.success('Firestore OK', { exists: testDoc.exists });
     } catch (error) {
       results.firestore = {
         status: 'error',
@@ -65,9 +65,9 @@ const DevDiagnosticScreen = ({ navigation }) => {
     // 3. Load User Data
     try {
       const fs = firestore();
-      const userDoc = await getDoc(doc(firestore, 'users', user.uid));
+      const userDoc = await fs.collection('users').doc(user.uid).get();
       
-      if (userDoc.exists()) {
+      if (userDoc.exists) {
         const data = userDoc.data();
         results.userData = {
           status: 'success',
