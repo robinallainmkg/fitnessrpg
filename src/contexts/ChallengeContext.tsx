@@ -5,7 +5,7 @@ import { storageService } from '../services/StorageService';
 
 // 🎭 MODE MOCK : Active les services mock pour tester sans Firebase
 // Mettre à true pour tester en local, false pour utiliser Firebase
-const USE_MOCK_SERVICES = true;
+const USE_MOCK_SERVICES = false;
 
 // Import conditionnel des services mock
 import * as MockChallengeService from '../services/MockChallengeService';
