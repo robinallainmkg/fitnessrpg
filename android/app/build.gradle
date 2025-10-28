@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.hybridrpg.app'
+    namespace 'com.fitnessrpg.app'
     defaultConfig {
-        applicationId 'com.hybridrpg.app'
+        applicationId 'com.fitnessrpg.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 19
@@ -180,3 +180,6 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Google Services plugin must be applied at the bottom
+apply plugin: 'com.google.gms.google-services'

@@ -1,5 +1,5 @@
 import storage from '@react-native-firebase/storage';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 const IS_DEV = __DEV__;
 const log = (...args: any[]) => IS_DEV && console.log('[StorageService]', ...args);

@@ -50,6 +50,7 @@ const ProfileScreen = ({ navigation }) => {
         globalLevel: 0,
         title: 'Invité',
         programs: {},
+        isAdmin: false,
       });
       setLoadingStats(false);
     } else {
@@ -73,6 +74,14 @@ const ProfileScreen = ({ navigation }) => {
       if (userDoc.exists) {
         const userData = userDoc.data();
         
+        // Vérifier si c'est l'admin par numéro de téléphone
+        const ADMIN_PHONE = '+33679430759'; // Format international
+        const isAdmin = userData.phoneNumber === ADMIN_PHONE || 
+                       userData.phoneNumber === '0679430759' ||
+                       userData.phoneNumber === '+33 6 79 43 07 59';
+        
+        console.log('👤 User phone:', userData.phoneNumber, 'isAdmin:', isAdmin);
+        
         // Structure pour utilisateur migré
         if (userData.migrationVersion) {
           setUserStats({
@@ -81,6 +90,7 @@ const ProfileScreen = ({ navigation }) => {
             globalLevel: userData.globalLevel || 0,
             title: userData.title || 'Débutant',
             programs: userData.programs || {},
+            isAdmin: isAdmin,
           });
         } else {
           // Legacy structure
@@ -93,6 +103,7 @@ const ProfileScreen = ({ navigation }) => {
             globalLevel: globalLevel,
             title: getTitleFromLevel(globalLevel),
             programs: {},
+            isAdmin: isAdmin,
           });
         }
       } else {
@@ -103,6 +114,7 @@ const ProfileScreen = ({ navigation }) => {
           globalLevel: 0,
           title: 'Débutant',
           programs: {},
+          isAdmin: false,
         });
       }
     } catch (error) {
@@ -120,6 +132,7 @@ const ProfileScreen = ({ navigation }) => {
           globalLevel: 0,
           title: 'Débutant',
           programs: {},
+          isAdmin: false,
         });
       }
       // Ne pas afficher d'alerte pour éviter de spammer l'utilisateur

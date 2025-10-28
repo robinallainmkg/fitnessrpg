@@ -207,11 +207,19 @@ export const AuthProvider = ({ children }) => {
       
       log('📱 Numéro formaté:', formattedPhone);
       
-      // Appel Firebase avec timeout de 15s
+      // Vérifier que Firebase est initialisé
+      const app = auth().app;
+      log('🔥 Firebase app:', app ? app.name : 'NOT INITIALIZED');
+      
+      if (!app) {
+        throw new Error('Firebase not initialized');
+      }
+      
+      // Appel Firebase avec timeout de 30s
       log('⏳ Appel Firebase signInWithPhoneNumber...');
       const signInPromise = auth().signInWithPhoneNumber(formattedPhone);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Firebase timeout après 15s')), 15000)
+        setTimeout(() => reject(new Error('Firebase timeout après 30s')), 30000)
       );
       
       const confirmation = await Promise.race([signInPromise, timeoutPromise]);

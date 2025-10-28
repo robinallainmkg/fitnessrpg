@@ -8,10 +8,9 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { CameraView } from 'expo-camera';
 import { useAuth } from '../contexts/AuthContext';
 import { useChallenge } from '../contexts/ChallengeContext';
-import { useCamera } from '../hooks/useCamera';
+import { useVideoPicker } from '../hooks/useVideoPicker';
 import { getChallengeLabel } from '../types/Challenge';
 import { colors } from '../theme/colors';
 
@@ -30,21 +29,13 @@ export const ChallengeScreen = () => {
   } = useChallenge();
 
   const {
-    hasPermissions,
-    requestPermissions,
-    cameraRef,
-    onCameraReady,
-    isRecording,
     recordedVideoUri,
-    facing,
-    isCameraReady,
-    startRecording,
-    stopRecording,
-    toggleCameraFacing,
+    isRecording,
+    recordVideo,
+    pickVideo,
     resetVideo,
-  } = useCamera();
-
-  const [showCamera, setShowCamera] = useState(false);
+    requestPermissions,
+  } = useVideoPicker();
 
   // Load today's challenge on mount
   useEffect(() => {
@@ -64,21 +55,20 @@ export const ChallengeScreen = () => {
   const handleOpenCamera = async () => {
     const granted = await requestPermissions();
     if (granted) {
-      setShowCamera(true);
       resetVideo();
+      const videoUri = await recordVideo();
+      if (!videoUri) {
+        Alert.alert(
+          'Enregistrement annulé',
+          'Aucune vidéo n\'a été enregistrée.'
+        );
+      }
     } else {
       Alert.alert(
         'Permissions requises',
-        'L\'accès à la caméra et à la galerie est nécessaire pour enregistrer une vidéo.'
+        'L\'accès à la caméra est nécessaire pour enregistrer une vidéo.'
       );
     }
-  };
-
-  const handleCloseCamera = () => {
-    if (isRecording) {
-      stopRecording();
-    }
-    setShowCamera(false);
   };
 
   const handleSubmit = () => {
@@ -100,9 +90,15 @@ export const ChallengeScreen = () => {
     );
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     resetVideo();
-    setShowCamera(true);
+    const videoUri = await recordVideo();
+    if (!videoUri) {
+      Alert.alert(
+        'Enregistrement annulé',
+        'Aucune vidéo n\'a été enregistrée.'
+      );
+    }
   };
 
   // Loading state
@@ -158,69 +154,6 @@ export const ChallengeScreen = () => {
           </Text>
         </View>
       </ScrollView>
-    );
-  }
-
-  // Camera view
-  if (showCamera) {
-    return (
-      <View style={styles.cameraContainer}>
-        {!hasPermissions ? (
-          <View style={styles.centerContainer}>
-            <Text style={styles.permissionText}>
-              Permissions caméra/galerie requises
-            </Text>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={requestPermissions}
-            >
-              <Text style={styles.buttonText}>Autoriser</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            <CameraView
-              ref={cameraRef}
-              style={styles.camera}
-              facing={facing}
-              onCameraReady={onCameraReady}
-            />
-            <View style={styles.cameraControls}>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={handleCloseCamera}
-              >
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.flipButton}
-                onPress={toggleCameraFacing}
-              >
-                <Text style={styles.flipButtonText}>🔄</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.recordButton,
-                  isRecording && styles.recordButtonActive,
-                  !isCameraReady && styles.recordButtonDisabled,
-                ]}
-                onPress={isRecording ? stopRecording : startRecording}
-                disabled={!isCameraReady}
-              >
-                <Text style={styles.recordButtonText}>
-                  {!isCameraReady
-                    ? '⏳ Chargement...'
-                    : isRecording
-                    ? '⏹ Arrêter'
-                    : '⏺ Enregistrer'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </View>
     );
   }
 

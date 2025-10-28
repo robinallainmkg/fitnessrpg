@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,10 @@ import {
   TextInput,
   Modal,
   ScrollView,
+  Linking,
+  Dimensions,
 } from 'react-native';
+import Video from 'react-native-video';
 import { useAuth } from '../contexts/AuthContext';
 import { useChallenge } from '../contexts/ChallengeContext';
 import { getChallengeLabel } from '../types/Challenge';
@@ -33,6 +36,9 @@ export const AdminReviewScreen = () => {
   const [selectedSubmission, setSelectedSubmission] = useState(null as ChallengeSubmission | null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoToPlay, setVideoToPlay] = useState(null as string | null);
+  const videoRef = useRef<any>(null);
 
   // Load pending submissions on mount
   useEffect(() => {
@@ -89,6 +95,22 @@ export const AdminReviewScreen = () => {
     loadPendingSubmissions();
   };
 
+  const handleViewVideo = (submission: ChallengeSubmission) => {
+    if (!submission.videoURL) {
+      Alert.alert('Erreur', 'Aucune vidéo disponible pour cette soumission.');
+      return;
+    }
+
+    // Ouvrir la vidéo dans un modal avec le player
+    setVideoToPlay(submission.videoURL);
+    setShowVideoModal(true);
+  };
+
+  const handleCloseVideo = () => {
+    setShowVideoModal(false);
+    setVideoToPlay(null);
+  };
+
   const renderSubmissionItem = ({ item }: { item: ChallengeSubmission }) => (
     <View style={styles.submissionCard}>
       <View style={styles.submissionHeader}>
@@ -107,6 +129,14 @@ export const AdminReviewScreen = () => {
       <Text style={styles.submissionInfo}>
         Soumis le: <Text style={styles.date}>{formatDate(item.submittedAt)}</Text>
       </Text>
+
+      {/* Bouton pour voir la vidéo */}
+      <TouchableOpacity
+        style={styles.viewVideoButton}
+        onPress={() => handleViewVideo(item)}
+      >
+        <Text style={styles.viewVideoButtonText}>🎥 Voir la vidéo</Text>
+      </TouchableOpacity>
 
       <View style={styles.actionButtons}>
         <TouchableOpacity
@@ -234,6 +264,40 @@ export const AdminReviewScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Video Modal */}
+      <Modal
+        visible={showVideoModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseVideo}
+      >
+        <View style={styles.videoModalOverlay}>
+          <View style={styles.videoModalContainer}>
+            <TouchableOpacity
+              style={styles.videoCloseButton}
+              onPress={handleCloseVideo}
+            >
+              <Text style={styles.videoCloseButtonText}>✕ Fermer</Text>
+            </TouchableOpacity>
+
+            {videoToPlay && (
+              <Video
+                ref={videoRef}
+                source={{ uri: videoToPlay }}
+                style={styles.video}
+                controls
+                resizeMode="contain"
+                paused={false}
+                onError={(error) => {
+                  console.error('Video error:', error);
+                  Alert.alert('Erreur', 'Impossible de lire la vidéo.');
+                }}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -326,6 +390,18 @@ const styles = StyleSheet.create({
   },
   date: {
     color: colors.text,
+  },
+  viewVideoButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  viewVideoButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -477,6 +553,39 @@ const styles = StyleSheet.create({
   },
   modalButtonCancelText: {
     color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Video Modal Styles
+  videoModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoModalContainer: {
+    width: '90%',
+    aspectRatio: 9 / 16, // Format vertical vidéo mobile
+    backgroundColor: '#000',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  videoCloseButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 10,
+  },
+  videoCloseButtonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

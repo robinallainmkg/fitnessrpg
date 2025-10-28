@@ -130,7 +130,7 @@ Si tu veux héberger l'APK en ligne:
 ```
 Nom: HybridRPG.apk
 Taille: 112 MB
-Package: com.hybridrpg.app
+Package: com.fitnessrpg.app
 Version: 1.0.0
 Min Android: 7.0 (API 24)
 Target Android: 15 (API 36)

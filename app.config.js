@@ -31,7 +31,7 @@ module.exports = {
       }
     },
     android: {
-      package: "com.hybridrpg.app",
+      package: "com.fitnessrpg.app",
       versionCode: 19
     }
   }

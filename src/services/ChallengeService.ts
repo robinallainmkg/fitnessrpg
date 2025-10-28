@@ -102,13 +102,16 @@ export class ChallengeService {
 
   async getPendingSubmissions(): Promise<ChallengeSubmission[]> {
     try {
+      log('Getting pending submissions...');
+      
+      // Version sans orderBy pour éviter l'index
+      // Une fois l'index créé, on pourra remettre .orderBy('submittedAt', 'desc')
       const snapshot = await this.submissionsCollection
         .where('status', '==', 'pending')
-        .orderBy('submittedAt', 'desc')
         .limit(100)
         .get();
 
-      return snapshot.docs.map((doc) => {
+      const submissions = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -117,6 +120,16 @@ export class ChallengeService {
           reviewedAt: data.reviewedAt?.toDate(),
         } as ChallengeSubmission;
       });
+
+      // Tri manuel en attendant l'index
+      submissions.sort((a, b) => {
+        const dateA = a.submittedAt ? a.submittedAt.getTime() : 0;
+        const dateB = b.submittedAt ? b.submittedAt.getTime() : 0;
+        return dateB - dateA; // Plus récent en premier
+      });
+
+      log(`✅ Found ${submissions.length} pending submissions`);
+      return submissions;
     } catch (error) {
       logError('Failed to get pending submissions:', error);
       throw error;

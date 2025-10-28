@@ -34,11 +34,12 @@
       }
     },
     "android": {
-      "package": "com.hybridrpg.app",
+      "package": "com.fitnessrpg.app",
       "versionCode": 19,
       "enableDangerousExperimentalLeanBuilds": true,
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     }
   }

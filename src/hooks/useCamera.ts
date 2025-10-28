@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { CameraType, useCameraPermissions } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 const IS_DEV = __DEV__;
 const log = (...args: any[]) => IS_DEV && console.log('[useCamera]', ...args);
@@ -19,6 +20,7 @@ export const useCamera = () => {
   
   const cameraRef = useRef(null as any);
   const recordingTimeoutRef = useRef(null as any);
+  const recordingStartTimeRef = useRef(null as number | null);
 
   /**
    * Request all necessary permissions
@@ -41,6 +43,23 @@ export const useCamera = () => {
         const result = await requestMediaLibraryPermission();
         if (!result.granted) {
           logError('Media library permission denied');
+          return false;
+        }
+      }
+
+      // Request RECORD_AUDIO permission on Android (required même si mute: true)
+      if (Platform.OS === 'android') {
+        const audioPermission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: 'Permission Microphone',
+            message: 'L\'app a besoin d\'accéder au microphone pour enregistrer des vidéos',
+            buttonPositive: 'OK',
+          }
+        );
+        
+        if (audioPermission !== PermissionsAndroid.RESULTS.GRANTED) {
+          logError('Audio permission denied');
           return false;
         }
       }
@@ -74,6 +93,7 @@ export const useCamera = () => {
       log('Starting recording...');
       setIsRecording(true);
       setRecordedVideoUri(null);
+      recordingStartTimeRef.current = Date.now();
 
       // Start recording (video only, no audio)
       const video = await cameraRef.current.recordAsync({
@@ -109,10 +129,23 @@ export const useCamera = () => {
         return;
       }
 
+      // Vérifier durée minimale (500ms minimum)
+      const MIN_RECORDING_DURATION_MS = 500;
+      const recordingDuration = recordingStartTimeRef.current 
+        ? Date.now() - recordingStartTimeRef.current 
+        : 0;
+      
+      if (recordingDuration < MIN_RECORDING_DURATION_MS) {
+        const waitTime = MIN_RECORDING_DURATION_MS - recordingDuration;
+        log(`⏳ Waiting ${waitTime}ms before stopping (min duration required)...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+
       log('Stopping recording...');
       
       await cameraRef.current.stopRecording();
       setIsRecording(false);
+      recordingStartTimeRef.current = null;
 
       // Clear timeout if exists
       if (recordingTimeoutRef.current) {
@@ -124,6 +157,7 @@ export const useCamera = () => {
     } catch (error) {
       logError('Failed to stop recording:', error);
       setIsRecording(false);
+      recordingStartTimeRef.current = null;
       throw error;
     }
   };
