@@ -82,6 +82,14 @@ const ProfileScreen = ({ navigation }) => {
         
         console.log('👤 User phone:', userData.phoneNumber, 'isAdmin:', isAdmin);
         
+        // Mettre à jour le champ isAdmin dans Firestore si nécessaire
+        if (userData.isAdmin !== isAdmin) {
+          await firestore().collection('users').doc(user.uid).update({
+            isAdmin: isAdmin
+          });
+          console.log('✅ Champ isAdmin mis à jour dans Firestore:', isAdmin);
+        }
+        
         // Structure pour utilisateur migré
         if (userData.migrationVersion) {
           setUserStats({

@@ -3,7 +3,8 @@ import {
   ChallengeSubmission, 
   DailyChallenge, 
   CHALLENGE_TYPES,
-  getChallengeXP 
+  getChallengeXP,
+  getChallengeLabel
 } from '../types/Challenge';
 
 const IS_DEV = __DEV__;
@@ -85,11 +86,12 @@ export class ChallengeService {
 
       await this.submissionsCollection.doc(id).update(updateData);
 
-      // Si approuvé, donner les XP à l'utilisateur
+      // Si approuvé, donner les XP à l'utilisateur ET créer une session
       if (status === 'approved') {
         const submission = await this.getSubmission(id);
         if (submission) {
           await this.rewardUserXP(submission.userId, submission.xpRewarded);
+          await this.createWorkoutSession(submission);
         }
       }
 
@@ -274,6 +276,43 @@ export class ChallengeService {
     } catch (error) {
       logError('Failed to reward XP:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Créer une session d'entraînement pour un challenge validé
+   * Compatible avec le système de progression des programmes
+   */
+  private async createWorkoutSession(submission: ChallengeSubmission): Promise<void> {
+    try {
+      const sessionData = {
+        userId: submission.userId,
+        type: 'challenge', // Type spécial pour identifier les challenges
+        challengeType: submission.challengeType,
+        submissionId: submission.id,
+        videoURL: submission.videoURL,
+        date: submission.submittedAt,
+        completedAt: firestore.FieldValue.serverTimestamp(),
+        xpEarned: submission.xpRewarded,
+        status: 'completed',
+        // Format compatible avec l'historique des séances
+        programId: null,
+        skillId: null,
+        exercises: [{
+          name: `Challenge: ${getChallengeLabel(submission.challengeType)}`,
+          type: submission.challengeType,
+          isChallenge: true,
+        }],
+      };
+
+      await firestore()
+        .collection('workoutSessions')
+        .add(sessionData);
+
+      log(`✅ Created workout session for challenge ${submission.challengeType}`);
+    } catch (error) {
+      logError('Failed to create workout session:', error);
+      // Non-bloquant, on continue même si ça échoue
     }
   }
 

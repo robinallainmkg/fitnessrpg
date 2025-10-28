@@ -156,35 +156,53 @@ const ProgressScreen = () => {
           </View>
         ) : (
           <View style={{ gap: 12 }}>
-            {sessionHistory.map(s => (
-              <View key={s.id} style={{ backgroundColor: 'rgba(30,41,59,0.8)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: 'rgba(77,158,255,0.2)' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                  <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(77,158,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 12, borderWidth: 2, borderColor: 'rgba(77,158,255,0.3)' }}>
-                    <Text style={{ fontSize: 24 }}>{s.programIcon || ''}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFF', marginBottom: 4 }} numberOfLines={1}>{s.skillName || s.workoutName || 'Séance'}</Text>
-                    <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{formatDate(s.createdAt || s.endTime)}</Text>
-                  </View>
-                  <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: 24, fontWeight: '700', color: getScoreColor(s.score || 0) }}>{s.score || 0}</Text>
-                    <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>pts</Text>
-                  </View>
-                </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
-                  {[
-                    { label: 'XP gagné', value: '+' + (s.xpEarned || 0) },
-                    { label: 'Exercices', value: (s.exercises?.length || 0) },
-                    { label: 'Niveau', value: (s.levelNumber || 1) }
-                  ].map(st => (
-                    <View key={st.label} style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{st.label}</Text>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: rpgTheme.colors.neon.blue }}>{st.value}</Text>
+            {sessionHistory.map(s => {
+              // Déterminer si c'est un challenge ou une séance normale
+              const isChallenge = s.type === 'challenge';
+              const displayName = isChallenge 
+                ? `🏆 ${s.exercises?.[0]?.name || 'Challenge'}` 
+                : (s.skillName || s.workoutName || 'Séance');
+              const displayIcon = isChallenge ? '🏆' : (s.programIcon || '💪');
+              
+              return (
+                <View key={s.id} style={{ backgroundColor: 'rgba(30,41,59,0.8)', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: isChallenge ? 'rgba(255,215,0,0.3)' : 'rgba(77,158,255,0.2)' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                    <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: isChallenge ? 'rgba(255,215,0,0.15)' : 'rgba(77,158,255,0.15)', justifyContent: 'center', alignItems: 'center', marginRight: 12, borderWidth: 2, borderColor: isChallenge ? 'rgba(255,215,0,0.3)' : 'rgba(77,158,255,0.3)' }}>
+                      <Text style={{ fontSize: 24 }}>{displayIcon}</Text>
                     </View>
-                  ))}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFF', marginBottom: 4 }} numberOfLines={1}>{displayName}</Text>
+                      <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{formatDate(s.createdAt || s.endTime || s.date)}</Text>
+                    </View>
+                    <View style={{ alignItems: 'center' }}>
+                      {isChallenge ? (
+                        <>
+                          <Text style={{ fontSize: 14, fontWeight: '700', color: '#FFD700' }}>VALIDÉ</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>challenge</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={{ fontSize: 24, fontWeight: '700', color: getScoreColor(s.score || 0) }}>{s.score || 0}</Text>
+                          <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>pts</Text>
+                        </>
+                      )}
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.1)' }}>
+                    {[
+                      { label: 'XP gagné', value: '+' + (s.xpEarned || 0) },
+                      { label: isChallenge ? 'Type' : 'Exercices', value: isChallenge ? 'Challenge' : (s.exercises?.length || 0) },
+                      { label: 'Niveau', value: (s.levelNumber || 1) }
+                    ].map(st => (
+                      <View key={st.label} style={{ alignItems: 'center' }}>
+                        <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>{st.label}</Text>
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: isChallenge ? '#FFD700' : rpgTheme.colors.neon.blue }}>{st.value}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>
