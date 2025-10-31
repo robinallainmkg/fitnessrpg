@@ -19,64 +19,103 @@ import { rpgTheme } from '../theme/rpgTheme';
 import firestore from '@react-native-firebase/firestore';
 
 /**
- * PhoneAuthModal - Authentification par numéro de téléphone (SMS)
+ * AuthModal - Modal d'authentification Phone (MVP)
  * 
  * Flow:
- * 1. Entrer le numéro de téléphone
- * 2. Recevoir un SMS avec un code 6 chiffres
- * 3. Entrer le code pour se connecter
- * 4. Sauvegarder les données guest (programmes sélectionnés)
+ * 1. Entrer numéro de téléphone
+ * 2. Recevoir code SMS
+ * 3. Vérifier code → linkWithPhoneNumber() au compte anonymous
+ * 4. Données guest automatiquement conservées ✓
+ * 
+ * Note: Email auth sera ajouté plus tard
  */
-const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+const AuthModal = ({ visible, onClose, onSuccess }) => {
+  const [identifier, setIdentifier] = useState(''); // Email ou téléphone
   const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState('phone'); // 'phone' | 'code'
+  const [step, setStep] = useState('input'); // 'input' | 'verify'
   const [confirmation, setConfirmation] = useState(null);
+  const [identifierType, setIdentifierType] = useState(null); // 'email' | 'phone'
   
   const { sendVerificationCode, verifyCode } = useAuth();
 
   // Réinitialiser les champs
   const resetForm = () => {
-    setPhoneNumber('');
+    setIdentifier('');
     setVerificationCode('');
     setLoading(false);
-    setStep('phone');
+    setStep('input');
     setConfirmation(null);
+    setIdentifierType(null);
   };
 
-  // === ENVOYER CODE SMS ===
+  // Détecter si c'est un email ou un téléphone
+  const detectIdentifierType = (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[\d\s+()-]+$/;
+    
+    const cleanValue = value.trim();
+    if (emailRegex.test(cleanValue)) {
+      return 'email';
+    } else if (phoneRegex.test(cleanValue.replace(/\s/g, ''))) {
+      return 'phone';
+    }
+    return null;
+  };
+
+  // === ENVOYER CODE (SMS ou Email) ===
   const handleSendCode = async () => {
-    if (!phoneNumber || phoneNumber.length < 9) {
-      Alert.alert('Numéro invalide', 'Entre un numéro de téléphone valide (ex: 612345678 ou 06 12 34 56 78)');
+    if (!identifier || identifier.length < 5) {
+      Alert.alert('⚠️ Champ requis', 'Entre ton email ou numéro de téléphone');
       return;
     }
 
+    const type = detectIdentifierType(identifier);
+    
+    if (!type) {
+      Alert.alert(
+        '⚠️ Format invalide',
+        'Entre un email valide (ex: ton@email.com)\nou un numéro de téléphone (ex: +33612345678 ou 0612345678)'
+      );
+      return;
+    }
+
+    setIdentifierType(type);
     setLoading(true);
+
     try {
-      console.log('📱 Envoi code SMS à:', phoneNumber);
-      const result = await sendVerificationCode(phoneNumber);
+      if (type === 'phone') {
+        console.log('📱 Envoi SMS à:', identifier);
+        const result = await sendVerificationCode(identifier);
       
       if (result.success) {
         console.log('✅ Code SMS envoyé');
         setConfirmation(result.confirmation);
-        setStep('code');
+        setStep('verify');
         Alert.alert(
-          'SMS envoyé ! 📲',
+          '📱 SMS envoyé !',
           `Un code à 6 chiffres a été envoyé à ${result.phoneNumber}`
         );
       } else {
         Alert.alert('Erreur', result.error || 'Impossible d\'envoyer le code');
       }
+      } else {
+        // Email - TODO: implémenter envoi email
+        Alert.alert(
+          '⚠️ En développement',
+          'L\'authentification par email arrive bientôt !\nUtilise un numéro de téléphone pour le moment.',
+          [{ text: 'OK' }]
+        );
+      }
     } catch (error) {
-      console.error('❌ Erreur envoi SMS:', error);
+      console.error('❌ Erreur envoi code:', error);
       Alert.alert('Erreur', 'Impossible d\'envoyer le code. Réessaie.');
     } finally {
       setLoading(false);
     }
   };
 
-  // === VÉRIFIER CODE ET CONNECTER ===
+  // === VÉRIFIER CODE ET LIER AU COMPTE ANONYME ===
   const handleVerifyCode = async () => {
     if (!verificationCode || verificationCode.length !== 6) {
       Alert.alert('Code invalide', 'Entre les 6 chiffres du code');
@@ -85,50 +124,30 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
 
     if (!confirmation) {
       Alert.alert('Erreur', 'Session expirée. Réessaie avec ton numéro.');
-      setStep('phone');
+      setStep('input');
       return;
     }
 
     setLoading(true);
     try {
-      console.log('🔐 Vérification code...');
+      console.log('🔐 Vérification code et linking...');
       const result = await verifyCode(confirmation, verificationCode);
       
       if (result.success) {
-        console.log('✅ Code validé, utilisateur connecté:', result.user.uid);
+        console.log('✅ Compte lié avec succès! UID:', result.user.uid);
         
-        // Sauvegarder les programmes sélectionnés
-        if (guestData && result.user) {
-          console.log('💾 Sauvegarde des programmes sélectionnés...');
-          console.log('guestData:', guestData);
-          try {
-            // Préparer les données (défendre contre les valeurs nulles)
-            const programsToSave = guestData.programs || guestData.userProgress || {};
-            const activePrograms = guestData.activePrograms || guestData.selectedPrograms?.slice(0, 2) || [];
-            const selectedPrograms = guestData.selectedPrograms || [];
-            
-            await firestore()
-              .collection('users')
-              .doc(result.user.uid)
-              .set({
-                phoneNumber: result.user.phoneNumber,
-                userProgress: programsToSave,
-                activePrograms: activePrograms,
-                selectedPrograms: selectedPrograms,
-              }, { merge: true });
-            
-            console.log('✅ Programmes sauvegardés');
-          } catch (error) {
-            console.error('⚠️ Erreur sauvegarde programmes:', error);
-            // Continue quand même
-          }
-        } else {
-          console.log('ℹ️ Pas de guestData à sauvegarder');
-        }
-        
-        onSuccess();
-        onClose();
-        resetForm();
+        Alert.alert(
+          '🎉 Compte créé !',
+          'Tes progrès sont maintenant sauvegardés en ligne.',
+          [{ 
+            text: 'OK', 
+            onPress: () => {
+              onSuccess();
+              onClose();
+              resetForm();
+            }
+          }]
+        );
       } else {
         Alert.alert('Code incorrect', result.error || 'Vérifie le code reçu par SMS');
       }
@@ -147,9 +166,9 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
     }
   };
 
-  const handleBackToPhone = () => {
+  const handleBackToInput = () => {
     if (!loading) {
-      setStep('phone');
+      setStep('input');
       setVerificationCode('');
       setConfirmation(null);
     }
@@ -179,12 +198,12 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
               <View style={styles.headerContent}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.title}>
-                    {step === 'phone' && '📱 Connexion par SMS'}
-                    {step === 'code' && '🔐 Vérification'}
+                    {step === 'input' && '⚔️ Connexion / Inscription'}
+                    {step === 'verify' && '🔐 Vérification'}
                   </Text>
                   <Text style={styles.subtitle}>
-                    {step === 'phone' && 'Sauvegarde ta progression'}
-                    {step === 'code' && 'Entre le code reçu par SMS'}
+                    {step === 'input' && 'Email ou téléphone'}
+                    {step === 'verify' && `Code envoyé à ${identifier}`}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={handleCancel} disabled={loading}>
@@ -198,30 +217,31 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
               style={styles.form}
               keyboardShouldPersistTaps="handled"
             >
-              {step === 'phone' && (
+              {step === 'input' && (
                 <>
-                  {/* Numéro de téléphone */}
+                  {/* Email ou Téléphone */}
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Numéro de téléphone</Text>
-                    <View style={styles.inputWrapper}>
-                      <Text style={styles.prefix}>🇫🇷 +33</Text>
-                      <TextInput
-                        style={styles.inputPhone}
-                        placeholder="6 XX XX XX XX"
-                        placeholderTextColor="#94A3B8"
-                        value={phoneNumber}
-                        onChangeText={setPhoneNumber}
-                        keyboardType="phone-pad"
-                        editable={!loading}
-                      />
-                    </View>
-                    <Text style={styles.hint}>Format: 06 12 34 56 78 ou 612345678</Text>
+                    <Text style={styles.label}>📧 Email ou 📱 Téléphone</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="ton@email.com ou +33612345678"
+                      placeholderTextColor="#94A3B8"
+                      value={identifier}
+                      onChangeText={setIdentifier}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      editable={!loading}
+                    />
+                    <Text style={styles.hint}>
+                      Format: email@exemple.com ou 0612345678
+                    </Text>
                   </View>
 
                   {/* Info */}
                   <View style={styles.infoBox}>
                     <Text style={styles.infoText}>
-                      ℹ️ Tu recevras un SMS avec un code de vérification
+                      💡 Ton compte sera créé automatiquement !{'\n'}
+                      Tes progrès seront sauvegardés en ligne.
                     </Text>
                   </View>
 
@@ -229,7 +249,7 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
                   <TouchableOpacity
                     style={[styles.button, loading && styles.buttonDisabled]}
                     onPress={handleSendCode}
-                    disabled={loading || phoneNumber.length < 9}
+                    disabled={loading || identifier.length < 5}
                   >
                     {loading ? (
                       <ActivityIndicator color="#FFF" />
@@ -242,7 +262,7 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
                 </>
               )}
 
-              {step === 'code' && (
+              {step === 'verify' && (
                 <>
                   {/* Code de vérification */}
                   <View style={styles.inputGroup}>
@@ -287,11 +307,11 @@ const PhoneAuthModal = ({ visible, onClose, onSuccess, guestData }) => {
                   {/* Retour */}
                   <TouchableOpacity
                     style={styles.backButton}
-                    onPress={handleBackToPhone}
+                    onPress={handleBackToInput}
                     disabled={loading}
                   >
                     <Text style={styles.backButtonText}>
-                      ← Modifier le numéro
+                      ← Modifier l'identifiant
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -440,4 +460,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PhoneAuthModal;
+export default AuthModal;

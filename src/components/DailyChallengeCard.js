@@ -31,6 +31,12 @@ const DailyChallengeCard = ({
 
   const challengeLabel = getChallengeLabel(challenge.challengeType);
   const xp = getChallengeXP(challenge.challengeType);
+  
+  // Déterminer le statut d'affichage
+  const status = challenge.status || (hasSubmitted ? 'pending' : null);
+  const isApproved = status === 'approved';
+  const isRejected = status === 'rejected';
+  const isPending = status === 'pending';
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
@@ -48,9 +54,17 @@ const DailyChallengeCard = ({
                 <Text style={styles.icon}>⚔️</Text>
                 <Text style={styles.title}>DÉFI DU JOUR</Text>
               </View>
-              {hasSubmitted ? (
-                <View style={styles.completedBadge}>
-                  <Text style={styles.completedText}>✓ ACCOMPLI</Text>
+              {isApproved ? (
+                <View style={[styles.completedBadge, styles.approvedBadge]}>
+                  <Text style={styles.completedText}>✓ VALIDÉ</Text>
+                </View>
+              ) : isRejected ? (
+                <View style={[styles.completedBadge, styles.rejectedBadge]}>
+                  <Text style={styles.completedText}>✗ REFUSÉ</Text>
+                </View>
+              ) : isPending ? (
+                <View style={[styles.completedBadge, styles.pendingBadge]}>
+                  <Text style={styles.completedText}>⏳ EN ATTENTE</Text>
                 </View>
               ) : (
                 <View style={styles.xpBadge}>
@@ -63,8 +77,16 @@ const DailyChallengeCard = ({
             <Text style={styles.challengeName}>{challengeLabel}</Text>
 
             {/* Status */}
-            {hasSubmitted ? (
-              <Text style={styles.statusText}>En attente de validation</Text>
+            {isApproved ? (
+              <Text style={[styles.statusText, styles.approvedText]}>
+                🎉 Challenge validé ! +{xp} XP reçus
+              </Text>
+            ) : isRejected ? (
+              <Text style={[styles.statusText, styles.rejectedText]}>
+                Soumission refusée. Réessaye demain !
+              </Text>
+            ) : isPending ? (
+              <Text style={styles.statusText}>En attente de validation par l'admin</Text>
             ) : (
               <View style={styles.actionRow}>
                 <Text style={styles.actionIcon}>🎥</Text>
@@ -157,6 +179,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#22C55E',
   },
+  approvedBadge: {
+    backgroundColor: 'rgba(34, 197, 94, 0.25)', // Vert transparent
+    borderColor: '#22C55E',
+  },
+  pendingBadge: {
+    backgroundColor: 'rgba(251, 191, 36, 0.25)', // Orange transparent
+    borderColor: '#F59E0B',
+  },
+  rejectedBadge: {
+    backgroundColor: 'rgba(239, 68, 68, 0.25)', // Rouge transparent
+    borderColor: '#EF4444',
+  },
   completedText: {
     color: '#4ADE80',
     fontSize: 12,
@@ -177,7 +211,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#94A3B8',
     fontStyle: 'italic',
-    marginTop: 4,
+    marginBottom: 4,
+  },
+  approvedText: {
+    color: '#4ADE80',
+    fontWeight: '600',
+  },
+  rejectedText: {
+    color: '#EF4444',
+    fontWeight: '600',
   },
   actionRow: {
     flexDirection: 'row',

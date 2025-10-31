@@ -17,7 +17,10 @@ import {
   ActivityIndicator,
   Chip,
 } from 'react-native-paper';
-import firestore from '@react-native-firebase/firestore';
+
+// ✅ IMPORT UNIFIÉ - Firebase simple config
+import { getFirestore, FieldValue } from '../config/firebase.simple';
+const firestore = getFirestore();
 
 import { useAuth } from '../contexts/AuthContext';
 import { useChallenge } from '../contexts/ChallengeContext';
@@ -33,11 +36,11 @@ import { loadProgramDetails } from '../data/programsLoader';
 import { logger } from '../utils/debugHelper';
 
 // ═══ Images de fond des programmes ═══
-// Pattern: {categoryId}-bg.jpg
-// Ajouter une nouvelle image: street => street-bg.jpg, running => running-bg.jpg, etc.
+// Pattern: {categoryId}-bg.jpg ou selon programs-meta.json
+// Ajouter une nouvelle image: street => street-bg.jpg, running => running-5.jpg, etc.
 const PROGRAM_IMAGES = {
   street: require('../../assets/programmes/street-bg.jpg'),
-  running: require('../../assets/programmes/running-bg.jpg'),
+  running: require('../../assets/programmes/running-5.jpg'),
   // Pour les prochains programmes, utiliser le même pattern: yoga => yoga-bg.jpg, etc.
 };
 
@@ -45,7 +48,6 @@ const HomeScreen = ({ navigation, route }) => {
   logger.section('🏠 HomeScreen Component Loaded');
   
   const [userStats, setUserStats] = useState(null);
-  const [lastSession, setLastSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -138,16 +140,35 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [route.params, programsLoading]);
 
+  // ═══ Redirection automatique vers ProgramSelection si pas de programmes actifs ═══
+  useEffect(() => {
+    // Attendre que le chargement soit terminé et que l'utilisateur soit connecté
+    if (!loading && !loadingQueue && user?.uid && !isGuest) {
+      // Si aucun programme actif, rediriger vers la sélection
+      if (activePrograms.length === 0) {
+        console.log('⚠️ Aucun programme actif - redirection vers ProgramSelection');
+        setTimeout(() => {
+          navigation.navigate('ProgramSelection');
+        }, 500);
+      }
+    }
+  }, [loading, loadingQueue, activePrograms, user, isGuest, navigation]);
+
   // Refresh au focus de l'écran
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (user?.uid) {
         console.log('🔄 Screen focused - refreshing data');
         loadActiveProgramsAndQueue();
+        
+        // Recharger le challenge du jour pour avoir le statut à jour
+        if (loadTodayChallenge) {
+          loadTodayChallenge(user.uid);
+        }
       }
     });
     return unsubscribe;
-  }, [navigation, user]);
+  }, [navigation, user, loadTodayChallenge]);
 
   const startFadeAnimation = () => {
     Animated.timing(fadeAnim, {
@@ -159,12 +180,18 @@ const HomeScreen = ({ navigation, route }) => {
 
   const loadAllData = async () => {
     console.log('🔄 loadAllData START');
+    const startTime = Date.now();
     
     try {
       setLoading(true);
       
-      // Charger stats utilisateur
-      const userStatsData = await loadUserStats();
+      // 🚀 OPTIMISATION: Charger user stats et programmes en parallèle
+      const [userStatsData] = await Promise.all([
+        loadUserStats(),
+        loadActiveProgramsAndQueue(), // Parallélisé !
+      ]);
+      
+      // Appliquer les stats
       if (userStatsData) {
         console.log('✅ User stats loaded:', userStatsData.globalLevel);
         setUserStats(userStatsData);
@@ -182,14 +209,8 @@ const HomeScreen = ({ navigation, route }) => {
         });
       }
       
-      // Charger dernière session
-      const lastSessionData = await loadLastSession();
-      setLastSession(lastSessionData);
-      
-      // Charger programmes actifs
-      await loadActiveProgramsAndQueue();
-      
-      console.log('✅ loadAllData COMPLETE');
+      const loadTime = Date.now() - startTime;
+      console.log(`✅ loadAllData COMPLETE en ${loadTime}ms`);
       
     } catch (error) {
       console.error('❌ loadAllData ERROR:', error);
@@ -204,7 +225,6 @@ const HomeScreen = ({ navigation, route }) => {
         displayName: user?.email?.split('@')[0] || 'Utilisateur',
         avatarId: 0
       });
-      setLastSession(null);
       
     } finally {
       setLoading(false);
@@ -212,15 +232,17 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   const loadUserStats = async () => {
-    if (isGuest || !user) {
-      console.log('⏭️ Skip loadUserStats (guest or no user)');
+    // ═══ NOUVELLE ARCHITECTURE: Les invités ont un user.uid Firebase ═══
+    // Ils utilisent Firestore normalement, juste isGuest=true dans leur document
+    if (!user || !user.uid) {
+      console.log('⏭️ Skip loadUserStats (no user)');
       return null;
     }
     
     try {
-      console.log('📊 Loading user stats for:', user.uid);
+      console.log('📊 Loading user stats for:', user.uid, isGuest ? '(guest)' : '(authenticated)');
       
-      const userDoc = await firestore()
+      const userDoc = await firestore
         .collection('users')
         .doc(user.uid)
         .get();
@@ -231,14 +253,14 @@ const HomeScreen = ({ navigation, route }) => {
         
         // Structure standard
         return {
-          globalXP: userData.totalXP || userData.globalXP || 0,
-          globalLevel: userData.globalLevel || Math.floor(Math.sqrt((userData.totalXP || 0) / 100)),
-          title: userData.title || getTitleFromLevel(userData.globalLevel || 0),
-          stats: userData.stats || { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
-          programs: userData.programs || {},
-          streakDays: userData.streak || 0,
-          displayName: userData.displayName || user.email?.split('@')[0] || 'Utilisateur',
-          avatarId: userData.avatarId || 0
+          globalXP: userData?.totalXP || userData?.globalXP || 0,
+          globalLevel: userData?.globalLevel || Math.floor(Math.sqrt((userData?.totalXP || 0) / 100)),
+          title: userData?.title || getTitleFromLevel(userData?.globalLevel || 0),
+          stats: userData?.stats || { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
+          programs: userData?.programs || {},
+          streakDays: userData?.streak || 0,
+          displayName: userData?.displayName || user.email?.split('@')[0] || 'Utilisateur',
+          avatarId: userData?.avatarId || 0
         };
       }
       
@@ -246,7 +268,6 @@ const HomeScreen = ({ navigation, route }) => {
       console.log('📝 Nouvel utilisateur - création document');
       
       const newUserData = {
-        email: user.email,
         totalXP: 0,
         level: 1,
         globalXP: 0,
@@ -257,13 +278,18 @@ const HomeScreen = ({ navigation, route }) => {
         selectedPrograms: [],
         streak: 0,
         lastWorkoutDate: null,
-        displayName: user.email?.split('@')[0] || 'Utilisateur',
+        displayName: user.email?.split('@')[0] || user.displayName || 'Utilisateur',
         avatarId: 0,
-        createdAt: firestore.FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       };
       
+      // Ajouter email seulement si disponible (pas pour anonymous)
+      if (user.email) {
+        newUserData.email = user.email;
+      }
+      
       // Créer le document
-      await firestore()
+      await firestore
         .collection('users')
         .doc(user.uid)
         .set(newUserData);
@@ -277,43 +303,12 @@ const HomeScreen = ({ navigation, route }) => {
         stats: { strength: 0, endurance: 0, power: 0, speed: 0, flexibility: 0 },
         programs: {},
         streakDays: 0,
-        displayName: user.email?.split('@')[0] || 'Utilisateur',
+        displayName: user.email?.split('@')[0] || user.displayName || 'Utilisateur',
         avatarId: 0
       };
       
     } catch (error) {
       console.error('❌ loadUserStats error:', error);
-      return null;
-    }
-  };
-
-  const loadLastSession = async () => {
-    if (isGuest || !user) return null;
-    
-    try {
-      const snapshot = await firestore()
-        .collection('workoutSessions')
-        .where('userId', '==', user.uid)
-        .orderBy('completedAt', 'desc')
-        .limit(1)
-        .get();
-      
-      if (!snapshot.empty) {
-        const sessionData = snapshot.docs[0].data();
-        return {
-          id: snapshot.docs[0].id,
-          ...sessionData,
-          completedAt: sessionData.completedAt?.toDate()
-        };
-      }
-      
-      return null;
-    } catch (error) {
-      if (error.message?.includes('index')) {
-        console.warn('⚠️ Index Firestore manquant');
-        return null;
-      }
-      console.error('❌ loadLastSession error:', error);
       return null;
     }
   };
@@ -327,16 +322,17 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   const loadActiveProgramsAndQueue = async () => {
-    if (isGuest || !user?.uid) {
-      console.log('⏭️ Skip loadActiveProgramsAndQueue (guest or no user)');
+    // ═══ NOUVELLE ARCHITECTURE: Les invités ont un user.uid Firebase ═══
+    if (!user?.uid) {
+      console.log('⏭️ Skip loadActiveProgramsAndQueue (no user)');
       return;
     }
     
     try {
       setLoadingQueue(true);
-      console.log('📋 Loading active programs and queue');
+      console.log('📋 Loading active programs and queue', isGuest ? '(guest)' : '(authenticated)');
       
-      const userDoc = await firestore()
+      const userDoc = await firestore
         .collection('users')
         .doc(user.uid)
         .get();
@@ -345,10 +341,21 @@ const HomeScreen = ({ navigation, route }) => {
         console.log('⚠️ User document not found');
         setActivePrograms([]);
         setSessionQueue([]);
+        setLoadingQueue(false);
         return;
       }
       
       const userData = userDoc.data();
+      
+      // Vérification défensive : si userData est undefined ou null
+      if (!userData) {
+        console.log('⚠️ User document exists but data is empty');
+        setActivePrograms([]);
+        setSessionQueue([]);
+        setLoadingQueue(false);
+        return;
+      }
+      
       const activeProgramIds = userData.activePrograms || [];
       
       console.log('🔍 Active programs:', activeProgramIds);
@@ -446,7 +453,8 @@ const HomeScreen = ({ navigation, route }) => {
         program: {
           id: skillDetails.id,
           name: skillDetails.name || session.skillName,
-          category: category.name,
+          category: category.id, // ← ID pour Firestore (ex: 'street')
+          categoryName: category.name, // ← Nom pour affichage
           icon: session.programIcon || skillDetails.icon,
         },
         level: {
@@ -524,43 +532,6 @@ const HomeScreen = ({ navigation, route }) => {
     );
   };
 
-  const LastSessionCard = ({ session }) => {
-    if (!session) return null;
-    
-    const formatDate = (date) => {
-      const now = new Date();
-      const diff = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-      if (diff === 0) return "Aujourd'hui";
-      if (diff === 1) return "Hier";
-      return `Il y a ${diff} jours`;
-    };
-    
-    return (
-      <Card style={styles.lastSessionCard}>
-        <Card.Content>
-          <View style={styles.lastSessionHeader}>
-            <Text style={styles.lastSessionTitle}>📈 Dernière séance</Text>
-            <Text style={styles.lastSessionDate}>{formatDate(session.completedAt)}</Text>
-          </View>
-          <View style={styles.lastSessionStats}>
-            <View style={styles.sessionStat}>
-              <Text style={styles.sessionStatValue}>{session.score}%</Text>
-              <Text style={styles.sessionStatLabel}>Score</Text>
-            </View>
-            <View style={styles.sessionStat}>
-              <Text style={styles.sessionStatValue}>+{session.xpGained || 0}</Text>
-              <Text style={styles.sessionStatLabel}>XP</Text>
-            </View>
-            <View style={styles.sessionStat}>
-              <Text style={styles.sessionStatValue}>{Math.floor((session.duration || 0) / 60)}min</Text>
-              <Text style={styles.sessionStatLabel}>Durée</Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
-    );
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -611,17 +582,22 @@ const HomeScreen = ({ navigation, route }) => {
             title={userStats?.title || 'Débutant'}
             streak={userStats?.streakDays || 0}
             avatarId={userStats?.avatarId || 0}
+            userId={user?.uid}
+            onUsernameUpdate={(newName) => {
+              setUserStats(prev => ({
+                ...prev,
+                displayName: newName
+              }));
+            }}
           />
 
           {/* DÉFI DU JOUR - En premier, juste après UserHeader */}
-          {!isGuest && (
-            <DailyChallengeCard
-              challenge={todayChallenge}
-              hasSubmitted={todayChallenge?.submitted || false}
-              loading={loadingChallenge}
-              onPress={() => navigation.navigate('Challenge')}
-            />
-          )}
+          <DailyChallengeCard
+            challenge={todayChallenge}
+            hasSubmitted={todayChallenge?.submitted || false}
+            loading={loadingChallenge}
+            onPress={() => navigation.navigate('Challenge')}
+          />
 
           <StreakCard streak={userStats?.streakDays || 0} />
 
@@ -700,7 +676,6 @@ const HomeScreen = ({ navigation, route }) => {
             </Card>
           )}
 
-          <LastSessionCard session={lastSession} />
           <View style={styles.bottomSpacer} />
         </Animated.View>
       </ScrollView>
@@ -810,19 +785,6 @@ const styles = StyleSheet.create({
   streakTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
   streakDays: { fontSize: 14, color: colors.textSecondary },
   streakChip: { backgroundColor: colors.warning + '20' },
-  lastSessionCard: { marginHorizontal: 16, marginBottom: 12, elevation: 2 },
-  lastSessionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  lastSessionTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
-  lastSessionDate: { fontSize: 12, color: colors.textSecondary },
-  lastSessionStats: { flexDirection: 'row', justifyContent: 'space-around' },
-  sessionStat: { alignItems: 'center' },
-  sessionStatValue: { fontSize: 18, fontWeight: 'bold', color: colors.primary },
-  sessionStatLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   bottomSpacer: { height: 20 },
   devButton: {
     position: 'absolute',

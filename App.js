@@ -148,28 +148,19 @@ const TabNavigator = () => {
 };
 
 const AppNavigator = () => {
-  const { user, isGuest, loading } = useAuth();
+  const { user, isGuest, loading, startGuestMode } = useAuth();
   const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(null);
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+  const [isInitializingGuest, setIsInitializingGuest] = useState(false);
+  const navigationRef = React.useRef(null);
 
+  // ═══ HOOK 1: Vérifier onboarding ═══
   useEffect(() => {
     const checkOnboarding = async () => {
       try {
-        // Vérifier UNIQUEMENT AsyncStorage pour l'onboarding
-        // L'onboarding ne doit s'afficher qu'UNE SEULE FOIS au premier lancement
         const completed = await AsyncStorage.getItem('@fitnessrpg:onboarding_completed');
         const isCompleted = completed === 'true';
         setIsOnboardingCompleted(isCompleted);
-        console.log('========================================');
-        console.log('🔍 ONBOARDING CHECK');
-        console.log('========================================');
-        console.log('AsyncStorage value:', completed);
-        console.log('Is completed?', isCompleted);
-        console.log('User:', user?.email || 'Guest');
-        console.log('Is Guest?', isGuest);
-        console.log('Loading:', loading);
-        console.log('Will navigate to:', isCompleted ? 'Main' : 'Onboarding');
-        console.log('========================================');
       } catch (error) {
         console.error('❌ Erreur vérification onboarding:', error);
         setIsOnboardingCompleted(false);
@@ -178,66 +169,101 @@ const AppNavigator = () => {
       }
     };
 
-    // Vérifier pour tous (user, guest, ou anonyme)
     setIsCheckingOnboarding(true);
     checkOnboarding();
-  }, [user, isGuest, loading]); // ✅ Ajouter 'loading' pour re-check quand auth change
+    
+    // Pas d'interval - on vérifie juste une fois au mount
+  }, []); // Dépendances vides = vérifie seulement au premier mount
 
-  // Afficher un écran de chargement pendant la vérification AuthContext OU onboarding
-  if (loading || isCheckingOnboarding) {
-    console.log('⏳ Loading... (AuthContext:', loading, ', CheckingOnboarding:', isCheckingOnboarding, ')');
+  // ═══ HOOK 2: Auto-démarrer mode invité si pas d'utilisateur ═══
+  useEffect(() => {
+    const initGuestMode = async () => {
+      // Si onboarding complété mais pas d'utilisateur Firebase → Démarrer anonymous auth
+      if (isOnboardingCompleted && !user && !loading && !isCheckingOnboarding && !isInitializingGuest) {
+        console.log('🎮 Démarrage automatique du mode invité (Anonymous Auth)');
+        setIsInitializingGuest(true);
+        const result = await startGuestMode();
+        
+        // Si erreur, arrêter le loading pour éviter boucle infinie
+        if (!result.success) {
+          console.error('❌ Impossible de démarrer le mode invité:', result.error);
+          setIsInitializingGuest(false);
+        }
+      }
+    };
+
+    initGuestMode();
+  }, [isOnboardingCompleted, user, loading, isCheckingOnboarding, isInitializingGuest]);
+
+  // ═══ HOOK 3: Réinitialiser isInitializingGuest quand user est défini ═══
+  useEffect(() => {
+    if (user && isInitializingGuest) {
+      console.log('✅ Mode invité initialisé - user défini');
+      setIsInitializingGuest(false);
+    }
+  }, [user, isInitializingGuest]);
+
+  // ═══ RENDERING LOGIC ═══
+  // Si pas d'utilisateur et pas en cours d'init → Erreur de configuration
+  if (!user && !loading && !isCheckingOnboarding && !isInitializingGuest && isOnboardingCompleted) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 16, color: colors.text }}>Chargement...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background, padding: 20 }}>
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>⚠️</Text>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 12, textAlign: 'center' }}>
+          Erreur de configuration
+        </Text>
+        <Text style={{ fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 24 }}>
+          L'authentification anonyme doit être activée dans Firebase Console.
+          {'\n\n'}
+          Authentication → Sign-in method → Anonymous → Activer
+        </Text>
+        <TouchableOpacity 
+          style={{ backgroundColor: colors.primary, padding: 16, borderRadius: 12 }}
+          onPress={() => {
+            setIsInitializingGuest(false);
+            // Force reload
+            window.location.reload?.();
+          }}
+        >
+          <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Réessayer</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  console.log('🎯 RENDERING NAVIGATOR');
-  console.log('User:', user?.email || 'Not logged in');
-  console.log('Is Guest:', isGuest);
-  console.log('isOnboardingCompleted:', isOnboardingCompleted);
+  // Afficher un écran de chargement pendant la vérification AuthContext OU onboarding OU initialisation guest
+  if (loading || isCheckingOnboarding || isInitializingGuest) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 16, color: colors.text }}>
+          {isInitializingGuest ? 'Initialisation...' : 'Chargement...'}
+        </Text>
+      </View>
+    );
+  }
 
-  // PRIORITÉ 1: Si onboarding pas complété, afficher Onboarding + ProgramSelection
-  // Ceci permet aux nouveaux utilisateurs de découvrir l'app en mode guest
-  // ET aussi pour les utilisateurs qui se sont déconnectés
-  if (!isOnboardingCompleted || (!user && !isGuest)) {
-    console.log('→ Showing Onboarding screen (onboarding not completed OR logged out)');
+  // Si pas d'onboarding → Afficher Onboarding screen
+  if (!isOnboardingCompleted) {
     return (
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false, headerBackVisible: true }}>
-          <Stack.Screen 
-            name="Onboarding" 
-            component={OnboardingScreen}
-            options={{ 
-              gestureEnabled: false,
-            }}
-          />
-          <Stack.Screen 
-            name="ProgramSelection" 
-            component={ProgramSelectionScreen}
-            options={{
-              gestureEnabled: false,
-            }}
-          />
-          <Stack.Screen 
-            name="PhoneLogin" 
-            component={PhoneLoginScreen}
-            options={{
-              title: 'Connexion',
-              gestureEnabled: false,
-            }}
-          />
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Onboarding">
+            {(props) => (
+              <OnboardingScreen 
+                {...props} 
+                onComplete={() => setIsOnboardingCompleted(true)}
+              />
+            )}
+          </Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
     );
   }
 
-  // Si on arrive ici, c'est qu'on a user OU isGuest = true
-  console.log('→ Showing Main app', user ? '(authenticated)' : '(guest mode)');
+  // Main app
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {

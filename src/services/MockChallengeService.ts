@@ -130,13 +130,27 @@ export const approveSubmission = async (
   // Calculer XP
   const xp = getChallengeXP(submission.challengeType);
 
-  // Mettre à jour
+  // Mettre à jour la soumission
   submission.status = 'approved';
   submission.reviewedAt = new Date();
   submission.reviewedBy = adminId;
   submission.xpRewarded = xp;
 
   await AsyncStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(submissions));
+  
+  // Mettre à jour le challenge du jour pour refléter l'approbation
+  const submittedAt = new Date(submission.submittedAt);
+  const date = submittedAt.toISOString().split('T')[0]; // Format YYYY-MM-DD
+  const challengeKey = `${STORAGE_KEYS.DAILY_CHALLENGES}_${submission.userId}_${date}`;
+  const challengeData = await AsyncStorage.getItem(challengeKey);
+  
+  if (challengeData) {
+    const challenge: DailyChallenge = JSON.parse(challengeData);
+    challenge.status = 'approved';
+    challenge.approvedAt = new Date();
+    await AsyncStorage.setItem(challengeKey, JSON.stringify(challenge));
+    console.log('✅ [MOCK] Daily challenge status updated to approved');
+  }
   
   // Mettre à jour stats utilisateur (simulé)
   await updateUserStats(submission.userId, 'approved');
@@ -169,6 +183,20 @@ export const rejectSubmission = async (
 
   await AsyncStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify(submissions));
   
+  // Mettre à jour le challenge du jour pour refléter le rejet
+  const submittedAt = new Date(submission.submittedAt);
+  const date = submittedAt.toISOString().split('T')[0]; // Format YYYY-MM-DD
+  const challengeKey = `${STORAGE_KEYS.DAILY_CHALLENGES}_${submission.userId}_${date}`;
+  const challengeData = await AsyncStorage.getItem(challengeKey);
+  
+  if (challengeData) {
+    const challenge: DailyChallenge = JSON.parse(challengeData);
+    challenge.status = 'rejected';
+    challenge.rejectedAt = new Date();
+    await AsyncStorage.setItem(challengeKey, JSON.stringify(challenge));
+    console.log('✅ [MOCK] Daily challenge status updated to rejected');
+  }
+  
   console.log('✅ [MOCK] Submission rejected');
 };
 
@@ -186,7 +214,32 @@ export const getOrCreateDailyChallenge = async (
 
   if (existing) {
     const challenge = JSON.parse(existing);
-    console.log('✅ [MOCK] Found existing challenge:', challenge.challengeType);
+    
+    // Si le challenge a une soumission, vérifier son statut actuel
+    if (challenge.submissionId) {
+      const submissionsData = await AsyncStorage.getItem(STORAGE_KEYS.SUBMISSIONS);
+      if (submissionsData) {
+        const submissions: ChallengeSubmission[] = JSON.parse(submissionsData);
+        const submission = submissions.find(s => s.id === challenge.submissionId);
+        
+        if (submission) {
+          // Synchroniser le statut du challenge avec celui de la soumission
+          if (submission.status !== challenge.status) {
+            challenge.status = submission.status;
+            if (submission.status === 'approved') {
+              challenge.approvedAt = submission.reviewedAt;
+            } else if (submission.status === 'rejected') {
+              challenge.rejectedAt = submission.reviewedAt;
+            }
+            // Sauvegarder le challenge mis à jour
+            await AsyncStorage.setItem(key, JSON.stringify(challenge));
+            console.log('🔄 [MOCK] Challenge status synchronized with submission:', submission.status);
+          }
+        }
+      }
+    }
+    
+    console.log('✅ [MOCK] Found existing challenge:', challenge.challengeType, 'status:', challenge.status || 'none');
     return challenge;
   }
 

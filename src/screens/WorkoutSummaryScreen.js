@@ -40,8 +40,12 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
   }, []);
 
   const calculateStatGains = async (levelCompleted) => {
-    // Skip Firebase calls in guest mode
-    if (!levelCompleted || !user?.uid || isGuest) return null;
+    if (!levelCompleted || !user?.uid) {
+      console.log('⏭️ Skip calculateStatGains - no level completed or no user');
+      return null;
+    }
+    
+    console.log('🎯 Calculating stat gains for user:', user.uid, isGuest ? '(guest)' : '(authenticated)');
 
     try {
       // Récupérer les données utilisateur actuelles
@@ -112,9 +116,80 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
       const result = await completeWorkout();
       setSessionData(result);
       
-      // Calculer les gains de stats si niveau complété
+      console.log('💾 Workout completed - result:', result);
+      
+      // ═══ SAUVEGARDE DES XP ═══
+      if (result.xpEarned && user?.uid) {
+        console.log('⭐ Updating user XP: +', result.xpEarned);
+        const userDocRef = firestore().doc(`users/${user.uid}`);
+        const userDoc = await userDocRef.get();
+        const currentXP = userDoc.data()?.totalXP || 0;
+        const newXP = currentXP + result.xpEarned;
+        
+        // Calculer le nouveau niveau global (1000 XP = 1 niveau)
+        const newGlobalLevel = Math.floor(newXP / 1000) + 1;
+        
+        await userDocRef.update({
+          totalXP: newXP,
+          globalXP: newXP,
+          globalLevel: newGlobalLevel,
+          lastXPUpdate: firestore.FieldValue.serverTimestamp()
+        });
+        
+        console.log('✅ XP updated:', currentXP, '→', newXP, '| Level:', newGlobalLevel);
+      }
+      
+      // ═══ SAUVEGARDE DE LA PROGRESSION SI NIVEAU VALIDÉ ═══
       const levelValidated = result.levelCompleted || isLevelCompleted(result.score);
-      if (levelValidated) {
+      if (levelValidated && user?.uid) {
+        console.log('🎯 Level validated - updating progression for program:', program.id, 'level:', level.id);
+        
+        // Mettre à jour la progression du programme dans userProgress
+        const categoryId = program.category || program.id;
+        const progressRef = firestore().doc(`userProgress/${user.uid}_${categoryId}`);
+        const progressDoc = await progressRef.get();
+        const currentProgress = progressDoc.exists ? progressDoc.data() : {};
+        
+        // Mettre à jour skillProgress
+        const skillProgress = currentProgress.skillProgress || {};
+        const skillId = program.id; // ex: "beginner-foundation"
+        const currentSkillData = skillProgress[skillId] || { completedLevels: [], currentLevel: 1 };
+        
+        // Ajouter le niveau complété
+        const newCompletedLevels = [...currentSkillData.completedLevels];
+        if (!newCompletedLevels.includes(level.id)) {
+          newCompletedLevels.push(level.id);
+          console.log(`✅ Level ${level.id} completed for skill ${skillId}`);
+        }
+        
+        // Calculer le nouveau niveau actuel
+        const nextLevel = Math.max(...newCompletedLevels) + 1;
+        
+        skillProgress[skillId] = {
+          completedLevels: newCompletedLevels,
+          currentLevel: nextLevel
+        };
+        
+        // Vérifier si la compétence est 100% complétée
+        const totalLevels = 6; // TODO: Récupérer dynamiquement
+        const isSkillComplete = newCompletedLevels.length >= totalLevels;
+        
+        const completedSkills = [...(currentProgress.completedSkills || [])];
+        if (isSkillComplete && !completedSkills.includes(skillId)) {
+          completedSkills.push(skillId);
+          console.log(`🏆 Skill ${skillId} 100% completed!`);
+        }
+        
+        await progressRef.set({
+          ...currentProgress,
+          skillProgress,
+          completedSkills,
+          lastSessionAt: firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        console.log('✅ Progression saved:', { skillId, completedLevels: newCompletedLevels, currentLevel: nextLevel });
+        
+        // Calculer les gains de stats
         const gainsData = await calculateStatGains(true);
         if (gainsData) {
           setStatGains(gainsData.gains);

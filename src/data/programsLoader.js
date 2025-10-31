@@ -139,12 +139,23 @@ export const loadCategoryDetails = async (categoryId) => {
  * @returns {Promise<Object>} Les programmes complets
  */
 export const loadPrograms = async () => {
-  // Charger d'abord les métadonnées
-  const metadata = await loadProgramsMeta();
-  
-  // Pour compatibilité, on retourne juste les métadonnées
-  // Les détails seront chargés à la demande via loadProgramDetails()
-  return metadata;
+  try {
+    // Charger d'abord les métadonnées
+    const metadata = await loadProgramsMeta();
+    
+    // Validation
+    if (!metadata || !metadata.categories) {
+      console.error('❌ loadPrograms: métadonnées invalides', metadata);
+      throw new Error('Métadonnées des programmes invalides');
+    }
+    
+    // Pour compatibilité, on retourne juste les métadonnées
+    // Les détails seront chargés à la demande via loadProgramDetails()
+    return metadata;
+  } catch (error) {
+    console.error('❌ loadPrograms failed:', error);
+    throw error;
+  }
 };
 
 /**

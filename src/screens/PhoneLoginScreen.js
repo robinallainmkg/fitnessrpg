@@ -15,7 +15,7 @@ import { AuthContext } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 
 export const PhoneLoginScreen = ({ navigation, route }) => {
-  const { sendVerificationCode, verifyCode } = useContext(AuthContext);
+  const { sendVerificationCode, verifyCode, setGuestMode } = useContext(AuthContext);
   
   const [phoneNumber, setPhoneNumber] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -155,12 +155,28 @@ export const PhoneLoginScreen = ({ navigation, route }) => {
         )}
 
         {!confirmation && (
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.switchText}>← Retour</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.switchText}>← Retour</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.guestButton}
+              onPress={async () => {
+                try {
+                  await setGuestMode();
+                  // AuthContext handles navigation automatically
+                } catch (error) {
+                  Alert.alert('Erreur', 'Impossible d\'activer le mode invité');
+                }
+              }}
+            >
+              <Text style={styles.guestText}>Continuer en mode invité</Text>
+            </TouchableOpacity>
+          </>
         )}
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -252,5 +268,18 @@ const styles = StyleSheet.create({
   switchText: {
     color: '#aaa',
     fontSize: 14,
+  },
+  guestButton: {
+    marginTop: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 12,
+  },
+  guestText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

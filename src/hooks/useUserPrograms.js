@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { getWithRetry } from '../utils/firestoreRetry';
 import { loadPrograms } from '../data/programsLoader';
+import { loadProgramTree } from '../utils/programLoader';
 import { useAuth } from '../contexts/AuthContext';
-import firestore from '@react-native-firebase/firestore';
+
+// ✅ IMPORT UNIFIÉ - Firebase simple config
+import { getFirestore } from '../config/firebase.simple';
+const firestore = getFirestore();
 
 /**
  * Hook pour gérer les données des programmes utilisateur
@@ -32,8 +36,8 @@ export const useUserPrograms = () => {
       const programs = await loadPrograms();
       
       // Validation : vérifier que les programmes sont chargés
-      if (!programs || !programs.categories) {
-        console.error('❌ Impossible de charger les métadonnées des programmes');
+      if (!programs || !programs.categories || !Array.isArray(programs.categories)) {
+        console.error('❌ Impossible de charger les métadonnées des programmes, structure invalide:', programs);
         throw new Error('Impossible de charger les métadonnées des programmes');
       }
 
@@ -43,24 +47,31 @@ export const useUserPrograms = () => {
         
         // Créer la liste des programmes sans progression
         const programsWithoutProgress = [];
-        programs.categories.forEach(category => {
-          // Vérification défensive : skip si category.programs n'existe pas
-          if (!category.programs || !Array.isArray(category.programs)) {
-            console.warn(`⚠️ [GUEST] Category ${category.id} has no programs array`);
-            return;
-          }
-          
-          category.programs.forEach(program => {
-            programsWithoutProgress.push({
-              ...program,
-              categoryId: category.id,
-              categoryName: category.name,
-              userProgress: { xp: 0, level: 0, completedSkills: 0 },
-              isStarted: false,
-              hasSkills: true
+        
+        for (const category of programs.categories) {
+          try {
+            // Charger l'arbre de programmes pour cette catégorie
+            const treeData = await loadProgramTree(category.id);
+            
+            if (!treeData || !treeData.tree || !Array.isArray(treeData.tree)) {
+              console.warn(`⚠️ [GUEST] Category ${category.id} has no tree data`);
+              continue;
+            }
+            
+            treeData.tree.forEach(program => {
+              programsWithoutProgress.push({
+                ...program,
+                categoryId: category.id,
+                categoryName: category.name,
+                userProgress: { xp: 0, level: 0, completedSkills: 0 },
+                isStarted: false,
+                hasSkills: true
+              });
             });
-          });
-        });
+          } catch (error) {
+            console.error(`❌ [GUEST] Error loading tree for ${category.id}:`, error);
+          }
+        }
         
         setUserPrograms(programsWithoutProgress);
         setLoading(false);
@@ -77,50 +88,57 @@ export const useUserPrograms = () => {
       const programsWithProgress = [];
 
       // Parcourir toutes les catégories et programmes disponibles
-      programs.categories.forEach(category => {
-        // Vérification défensive : skip si category.programs n'existe pas
-        if (!category.programs || !Array.isArray(category.programs)) {
-          console.warn(`⚠️ Category ${category.id} has no programs array`);
-          return;
+      for (const category of programs.categories) {
+        try {
+          // Charger l'arbre de programmes pour cette catégorie
+          const treeData = await loadProgramTree(category.id);
+          
+          if (!treeData || !treeData.tree || !Array.isArray(treeData.tree)) {
+            console.warn(`⚠️ Category ${category.id} has no tree data`);
+            continue;
+          }
+          
+          // Parcourir les programmes de l'arbre
+          treeData.tree.forEach(program => {
+            // Récupérer la progression utilisateur pour ce programme
+            const userProgress = userProgramsData[program.id] || {
+              xp: 0,
+              level: 0,
+              completedSkills: 0
+            };
+
+            // Calculer le nombre total de compétences pour ce programme
+            const totalSkills = program.skills ? program.skills.length : 0;
+
+            // Créer l'objet programme complet
+            const programWithProgress = {
+              program: {
+                id: program.id,
+                name: program.name,
+                icon: program.icon,
+                color: program.color || category.color,
+                description: program.description,
+                category: category.name
+              },
+              progress: {
+                ...userProgress,
+                totalSkills
+              },
+              // Calculer des métriques utiles
+              progressPercentage: totalSkills > 0 
+                ? Math.round((userProgress.completedSkills / totalSkills) * 100) 
+                : 0,
+              isStarted: userProgress.completedSkills > 0,
+              isCompleted: userProgress.completedSkills === totalSkills && totalSkills > 0,
+              hasSkills: totalSkills > 0
+            };
+
+            programsWithProgress.push(programWithProgress);
+          });
+        } catch (error) {
+          console.error(`❌ Error loading tree for ${category.id}:`, error);
         }
-        
-        category.programs.forEach(program => {
-          // Récupérer la progression utilisateur pour ce programme
-          const userProgress = userProgramsData[program.id] || {
-            xp: 0,
-            level: 0,
-            completedSkills: 0
-          };
-
-          // Calculer le nombre total de compétences pour ce programme
-          const totalSkills = program.skills ? program.skills.length : 0;
-
-          // Créer l'objet programme complet
-          const programWithProgress = {
-            program: {
-              id: program.id,
-              name: program.name,
-              icon: program.icon,
-              color: program.color,
-              description: program.description,
-              category: category.name
-            },
-            progress: {
-              ...userProgress,
-              totalSkills
-            },
-            // Calculer des métriques utiles
-            progressPercentage: totalSkills > 0 
-              ? Math.round((userProgress.completedSkills / totalSkills) * 100) 
-              : 0,
-            isStarted: userProgress.completedSkills > 0,
-            isCompleted: userProgress.completedSkills === totalSkills && totalSkills > 0,
-            hasSkills: totalSkills > 0
-          };
-
-          programsWithProgress.push(programWithProgress);
-        });
-      });
+      }
 
       // Trier par progression décroissante (programmes actifs en premier)
       programsWithProgress.sort((a, b) => {
@@ -141,6 +159,8 @@ export const useUserPrograms = () => {
     } catch (err) {
       console.error('Erreur lors du chargement des programmes utilisateur:', err);
       setError(err.message);
+      // En cas d'erreur, retourner un tableau vide plutôt que de planter
+      setUserPrograms([]);
     } finally {
       setLoading(false);
     }
@@ -149,15 +169,15 @@ export const useUserPrograms = () => {
   useEffect(() => {
     const startTime = Date.now();
     
-    // GUEST MODE: Skip Firebase
-    if (isGuest || !user?.uid) {
-      console.log(`[useUserPrograms] 👤 Mode invité - skip Firebase (${Date.now() - startTime}ms)`);
+    // ═══ NOUVELLE ARCHITECTURE: Les invités ont un user.uid Firebase ═══
+    if (!user?.uid) {
+      console.log(`[useUserPrograms] ⏭️ Skip Firebase - no user (${Date.now() - startTime}ms)`);
       setLoading(false);
       setUserPrograms([]);
       return;
     }
     
-    console.log(`[useUserPrograms] useEffect triggered - User: ${user.email}`);
+    console.log(`[useUserPrograms] useEffect triggered - User: ${user.uid}`, isGuest ? '(guest)' : '(authenticated)');
     console.log(`[useUserPrograms] Starting fetchUserPrograms...`);
     
     fetchUserPrograms().then(() => {
@@ -369,15 +389,15 @@ export const useUserCategories = () => {
   useEffect(() => {
     const startTime = Date.now();
     
-    // GUEST MODE: Skip Firebase
-    if (isGuest || !user?.uid) {
-      console.log(`[useUserCategories] 👤 Mode invité - skip Firebase (${Date.now() - startTime}ms)`);
+    // ═══ NOUVELLE ARCHITECTURE: Les invités ont un user.uid Firebase ═══
+    if (!user?.uid) {
+      console.log(`[useUserCategories] ⏭️ Skip Firebase - no user (${Date.now() - startTime}ms)`);
       setLoading(false);
       setCategories([]);
       return;
     }
     
-    console.log(`[useUserCategories] useEffect triggered - User: ${user.email}`);
+    console.log(`[useUserCategories] useEffect triggered - User: ${user.uid}`, isGuest ? '(guest)' : '(authenticated)');
     console.log(`[useUserCategories] Starting fetchUserCategories...`);
     
     fetchUserCategories().then(() => {

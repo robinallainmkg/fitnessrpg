@@ -27,11 +27,16 @@ const ProgressScreen = () => {
   useEffect(() => { loadUserData(); }, [user]);
 
   const loadUserData = async () => {
-    // Skip Firebase calls in guest mode
-    if (!user || isGuest) return;
+    // ═══ NOUVELLE ARCHITECTURE: Les invités ont un user.uid Firebase ═══
+    if (!user || !user.uid) {
+      console.log('⏭️ ProgressScreen: No user');
+      return;
+    }
     
     try {
       setLoading(true);
+      
+      console.log('📊 ProgressScreen: Loading data for user', user.uid, isGuest ? '(guest)' : '(authenticated)');
       
       // ✅ Utiliser firestore() comme instance DB pour la modular API
       const db = firestore();

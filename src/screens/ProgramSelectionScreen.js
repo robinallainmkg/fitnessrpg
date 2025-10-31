@@ -3,12 +3,13 @@ import { View, ScrollView, StyleSheet, Alert, ImageBackground, TouchableOpacity 
 import { Card, Button, Text, Chip, ActivityIndicator } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// ✅ ANCIENNE API FIREBASE (cohérente avec firebase.js)
-import firestore from '@react-native-firebase/firestore';
+// ✅ IMPORT UNIFIÉ - Firebase simple config
+import { getFirestore, FieldValue } from '../config/firebase.simple';
+const firestore = getFirestore();
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
-import PhoneAuthModal from '../components/PhoneAuthModal';
+import AuthModal from '../components/AuthModal';
 import { loadProgramsMeta } from '../data/programsLoader';
 import { loadProgramTree } from '../utils/programLoader';
 import { colors } from '../theme/colors';
@@ -16,11 +17,11 @@ import { ProgramCard } from '../components/cards';
 import { ProgramStatBadge } from '../components/badges';
 import { rpgTheme } from '../theme/rpgTheme';
 
-// ═══ Pattern images: {categoryId}-bg.jpg
+// ═══ Pattern images: {categoryId}-bg.jpg ou selon programs-meta.json
 const getProgramImageSource = (categoryId) => {
   const imageMap = {
     street: require('../../assets/programmes/street-bg.jpg'),
-    running: require('../../assets/programmes/running-bg.jpg'),
+    running: require('../../assets/programmes/running-5.jpg'),
     // Ajouter les nouvelles images ici: yoga: require('../../assets/programmes/yoga-bg.jpg'),
   };
   return imageMap[categoryId] || null;
@@ -36,7 +37,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
   const [signupSuccessful, setSignupSuccessful] = useState(false);
   const [categories, setCategories] = useState([]);
   const [programTrees, setProgramTrees] = useState({});
-  const { user, isGuest, saveGuestData } = useAuth();
+  const { user, isGuest } = useAuth();
   const maxPrograms = 2;
 
   // Personnaliser le header de navigation avec style gaming
@@ -78,7 +79,7 @@ const ProgramSelectionScreen = ({ navigation }) => {
           }
         }
         setProgramTrees(trees);
-        console.log('✅ [ProgramSelection] Catégories et trees chargés');
+        console.log('✅ [ProgramSelection] Catégories et trees chargés:', Object.keys(trees));
       } catch (error) {
         console.error('❌ [ProgramSelection] Erreur chargement:', error);
       }
@@ -91,40 +92,41 @@ const ProgramSelectionScreen = ({ navigation }) => {
   useEffect(() => {
     const loadExistingPrograms = async () => {
       try {
-        // Si mode invité, charger depuis AsyncStorage
-        if (isGuest) {
-          console.log('👤 Mode invité - Chargement depuis AsyncStorage');
-          const guestPrograms = await AsyncStorage.getItem('@fitnessrpg:guest_programs');
-          if (guestPrograms) {
-            const parsedPrograms = JSON.parse(guestPrograms);
-            setSelectedPrograms(Object.keys(parsedPrograms));
-            setExistingPrograms(parsedPrograms);
-          }
+        // ═══ NOUVELLE ARCHITECTURE: Tous les utilisateurs (invités ou authentifiés) utilisent Firestore ═══
+        if (!user || !user.uid) {
+          console.log('⏭️ No user - skip loading existing programs');
           setInitialLoading(false);
           return;
         }
 
-        // Si utilisateur authentifié, charger depuis Firestore
-        if (user && !isGuest) {
-          // ✅ ANCIENNE API FIRESTORE
-          const userDoc = await firestore().collection('users').doc(user.uid).get();
+        console.log('📥 Loading existing programs from Firestore for user:', user.uid, isGuest ? '(guest)' : '(authenticated)');
+        
+        // Charger depuis Firestore (pour invités ET authentifiés)
+        const userDoc = await firestore.collection('users').doc(user.uid).get();
+        
+        if (userDoc.exists) {
+          const userData = userDoc.data();
           
-          if (userDoc.exists) {
-            const userData = userDoc.data();
-            const userPrograms = userData.programs || {};
-            
-            // Pré-sélectionner les programmes existants
-            const existingProgramIds = Object.keys(userPrograms);
-            setSelectedPrograms(existingProgramIds);
-            setExistingPrograms(userPrograms);
-            
-            console.log('🔍 ProgramSelection State:', {
-              loading: initialLoading,
-              selectedPrograms: existingProgramIds,
-              isExistingUser: existingProgramIds.length > 0,
-              buttonDisabled: existingProgramIds.length === 0
-            });
+          // Vérification défensive : si userData est undefined
+          if (!userData) {
+            console.log('⚠️ User document exists but data is empty');
+            setInitialLoading(false);
+            return;
           }
+          
+          const userPrograms = userData.programs || {};
+          
+          // Pré-sélectionner les programmes existants
+          const existingProgramIds = Object.keys(userPrograms);
+          setSelectedPrograms(existingProgramIds);
+          setExistingPrograms(userPrograms);
+          
+          console.log('🔍 ProgramSelection State:', {
+            loading: initialLoading,
+            selectedPrograms: existingProgramIds,
+            isExistingUser: existingProgramIds.length > 0,
+            buttonDisabled: existingProgramIds.length === 0
+          });
         }
       } catch (error) {
         console.error('Erreur chargement programmes:', error);
@@ -158,66 +160,65 @@ const ProgramSelectionScreen = ({ navigation }) => {
     }
 
     console.log('🔘 Bouton validation cliqué, selectedPrograms:', selectedPrograms);
+    console.log('🌳 Program trees disponibles:', Object.keys(programTrees));
     
-    // Si mode invité, sauvegarder temporairement et afficher modal signup
-    if (isGuest) {
-      console.log('👤 Mode invité détecté - Préparation données pour signup');
-      
-      // Préparer les données du programme
-      const programsData = {};
-      selectedPrograms.forEach(programId => {
-        const tree = programTrees[programId];
-        if (tree) {
-          programsData[programId] = {
-            xp: 0,
-            level: 1,
-            completedSkills: [],
-            skillProgress: {},
-            totalSkills: tree.length,
-            lastSession: null
-          };
-        }
-      });
-
-      // Sauvegarder en AsyncStorage pour mode invité
-      await AsyncStorage.setItem('@fitnessrpg:guest_programs', JSON.stringify(programsData));
-      
-      // Préparer les données pour la conversion
-      const guestDataToSave = {
-        programs: programsData,
-        selectedPrograms: selectedPrograms,
-        activePrograms: selectedPrograms.slice(0, 2),
-        onboardingCompleted: true,
-      };
-      
-      setPendingProgramData(guestDataToSave);
-      await saveGuestData(guestDataToSave);
-      
-      // Afficher le modal de signup
-      setShowSignupModal(true);
+    // ✅ Vérifier que les trees sont chargés
+    const missingTrees = selectedPrograms.filter(pid => !programTrees[pid]);
+    if (missingTrees.length > 0) {
+      console.error('❌ Trees manquants pour:', missingTrees);
+      Alert.alert(
+        "Erreur",
+        "Données des programmes en cours de chargement. Réessaie dans quelques secondes."
+      );
+      return;
+    }
+    
+    // ═══ NOUVELLE ARCHITECTURE: Tous les utilisateurs (invités ou authentifiés) ont un user.uid ═══
+    // Les invités sont des utilisateurs Firebase Anonymous, donc on traite tout le monde pareil
+    
+    if (!user || !user.uid) {
+      Alert.alert(
+        "Erreur",
+        "Impossible de sauvegarder. Redémarre l'application."
+      );
       return;
     }
 
-    // Mode authentifié - procéder normalement
     setLoading(true);
     
     try {
-      // ✅ ANCIENNE API FIRESTORE
-      const userRef = firestore().collection('users').doc(user.uid);
+      console.log('🔍 DIAGNOSTIC PRÉ-SAUVEGARDE:');
+      console.log('  - User UID:', user.uid);
+      console.log('  - Is Guest:', isGuest);
+      console.log('  - Selected programs:', selectedPrograms);
+      console.log('  - Existing programs:', Object.keys(existingPrograms));
+      
+      const userRef = firestore.collection('users').doc(user.uid);
+      
+      // 🔥 TENTATIVE: Vérifier si le document existe AVANT de sauvegarder
+      console.log('📖 Lecture document utilisateur...');
+      const startRead = Date.now();
+      
+      const readPromise = userRef.get();
+      const readTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('TIMEOUT: Lecture Firestore après 8s')), 8000)
+      );
+      
+      const docSnap = await Promise.race([readPromise, readTimeoutPromise]);
+      const readTime = Date.now() - startRead;
+      console.log(`✅ Document lu en ${readTime}ms - Existe: ${docSnap.exists}`);
       
       // Créer l'objet programs pour Firestore
       const programsData = {};
       selectedPrograms.forEach(programId => {
         const tree = programTrees[programId];
         if (tree) {
-          // Garder les données existantes ou créer nouvelles avec la structure correcte
           programsData[programId] = existingPrograms[programId] || {
             xp: 0,
             level: 1,
-            completedSkills: [], // Array des IDs de compétences 100% complétées
-            skillProgress: {}, // Object: { skillId: { completedLevels: [1,2,3], currentLevel: 4 } }
-            totalSkills: tree.length,
-            lastSession: null
+            completedSkills: [],
+            skillProgress: {},
+            totalSkills: tree.length
           };
         }
       });
@@ -233,72 +234,98 @@ const ProgramSelectionScreen = ({ navigation }) => {
       console.log('💾 Saving to Firestore:', {
         selectedPrograms,
         activePrograms: activeProgramsList,
-        programsData
+        programsDataKeys: Object.keys(programsData)
       });
+      
+      console.log('📊 Taille des données:', JSON.stringify(updateData).length, 'caractères');
       
       // Marquer l'onboarding comme terminé seulement si c'est un nouvel utilisateur
       if (Object.keys(existingPrograms).length === 0) {
         updateData.onboardingCompleted = true;
-        // Pour un nouvel utilisateur, créer le document avec les champs de base
-        updateData.createdAt = new Date().toISOString();
         updateData.totalXP = 0;
         updateData.globalLevel = 1;
-        updateData.email = user.email;
+        updateData.globalXP = 0;
+        updateData.level = 1;
+        updateData.streak = 0;
+        updateData.displayName = user.email?.split('@')[0] || user.displayName || 'Utilisateur';
+        updateData.avatarId = 0;
+        updateData.createdAt = FieldValue.serverTimestamp();
         
-        // ✅ ANCIENNE API: set avec merge
-        await userRef.set(updateData, { merge: true });
-        console.log('✅ Nouveau document utilisateur créé avec programmes');
+        // Ajouter email seulement si l'utilisateur n'est pas anonyme
+        if (user.email) {
+          updateData.email = user.email;
+        }
+        
+        console.log('💾 Tentative création nouveau document utilisateur...');
+        console.log('💾 User UID:', user.uid);
+        console.log('💾 Update data keys:', Object.keys(updateData));
+        
+        // ✅ ANCIENNE API: set avec merge + timeout
+        console.log('⏱️ Démarrage set() avec timeout 10s...');
+        const startWrite = Date.now();
+        
+        const setPromise = userRef.set(updateData, { merge: true });
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('TIMEOUT: Firebase set() ne répond pas après 10s')), 10000)
+        );
+        
+        await Promise.race([setPromise, timeoutPromise]);
+        const writeTime = Date.now() - startWrite;
+        console.log(`✅ Nouveau document utilisateur créé en ${writeTime}ms`);
       } else {
         // Pour un utilisateur existant, mettre à jour le document
-        // ✅ ANCIENNE API: update
-        await userRef.update(updateData);
-        console.log('✅ Document utilisateur mis à jour');
+        console.log('📝 Tentative update pour utilisateur existant...');
+        console.log('📝 User UID:', user.uid);
+        console.log('📝 Update data keys:', Object.keys(updateData));
+        
+        // ✅ CHANGEMENT: Utiliser set() avec merge au lieu de update()
+        // Parfois update() bloque même avec des règles permissives
+        console.log('⏱️ Démarrage set() avec timeout 10s...');
+        const startWrite = Date.now();
+        
+        const setPromise = userRef.set(updateData, { merge: true });
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('TIMEOUT: Firebase set() ne répond pas après 10s')), 10000)
+        );
+        
+        await Promise.race([setPromise, timeoutPromise]);
+        const writeTime = Date.now() - startWrite;
+        console.log(`✅ Document utilisateur mis à jour en ${writeTime}ms`);
       }
 
-      // Navigation vers SkillTree pour nouveaux utilisateurs, HomeScreen pour utilisateurs existants
+      // Navigation après sauvegarde
       if (Object.keys(existingPrograms).length === 0) {
-        console.log('🚀 Nouveau utilisateur - Navigation vers Home puis ProgramSelection auto-ouvre');
-        
-        // Marquer l'onboarding comme terminé dans AsyncStorage
-        await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
+        // Nouvel utilisateur - juste revenir à Home (qui va charger les programmes)
+        console.log('🚀 Nouveau utilisateur - Navigation vers Home');
         
         // Réinitialiser le flag tooltip pour permettre l'affichage
         await AsyncStorage.removeItem('@fitnessrpg:tree_tooltip_shown');
         
-        // Rediriger vers Home avec paramètre pour auto-ouvrir ProgramSelection
+        // Rediriger vers Home normalement (sans flag openProgramSelection)
         setTimeout(() => {
           navigation.reset({
             index: 0,
-            routes: [
-              { 
-                name: 'Main',
-                params: {
-                  screen: 'Home',
-                  params: {
-                    openProgramSelection: true,  // 🎯 Nouveau paramètre
-                    refresh: Date.now()
-                  }
-                }
-              }
-            ],
+            routes: [{ name: 'Main' }],
           });
         }, 100);
       } else {
+        // Utilisateur existant - naviguer vers Home avec refresh
         console.log('🚀 Navigation vers Home pour utilisateur existant avec refresh');
-        // Forcer le rechargement des données en passant un timestamp
         navigation.navigate('Main', {
           screen: 'Home',
           params: {
-            refresh: Date.now() // Force un refresh des données
+            refresh: Date.now()
           }
         });
       }
       
     } catch (error) {
-      console.error("Erreur sélection programmes:", error);
+      console.error("❌ Erreur sélection programmes:", error);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error code:", error.code);
       Alert.alert(
-        "Erreur",
-        "Impossible de sauvegarder tes programmes. Réessaie."
+        "Erreur de sauvegarde",
+        `Impossible de sauvegarder tes programmes.\n\nDétails: ${error.message || error.code || 'Erreur inconnue'}\n\nRéessaie ou redémarre l'app.`
       );
     } finally {
       setLoading(false);
@@ -521,8 +548,8 @@ const ProgramSelectionScreen = ({ navigation }) => {
       </View>
     </ImageBackground>
 
-      {/* Signup Modal */}
-      <PhoneAuthModal
+      {/* Auth Modal */}
+      <AuthModal
         visible={showSignupModal}
         onClose={handleContinueAsGuest}
         onSuccess={handleSignupSuccess}

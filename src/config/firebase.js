@@ -102,11 +102,12 @@ export const getFirebaseFirestore = () => {
 
     _firestore = firestore();
     
-    // ⚠️ DÉSACTIVER LA PERSISTENCE OFFLINE pour éviter firestore/unavailable
-    // La persistence peut causer des problèmes de connexion sur Android
+    // 🔥 FORCER LE NETTOYAGE DU CACHE CORROMPU (Nothing Phone)
+    // Le cache offline peut bloquer les writes sur certains devices
     try {
+      // Désactiver la persistence (ne marche que AVANT première utilisation)
       _firestore.settings({
-        persistence: false, // Désactiver le cache offline
+        persistence: false,
         cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED
       });
       console.log('✅ Firestore initialized (persistence: disabled)');

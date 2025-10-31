@@ -18,6 +18,9 @@ export interface DailyChallenge {
   challengeType: string;
   submissionId?: string;
   submitted: boolean;
+  status?: 'pending' | 'approved' | 'rejected';
+  approvedAt?: Date;
+  rejectedAt?: Date;
 }
 
 export interface SubmissionStats {

@@ -135,8 +135,12 @@ export const ChallengeScreen = () => {
     );
   }
 
-  // Already submitted
-  if (todayChallenge?.submitted) {
+  // Already submitted (sauf si rejeté)
+  if (todayChallenge?.submitted && todayChallenge.status !== 'rejected') {
+    const status = todayChallenge.status || 'pending';
+    const isApproved = status === 'approved';
+    const isPending = status === 'pending';
+
     return (
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>🎯 Challenge du jour</Text>
@@ -144,23 +148,55 @@ export const ChallengeScreen = () => {
           <Text style={styles.challengeType}>
             {todayChallenge ? getChallengeLabel(todayChallenge.challengeType) : ''}
           </Text>
-          <View style={styles.successBanner}>
-            <Text style={styles.successEmoji}>✓</Text>
-            <Text style={styles.successText}>Challenge soumis !</Text>
-          </View>
-          <Text style={styles.submittedMessage}>
-            Votre vidéo est en cours de validation.{'\n'}
-            Revenez demain pour un nouveau challenge !
-          </Text>
+          
+          {isApproved && (
+            <>
+              <View style={[styles.successBanner, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
+                <Text style={styles.successEmoji}>🏆</Text>
+                <Text style={[styles.successText, { color: '#22C55E' }]}>Challenge validé !</Text>
+              </View>
+              <Text style={styles.submittedMessage}>
+                Félicitations ! Votre challenge a été validé.{'\n'}
+                Les XP ont été ajoutés à votre compte.{'\n\n'}
+                Revenez demain pour un nouveau challenge !
+              </Text>
+            </>
+          )}
+          
+          {isPending && (
+            <>
+              <View style={styles.successBanner}>
+                <Text style={styles.successEmoji}>⏳</Text>
+                <Text style={styles.successText}>En attente de validation</Text>
+              </View>
+              <Text style={styles.submittedMessage}>
+                Votre vidéo est en cours de validation.{'\n'}
+                Revenez demain pour un nouveau challenge !
+              </Text>
+            </>
+          )}
         </View>
       </ScrollView>
     );
   }
 
+  // Message si rejeté (avant le formulaire de soumission)
+  const isRejected = todayChallenge?.status === 'rejected';
+  const rejectionNotice = isRejected ? (
+    <View style={[styles.successBanner, { backgroundColor: 'rgba(239,68,68,0.15)', marginBottom: 20 }]}>
+      <Text style={styles.successEmoji}>⚠️</Text>
+      <Text style={[styles.successText, { color: '#EF4444' }]}>
+        Votre précédente soumission a été refusée. Vous pouvez resoumettre une nouvelle vidéo.
+      </Text>
+    </View>
+  ) : null;
+
   // Main challenge view
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>🎯 Challenge du jour</Text>
+
+      {rejectionNotice}
 
       {todayChallenge && (
         <View style={styles.challengeCard}>

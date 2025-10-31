@@ -23,11 +23,11 @@ import { colors } from '../theme/colors';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// ═══ Pattern images: {categoryId}-bg.jpg
+// ═══ Pattern images: {categoryId}-bg.jpg ou selon programs-meta.json
 const getProgramImageSource = (categoryId) => {
   const imageMap = {
     street: require('../../assets/programmes/street-bg.jpg'),
-    running: require('../../assets/programmes/running-bg.jpg'),
+    running: require('../../assets/programmes/running-5.jpg'),
     // Ajouter les nouvelles images ici: yoga: require('../../assets/programmes/yoga-bg.jpg'),
   };
   return imageMap[categoryId] || null;

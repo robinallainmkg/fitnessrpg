@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// ✅ IMPORT UNIFIÉ - Un seul point d'entrée Firebase
-import { getAuth, getFirestore, FieldValue } from '../config/firebase.simple';
-
-const auth = getAuth();
-const firestore = getFirestore();
 
 export const AuthContext = createContext();
 
@@ -24,7 +20,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     log('🔄 Initialisation Firebase Auth');
 
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+    const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         log('✅ Utilisateur connecté:', firebaseUser.phoneNumber || firebaseUser.uid);
         setUser(firebaseUser);
@@ -36,14 +32,14 @@ export const AuthProvider = ({ children }) => {
         
         // Vérifier que le document Firestore existe
         try {
-          const doc = await firestore
+          const doc = await firestore()
             .collection('users')
             .doc(firebaseUser.uid)
             .get();
           
           if (!doc.exists) {
             log('📝 Création du document utilisateur');
-            await firestore
+            await firestore()
               .collection('users')
               .doc(firebaseUser.uid)
               .set({
@@ -85,13 +81,13 @@ export const AuthProvider = ({ children }) => {
     try {
       log('👤 Démarrage mode invité (Firebase Anonymous Auth)');
       
-      const userCredential = await auth.signInAnonymously();
+      const userCredential = await auth().signInAnonymously();
       const anonymousUser = userCredential.user;
       
       log('✅ Anonymous Auth créé:', anonymousUser.uid);
       
       // Créer le document Firestore
-      await firestore
+      await firestore()
         .collection('users')
         .doc(anonymousUser.uid)
         .set({
@@ -144,7 +140,7 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
-      const confirmation = await auth.signInWithPhoneNumber(phoneNumber);
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
       
       log('✅ Code SMS envoyé');
       
@@ -187,7 +183,7 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
-      const currentUser = auth.currentUser;
+      const currentUser = auth().currentUser;
       
       // ─────────────────────────────────────────────────────────
       // CAS 1: Utilisateur anonymous → LINKING (préserve les données)
@@ -207,7 +203,7 @@ export const AuthProvider = ({ children }) => {
         log('✅ Phone linked! UID reste le même:', linkedUser.user.uid);
         
         // Mettre à jour le document Firestore (MERGE pour garder les données)
-        await firestore
+        await firestore()
           .collection('users')
           .doc(linkedUser.user.uid)
           .set({
@@ -234,14 +230,14 @@ export const AuthProvider = ({ children }) => {
         log('✅ Code validé, utilisateur connecté:', loggedUser.uid);
         
         // Créer le document si n'existe pas
-        const userDoc = await firestore
+        const userDoc = await firestore()
           .collection('users')
           .doc(loggedUser.uid)
           .get();
         
         if (!userDoc.exists) {
           log('📝 Création nouveau document utilisateur');
-          await firestore
+          await firestore()
             .collection('users')
             .doc(loggedUser.uid)
             .set({
@@ -296,7 +292,7 @@ export const AuthProvider = ({ children }) => {
     try {
       log('🚪 Déconnexion...');
       
-      await auth.signOut();
+      await auth().signOut();
       
       log('✅ Déconnecté - Redémarrage en mode invité');
       
@@ -325,7 +321,7 @@ export const AuthProvider = ({ children }) => {
 
       log('🔄 Réinitialisation données utilisateur:', user.uid);
 
-      const userDocRef = firestore.collection('users').doc(user.uid);
+      const userDocRef = firestore().collection('users').doc(user.uid);
       const userDoc = await userDocRef.get();
       
       if (!userDoc.exists) {

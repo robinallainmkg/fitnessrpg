@@ -71,6 +71,12 @@ export class ChallengeService {
     try {
       log(`Updating submission ${id} to ${status}`);
 
+      // D'abord récupérer la submission pour avoir toutes les infos
+      const submission = await this.getSubmission(id);
+      if (!submission) {
+        throw new Error('Submission not found');
+      }
+
       const updateData: any = {
         status,
         reviewedAt: firestore.FieldValue.serverTimestamp(),
@@ -84,15 +90,27 @@ export class ChallengeService {
         updateData.reason = reason;
       }
 
-      await this.submissionsCollection.doc(id).update(updateData);
-
-      // Si approuvé, donner les XP à l'utilisateur ET créer une session
+      // Si approuvé, exécuter les opérations en parallèle pour éviter les timeouts
       if (status === 'approved') {
-        const submission = await this.getSubmission(id);
-        if (submission) {
-          await this.rewardUserXP(submission.userId, submission.xpRewarded);
-          await this.createWorkoutSession(submission);
-        }
+        // Update submission status first
+        await this.submissionsCollection.doc(id).update(updateData);
+        
+        // Ensuite, exécuter les autres opérations en parallèle
+        await Promise.all([
+          this.rewardUserXP(submission.userId, submission.xpRewarded),
+          this.createWorkoutSession(submission),
+          this.updateUserStats(submission.userId, 'approved'),
+          this.markDailyChallengeAsApproved(submission),
+        ]);
+      } else if (status === 'rejected') {
+        // Pour le rejet, 2 opérations en parallèle
+        await Promise.all([
+          this.submissionsCollection.doc(id).update(updateData),
+          this.markDailyChallengeAsRejected(submission),
+        ]);
+      } else {
+        // Simple update pour d'autres statuts
+        await this.submissionsCollection.doc(id).update(updateData);
       }
 
       log('✅ Submission status updated');
@@ -213,6 +231,7 @@ export class ChallengeService {
       await docRef.update({
         submissionId,
         submitted: true,
+        status: 'pending', // Nouveau champ pour suivre l'état
       });
 
       log('✅ Daily challenge marked as submitted');
@@ -230,6 +249,53 @@ export class ChallengeService {
     } catch (error) {
       logError('Failed to check if user submitted today:', error);
       return false;
+    }
+  }
+
+  /**
+   * Marquer le challenge quotidien comme approuvé
+   */
+  async markDailyChallengeAsApproved(submission: ChallengeSubmission): Promise<void> {
+    try {
+      const date = this.formatDateForKey(submission.submittedAt);
+      const docRef = this.dailyChallengesCollection
+        .doc(date)
+        .collection('users')
+        .doc(submission.userId);
+
+      await docRef.update({
+        status: 'approved',
+        approvedAt: firestore.FieldValue.serverTimestamp(),
+      });
+
+      log('✅ Daily challenge marked as approved');
+    } catch (error) {
+      logError('Failed to mark daily challenge as approved:', error);
+      // Non-bloquant
+    }
+  }
+
+  /**
+   * Marquer le challenge quotidien comme rejeté (permet de resoumettre)
+   */
+  async markDailyChallengeAsRejected(submission: ChallengeSubmission): Promise<void> {
+    try {
+      const date = this.formatDateForKey(submission.submittedAt);
+      const docRef = this.dailyChallengesCollection
+        .doc(date)
+        .collection('users')
+        .doc(submission.userId);
+
+      await docRef.update({
+        status: 'rejected',
+        rejectedAt: firestore.FieldValue.serverTimestamp(),
+        submitted: false, // Permettre de resoumettre
+      });
+
+      log('✅ Daily challenge marked as rejected (can resubmit)');
+    } catch (error) {
+      logError('Failed to mark daily challenge as rejected:', error);
+      // Non-bloquant
     }
   }
 

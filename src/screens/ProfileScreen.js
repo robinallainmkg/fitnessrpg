@@ -14,7 +14,7 @@ import {
 } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
-import SignupModal from '../components/SignupModal';
+import AuthModal from '../components/AuthModal';
 import { colors } from '../theme/colors';
 import { rpgTheme } from '../theme/rpgTheme';
 import firestore from '@react-native-firebase/firestore';
@@ -74,21 +74,10 @@ const ProfileScreen = ({ navigation }) => {
       if (userDoc.exists) {
         const userData = userDoc.data();
         
-        // Vérifier si c'est l'admin par numéro de téléphone
-        const ADMIN_PHONE = '+33679430759'; // Format international
-        const isAdmin = userData.phoneNumber === ADMIN_PHONE || 
-                       userData.phoneNumber === '0679430759' ||
-                       userData.phoneNumber === '+33 6 79 43 07 59';
+        // Lire le champ isAdmin directement de Firestore
+        const isAdmin = userData.isAdmin === true;
         
-        console.log('👤 User phone:', userData.phoneNumber, 'isAdmin:', isAdmin);
-        
-        // Mettre à jour le champ isAdmin dans Firestore si nécessaire
-        if (userData.isAdmin !== isAdmin) {
-          await firestore().collection('users').doc(user.uid).update({
-            isAdmin: isAdmin
-          });
-          console.log('✅ Champ isAdmin mis à jour dans Firestore:', isAdmin);
-        }
+        console.log('👤 User:', userData.displayName || userData.phoneNumber, 'isAdmin:', isAdmin);
         
         // Structure pour utilisateur migré
         if (userData.migrationVersion) {
@@ -368,11 +357,11 @@ const ProfileScreen = ({ navigation }) => {
       {isGuest ? (
         <View style={styles.logoutCard}>
           <View style={styles.guestWarning}>
-            <Text style={styles.guestWarningIcon}>⚠️</Text>
+            <Text style={styles.guestWarningIcon}>🎮</Text>
             <View style={styles.guestWarningText}>
               <Text style={styles.guestWarningTitle}>Mode invité</Text>
               <Text style={styles.guestWarningSubtitle}>
-                Tes données ne sont pas sauvegardées de façon permanente
+                Crée ton compte pour sauvegarder tes progrès en ligne
               </Text>
             </View>
           </View>
@@ -399,8 +388,8 @@ const ProfileScreen = ({ navigation }) => {
       )}
     </ScrollView>
 
-    {/* Signup Modal pour invités */}
-    <SignupModal
+    {/* Auth Modal pour invités */}
+    <AuthModal
       visible={showSignupModal}
       onClose={() => setShowSignupModal(false)}
       onSuccess={() => {

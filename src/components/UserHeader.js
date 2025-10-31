@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { rpgTheme, getRankColor } from '../theme/rpgTheme';
+import firestore from '@react-native-firebase/firestore';
 
 // Import des avatars disponibles
 const AVATARS = {
@@ -22,8 +23,57 @@ const UserHeader = ({
   globalXP = 0, 
   title = 'Débutant', 
   avatarId = 0,
-  streak = 0 
+  streak = 0,
+  userId = null,
+  onUsernameUpdate = null
 }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newUsername, setNewUsername] = useState(username);
+  const [saving, setSaving] = useState(false);
+
+  const handleSaveUsername = async () => {
+    if (!newUsername.trim()) {
+      Alert.alert('Erreur', 'Le nom ne peut pas être vide');
+      return;
+    }
+
+    if (newUsername.trim().length < 3) {
+      Alert.alert('Erreur', 'Le nom doit contenir au moins 3 caractères');
+      return;
+    }
+
+    if (newUsername.trim().length > 20) {
+      Alert.alert('Erreur', 'Le nom ne peut pas dépasser 20 caractères');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      
+      if (userId) {
+        // Sauvegarder dans Firestore
+        await firestore()
+          .collection('users')
+          .doc(userId)
+          .update({ displayName: newUsername.trim() });
+        
+        console.log('✅ Username updated:', newUsername.trim());
+      }
+
+      // Callback pour mettre à jour l'état parent
+      if (onUsernameUpdate) {
+        onUsernameUpdate(newUsername.trim());
+      }
+
+      setModalVisible(false);
+      Alert.alert('✅ Succès', 'Ton nom de guerrier a été mis à jour !');
+    } catch (error) {
+      console.error('❌ Error updating username:', error);
+      Alert.alert('Erreur', 'Impossible de mettre à jour le nom');
+    } finally {
+      setSaving(false);
+    }
+  };
   // Calcul de la progression XP vers le prochain niveau
   const xpForNextLevel = 100;
   const currentLevelXP = globalXP % xpForNextLevel;
@@ -49,7 +99,15 @@ const UserHeader = ({
         
         {/* Info utilisateur (centre) */}
         <View style={styles.userInfo}>
-          <Text style={styles.username} numberOfLines={1}>{username}</Text>
+          <TouchableOpacity 
+            onPress={() => {
+              setNewUsername(username);
+              setModalVisible(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.username} numberOfLines={1}>{username}</Text>
+          </TouchableOpacity>
           
           {/* Badge de titre */}
           <View style={styles.badgeContainer}>
@@ -82,6 +140,54 @@ const UserHeader = ({
           </Text>
         </View>
       </View>
+
+      {/* Modal d'édition du nom */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>⚔️ Nom de Guerrier</Text>
+            <Text style={styles.modalSubtitle}>
+              Choisis ton nom de légende (3-20 caractères)
+            </Text>
+            
+            <TextInput
+              style={styles.input}
+              value={newUsername}
+              onChangeText={setNewUsername}
+              placeholder="Ton nom..."
+              placeholderTextColor="rgba(255, 255, 255, 0.4)"
+              maxLength={20}
+              autoFocus
+              editable={!saving}
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setModalVisible(false)}
+                disabled={saving}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={handleSaveUsername}
+                disabled={saving}
+              >
+                <Text style={styles.saveButtonText}>
+                  {saving ? '...' : 'Valider'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -127,11 +233,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  
   username: {
     fontSize: 24,
     fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 6,
+  },
+  
+  editIcon: {
+    fontSize: 16,
+    opacity: 0.6,
   },
   
   badgeContainer: {
@@ -204,6 +321,97 @@ const styles = StyleSheet.create({
   xpText: {
     fontSize: 11,
     color: 'rgba(200, 200, 200, 0.8)',
+  },
+  
+  // Styles du modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  
+  modalContent: {
+    backgroundColor: '#1A2244',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.neon.blue,
+    shadowColor: rpgTheme.colors.neon.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  
+  modalSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 18,
+    color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(77, 158, 255, 0.3)',
+    marginBottom: 24,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  
+  cancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  
+  saveButton: {
+    backgroundColor: rpgTheme.colors.neon.blue,
+    shadowColor: rpgTheme.colors.neon.blue,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  
+  cancelButtonText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

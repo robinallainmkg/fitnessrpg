@@ -1,5 +1,7 @@
-// ✅ ANCIENNE API FIREBASE (cohérente avec firebase.js)
-import firestore from '@react-native-firebase/firestore';
+// ✅ IMPORT UNIFIÉ - Firebase simple config
+import { getFirestore } from '../config/firebase.simple';
+const firestore = getFirestore();
+
 import { getWithRetry } from '../utils/firestoreRetry';
 import { getCategoryWithDetails } from '../utils/programLoader';
 
@@ -177,7 +179,7 @@ export const generateAvailableSessions = async (programId, userProgress = {}, ma
  */
 export const getUserSessionQueue = async (userId) => {
   try {
-    const userDoc = await firestore().collection('users').doc(userId).get();
+    const userDoc = await firestore.collection('users').doc(userId).get();
     
     if (!userDoc.exists) {
       console.warn('Utilisateur non trouvé');
@@ -239,7 +241,7 @@ export const getUserSessionQueue = async (userId) => {
  */
 export const getCompletedSessions = async (userId, limit = 3) => {
   try {
-    const userDoc = await firestore().collection('users').doc(userId).get();
+    const userDoc = await firestore.collection('users').doc(userId).get();
     
     if (!userDoc.exists) {
       return [];
@@ -267,7 +269,7 @@ export const getCompletedSessions = async (userId, limit = 3) => {
  */
 export const activateProgram = async (userId, programId) => {
   try {
-    const userRef = firestore().collection('users').doc(userId);
+    const userRef = firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
     
     if (!userDoc.exists) {
@@ -317,7 +319,7 @@ export const activateProgram = async (userId, programId) => {
  */
 export const deactivateProgram = async (userId, programId) => {
   try {
-    const userRef = firestore().collection('users').doc(userId);
+    const userRef = firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
     
     if (!userDoc.exists) {
@@ -352,7 +354,7 @@ export const deactivateProgram = async (userId, programId) => {
  */
 export const completeSession = async (userId, session, sessionData) => {
   try {
-    const userRef = firestore().collection('users').doc(userId);
+    const userRef = firestore.collection('users').doc(userId);
     const userDoc = await userRef.get();
     
     if (!userDoc.exists) {

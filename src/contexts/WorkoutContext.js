@@ -131,26 +131,12 @@ export const WorkoutProvider = ({ children }) => {
   const completeWorkout = async (finalSetsData = setsData) => {
     if (!workoutData) return;
 
-    // ✅ PROTECTION GUEST MODE
-    if (isGuest || !user?.uid) {
-      console.log('👤 Mode invité - Workout complété sans sauvegarde Firebase');
-      return {
-        sessionId: `guest_${Date.now()}`,
-        score: 850,
-        percentage: 85,
-        levelCompleted: true,
-        programCompleted: false,
-        unlockedPrograms: [],
-        exercises: [],
-        xpEarned: 100,
-        startTime: workoutStartTime || new Date(), // Date JS pour les retours (pas Firestore)
-        endTime: new Date(), // Date JS pour les retours
-        userProgress: {
-          currentLevel: 1,
-          unlockedLevels: [1]
-        }
-      };
+    if (!user?.uid) {
+      console.log('⏭️ No user - skip completeWorkout');
+      return;
     }
+
+    console.log('💾 Début finalisation workout for user:', user.uid, isGuest ? '(guest)' : '(authenticated)');
 
     try {
       console.log('💾 Début finalisation workout...');
@@ -262,11 +248,12 @@ export const WorkoutProvider = ({ children }) => {
    * Met à jour la progression utilisateur
    */
   const updateUserProgress = async (programId, completedLevelId) => {
-    // ✅ PROTECTION GUEST MODE
-    if (isGuest || !user?.uid) {
-      console.log('👤 Mode invité - Skip updateUserProgress');
+    if (!user?.uid) {
+      console.log('⏭️ No user - skip updateUserProgress');
       return;
     }
+    
+    console.log('📈 Updating progress for user:', user.uid, isGuest ? '(guest)' : '(authenticated)');
 
     try {
       const fs = firestore();
@@ -309,11 +296,12 @@ export const WorkoutProvider = ({ children }) => {
    * Met à jour les XP de l'utilisateur
    */
   const updateUserXP = async (xpToAdd) => {
-    // ✅ PROTECTION GUEST MODE
-    if (isGuest || !user?.uid) {
-      console.log('👤 Mode invité - Skip updateUserXP');
+    if (!user?.uid) {
+      console.log('⏭️ No user - skip updateUserXP');
       return;
     }
+    
+    console.log('⭐ Adding XP for user:', user.uid, isGuest ? '(guest)' : '(authenticated)', `+${xpToAdd}XP`);
 
     try {
       const fs = firestore();

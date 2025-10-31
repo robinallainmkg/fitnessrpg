@@ -17,7 +17,10 @@ export { default as OutlineButton } from './buttons/OutlineButton';
 export { default as StatBadge } from './badges/StatBadge';
 export { default as StatusBadge } from './badges/StatusBadge';
 
-// 📁 Sub-export all organized exports for granular imports if needed
+// 🔐 Auth
+export { default as AuthModal } from './AuthModal';
+
+// � Sub-export all organized exports for granular imports if needed
 export * from './cards';
 export * from './buttons';
 export * from './badges';

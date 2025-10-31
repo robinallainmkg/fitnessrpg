@@ -40,6 +40,7 @@ Bienvenue dans la documentation complète du projet **Fitness RPG**, une applica
 - [UX & Interface utilisateur](./guides/UX_IMPROVEMENTS.md)
 - [Migration de données](./guides/MIGRATION.md)
 - [Tests système](./guides/TESTING.md)
+- [**🔥 Mode Développement (DEV_AUTO_LOGIN)**](./guides/DEV_MODE.md)
 
 ### 🎨 Composants
 - [UserHeader](./components/UserHeader.md)
@@ -178,5 +179,5 @@ Ce projet est un prototype éducatif.
 
 ---
 
-**Dernière mise à jour** : 3 octobre 2025  
+**Dernière mise à jour** : 29 octobre 2025  
 **Version** : 1.0.0
