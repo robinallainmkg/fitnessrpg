@@ -57,7 +57,12 @@ export const PhoneLoginScreen = ({ navigation, route }) => {
 
     if (result.success) {
       // Navigation automatique par AuthContext
-      console.log('✅ Connexion réussie !');
+      const message = result.message || '✅ Connexion réussie !';
+      console.log(message);
+      
+      if (result.message) {
+        Alert.alert('Succès', result.message);
+      }
     } else {
       Alert.alert('Erreur', result.error || 'Code incorrect');
     }
@@ -98,7 +103,7 @@ export const PhoneLoginScreen = ({ navigation, route }) => {
               editable={!loading}
             />
             <Text style={styles.hint}>
-              Format accepté : 06 XX XX XX XX ou +33 6 XX XX XX XX
+              Formats acceptés : 0679430759 ou 679430759 ou +33679430759
             </Text>
 
             <TouchableOpacity

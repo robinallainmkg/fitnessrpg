@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
   ActivityIndicator
 } from 'react-native';
 import { Text } from 'react-native-paper';
@@ -36,6 +35,8 @@ const AuthModal = ({ visible, onClose, onSuccess }) => {
   const [step, setStep] = useState('input'); // 'input' | 'verify'
   const [confirmation, setConfirmation] = useState(null);
   const [identifierType, setIdentifierType] = useState(null); // 'email' | 'phone'
+  const [statusMessage, setStatusMessage] = useState(''); // Message inline à la place des popups
+  const [statusType, setStatusType] = useState(''); // 'success' | 'error' | 'info'
   
   const { sendVerificationCode, verifyCode } = useAuth();
 
@@ -47,6 +48,8 @@ const AuthModal = ({ visible, onClose, onSuccess }) => {
     setStep('input');
     setConfirmation(null);
     setIdentifierType(null);
+    setStatusMessage('');
+    setStatusType('');
   };
 
   // Détecter si c'est un email ou un téléphone
@@ -66,22 +69,22 @@ const AuthModal = ({ visible, onClose, onSuccess }) => {
   // === ENVOYER CODE (SMS ou Email) ===
   const handleSendCode = async () => {
     if (!identifier || identifier.length < 5) {
-      Alert.alert('⚠️ Champ requis', 'Entre ton email ou numéro de téléphone');
+      setStatusMessage('Entre ton email ou numéro de téléphone');
+      setStatusType('error');
       return;
     }
 
     const type = detectIdentifierType(identifier);
     
     if (!type) {
-      Alert.alert(
-        '⚠️ Format invalide',
-        'Entre un email valide (ex: ton@email.com)\nou un numéro de téléphone (ex: +33612345678 ou 0612345678)'
-      );
+      setStatusMessage('Format invalide. Entre un email valide ou un numéro de téléphone');
+      setStatusType('error');
       return;
     }
 
     setIdentifierType(type);
     setLoading(true);
+    setStatusMessage('');
 
     try {
       if (type === 'phone') {
@@ -92,24 +95,21 @@ const AuthModal = ({ visible, onClose, onSuccess }) => {
         console.log('✅ Code SMS envoyé');
         setConfirmation(result.confirmation);
         setStep('verify');
-        Alert.alert(
-          '📱 SMS envoyé !',
-          `Un code à 6 chiffres a été envoyé à ${result.phoneNumber}`
-        );
+        setStatusMessage(`Code envoyé à ${result.phoneNumber}`);
+        setStatusType('success');
       } else {
-        Alert.alert('Erreur', result.error || 'Impossible d\'envoyer le code');
+        setStatusMessage(result.error || 'Impossible d\'envoyer le code');
+        setStatusType('error');
       }
       } else {
         // Email - TODO: implémenter envoi email
-        Alert.alert(
-          '⚠️ En développement',
-          'L\'authentification par email arrive bientôt !\nUtilise un numéro de téléphone pour le moment.',
-          [{ text: 'OK' }]
-        );
+        setStatusMessage('L\'authentification par email arrive bientôt ! Utilise un numéro de téléphone.');
+        setStatusType('info');
       }
     } catch (error) {
       console.error('❌ Erreur envoi code:', error);
-      Alert.alert('Erreur', 'Impossible d\'envoyer le code. Réessaie.');
+      setStatusMessage('Impossible d\'envoyer le code. Réessaie.');
+      setStatusType('error');
     } finally {
       setLoading(false);
     }
@@ -118,42 +118,43 @@ const AuthModal = ({ visible, onClose, onSuccess }) => {
   // === VÉRIFIER CODE ET LIER AU COMPTE ANONYME ===
   const handleVerifyCode = async () => {
     if (!verificationCode || verificationCode.length !== 6) {
-      Alert.alert('Code invalide', 'Entre les 6 chiffres du code');
+      setStatusMessage('Entre les 6 chiffres du code');
+      setStatusType('error');
       return;
     }
 
     if (!confirmation) {
-      Alert.alert('Erreur', 'Session expirée. Réessaie avec ton numéro.');
+      setStatusMessage('Session expirée. Réessaie avec ton numéro.');
+      setStatusType('error');
       setStep('input');
       return;
     }
 
     setLoading(true);
+    setStatusMessage('');
     try {
       console.log('🔐 Vérification code et linking...');
       const result = await verifyCode(confirmation, verificationCode);
       
       if (result.success) {
         console.log('✅ Compte lié avec succès! UID:', result.user.uid);
+        setStatusMessage('Compte créé ! Tes progrès sont sauvegardés.');
+        setStatusType('success');
         
-        Alert.alert(
-          '🎉 Compte créé !',
-          'Tes progrès sont maintenant sauvegardés en ligne.',
-          [{ 
-            text: 'OK', 
-            onPress: () => {
-              onSuccess();
-              onClose();
-              resetForm();
-            }
-          }]
-        );
+        // Fermer après 1 seconde
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+          resetForm();
+        }, 1000);
       } else {
-        Alert.alert('Code incorrect', result.error || 'Vérifie le code reçu par SMS');
+        setStatusMessage(result.error || 'Code incorrect. Vérifie le code reçu par SMS.');
+        setStatusType('error');
       }
     } catch (error) {
       console.error('❌ Erreur vérification:', error);
-      Alert.alert('Erreur', 'Impossible de vérifier le code');
+      setStatusMessage('Impossible de vérifier le code');
+      setStatusType('error');
     } finally {
       setLoading(false);
     }
@@ -217,6 +218,23 @@ const AuthModal = ({ visible, onClose, onSuccess }) => {
               style={styles.form}
               keyboardShouldPersistTaps="handled"
             >
+              {/* Message de statut inline */}
+              {statusMessage ? (
+                <View style={[
+                  styles.statusMessage,
+                  statusType === 'success' && styles.statusSuccess,
+                  statusType === 'error' && styles.statusError,
+                  statusType === 'info' && styles.statusInfo
+                ]}>
+                  <Text style={styles.statusText}>
+                    {statusType === 'success' && '✅ '}
+                    {statusType === 'error' && '⚠️ '}
+                    {statusType === 'info' && 'ℹ️ '}
+                    {statusMessage}
+                  </Text>
+                </View>
+              ) : null}
+
               {step === 'input' && (
                 <>
                   {/* Email ou Téléphone */}
@@ -364,6 +382,29 @@ const styles = StyleSheet.create({
   },
   form: {
     padding: 24,
+  },
+  statusMessage: {
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 3,
+  },
+  statusSuccess: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderLeftColor: '#22C55E',
+  },
+  statusError: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderLeftColor: '#EF4444',
+  },
+  statusInfo: {
+    backgroundColor: 'rgba(77, 158, 255, 0.1)',
+    borderLeftColor: '#4D9EFF',
+  },
+  statusText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    lineHeight: 20,
   },
   inputGroup: {
     marginBottom: 20,

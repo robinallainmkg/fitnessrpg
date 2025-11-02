@@ -111,19 +111,7 @@ export const ChallengeScreen = () => {
     );
   }
 
-  // Guest user
-  if (isGuest) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.title}>🎯 Challenge du jour</Text>
-        <Text style={styles.guestMessage}>
-          Créez un compte pour participer aux challenges quotidiens !
-        </Text>
-      </View>
-    );
-  }
-
-  // No user
+  // No user (mais on autorise les invités)
   if (!user) {
     return (
       <View style={styles.centerContainer}>
@@ -195,6 +183,16 @@ export const ChallengeScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>🎯 Challenge du jour</Text>
+
+      {/* Info pour les invités */}
+      {isGuest && (
+        <View style={[styles.successBanner, { backgroundColor: 'rgba(59,130,246,0.15)', marginBottom: 20 }]}>
+          <Text style={styles.successEmoji}>ℹ️</Text>
+          <Text style={[styles.successText, { color: '#3B82F6' }]}>
+            Mode invité : Vos challenges seront sauvegardés et transférés si vous créez un compte plus tard !
+          </Text>
+        </View>
+      )}
 
       {rejectionNotice}
 

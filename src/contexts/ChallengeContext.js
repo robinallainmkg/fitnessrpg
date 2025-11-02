@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, FieldValue } from '../config/firebase.simple';
+import storage from '@react-native-firebase/storage';
 import { useAuth } from './AuthContext';
+
+const firestore = getFirestore();
 
 const ChallengeContext = createContext({});
 
@@ -16,6 +19,18 @@ export const ChallengeProvider = ({ children }) => {
   const { user } = useAuth();
   const [todayChallenge, setTodayChallenge] = useState(null);
   const [loadingChallenge, setLoadingChallenge] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  /**
+   * Clear error and success messages
+   */
+  const clearMessages = () => {
+    setError(null);
+    setSuccess(null);
+  };
 
   /**
    * Charge le défi du jour pour un utilisateur
@@ -37,7 +52,7 @@ export const ChallengeProvider = ({ children }) => {
       console.log('📅 Loading daily challenge for:', dateStr, 'user:', userId);
 
       // Charger le défi du jour de l'utilisateur
-      const userChallengeRef = firestore()
+      const userChallengeRef = firestore
         .collection('dailyChallenges')
         .doc(dateStr)
         .collection('users')
@@ -126,11 +141,11 @@ export const ChallengeProvider = ({ children }) => {
         ...selectedChallenge,
         date: dateStr,
         submitted: false,
-        createdAt: firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       };
 
       // Sauvegarder dans Firestore
-      const userChallengeRef = firestore()
+      const userChallengeRef = firestore
         .collection('dailyChallenges')
         .doc(dateStr)
         .collection('users')
@@ -151,40 +166,93 @@ export const ChallengeProvider = ({ children }) => {
   };
 
   /**
-   * Soumettre un défi complété
+   * Soumettre un défi complété avec vidéo
    */
-  const submitChallenge = async (challengeId, actualValue) => {
-    if (!user?.uid) {
+  const submitChallenge = async (videoUri, userId, challengeType) => {
+    if (!userId) {
       console.log('⏭️ No user - cannot submit challenge');
+      setError('Utilisateur non connecté');
+      return false;
+    }
+
+    if (!videoUri) {
+      console.log('⏭️ No video URI - cannot submit challenge');
+      setError('Aucune vidéo sélectionnée');
       return false;
     }
 
     try {
-      console.log('📤 Submitting challenge:', challengeId, 'value:', actualValue);
+      console.log('📤 Submitting challenge with video:', videoUri);
+      setIsUploading(true);
+      setUploadProgress(0);
+      setError(null);
+      setSuccess(null);
 
-      const userChallengeRef = firestore()
+      // Format date YYYY-MM-DD
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+
+      // Create unique filename
+      const filename = `challenge_${userId}_${dateStr}_${Date.now()}.mp4`;
+      const storageRef = storage().ref(`challenges/${dateStr}/${filename}`);
+
+      console.log('📹 Uploading video to:', storageRef.fullPath);
+
+      // Upload the video with progress tracking
+      const uploadTask = storageRef.putFile(videoUri);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+          console.log(`📊 Upload progress: ${progress.toFixed(0)}%`);
+        },
+        (error) => {
+          console.error('❌ Upload error:', error);
+          setIsUploading(false);
+          setError(`Erreur d'upload: ${error.message}`);
+        }
+      );
+
+      // Wait for upload to complete
+      await uploadTask;
+
+      // Get download URL
+      const downloadUrl = await storageRef.getDownloadURL();
+      console.log('✅ Video uploaded, URL:', downloadUrl);
+
+      // Update Firestore with video URL and submission
+      const userChallengeRef = firestore
         .collection('dailyChallenges')
-        .doc(challengeId)
+        .doc(dateStr)
         .collection('users')
-        .doc(user.uid);
+        .doc(userId);
 
       await userChallengeRef.update({
         submitted: true,
-        actualValue: actualValue,
-        submittedAt: firestore.FieldValue.serverTimestamp()
+        videoUrl: downloadUrl,
+        videoPath: storageRef.fullPath,
+        submittedAt: FieldValue.serverTimestamp(),
+        status: 'pending' // En attente de validation admin
       });
 
       // Mettre à jour l'état local
       setTodayChallenge(prev => ({
         ...prev,
         submitted: true,
-        actualValue
+        videoUrl: downloadUrl,
+        status: 'pending'
       }));
 
+      setIsUploading(false);
+      setSuccess('✅ Challenge soumis avec succès ! En attente de validation.');
       console.log('✅ Challenge submitted successfully');
       return true;
     } catch (error) {
       console.error('❌ Failed to submit challenge:', error);
+      setIsUploading(false);
+      setError(`Erreur: ${error.message}`);
       return false;
     }
   };
@@ -199,8 +267,13 @@ export const ChallengeProvider = ({ children }) => {
   const value = {
     todayChallenge,
     loadingChallenge,
+    isUploading,
+    uploadProgress,
+    error,
+    success,
     loadTodayChallenge,
-    submitChallenge
+    submitChallenge,
+    clearMessages
   };
 
   return (

@@ -15,9 +15,12 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 import AuthModal from '../components/AuthModal';
+import UserHeader from '../components/UserHeader';
 import { colors } from '../theme/colors';
 import { rpgTheme } from '../theme/rpgTheme';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore } from '../config/firebase.simple';
+
+const firestore = getFirestore();
 
 const ProfileScreen = ({ navigation }) => {
   const { user, isGuest, logout, resetUserData, loading: authLoading } = useAuth();
@@ -69,7 +72,7 @@ const ProfileScreen = ({ navigation }) => {
     
     try {
       setLoadingStats(true);
-      const userDoc = await firestore().collection('users').doc(user.uid).get();
+      const userDoc = await firestore.collection('users').doc(user.uid).get();
       
       if (userDoc.exists) {
         const userData = userDoc.data();
@@ -280,21 +283,45 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* USER HEADER - Édition activée uniquement ici */}
+      <UserHeader
+        username={userStats?.displayName || user?.displayName || 'Utilisateur'}
+        globalLevel={userStats?.globalLevel || 0}
+        globalXP={userStats?.globalXP || 0}
+        title={userStats?.title || 'Débutant'}
+        streak={userStats?.streakDays || 0}
+        avatarId={userStats?.avatarId || 0}
+        userId={user?.uid}
+        onUsernameUpdate={(newName) => {
+          setUserStats(prev => ({
+            ...prev,
+            displayName: newName
+          }));
+        }}
+        enableUsernameEdit={true}
+      />
+
       {/* Profil utilisateur */}
       <Card style={styles.profileCard}>
         <Card.Content style={styles.profileContent}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
-              {isGuest ? '👤' : (user?.email?.charAt(0).toUpperCase() || '?')}
+              {isGuest 
+                ? '👤' 
+                : (userStats?.avatar || user?.displayName?.charAt(0)?.toUpperCase() || user?.phoneNumber?.slice(-2) || '?')
+              }
             </Text>
           </View>
           
           <Text style={styles.userName}>
-            {isGuest ? 'Invité' : (user?.displayName || 'Utilisateur')}
+            {isGuest 
+              ? 'Invité' 
+              : (userStats?.displayName || user?.displayName || user?.phoneNumber || 'Utilisateur')
+            }
           </Text>
           
           <Text style={styles.userEmail}>
-            {isGuest ? 'Mode invité' : user?.email}
+            {isGuest ? 'Mode invité' : (user?.email || user?.phoneNumber || 'Compte authentifié')}
           </Text>
           
           <Text style={styles.memberSince}>

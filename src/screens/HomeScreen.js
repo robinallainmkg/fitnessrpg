@@ -29,8 +29,11 @@ import { rpgTheme } from '../theme/rpgTheme';
 import UserHeader from '../components/UserHeader';
 import DailyChallengeCard from '../components/DailyChallengeCard';
 import { ProgramCard, WorkoutCard } from '../components/cards';
+import ChallengeCard from '../components/ChallengeCard';
+import QuestePrincipale from '../components/QuestePrincipale';
 import { useUserPrograms } from '../hooks/useUserPrograms';
 import { getUserSessionQueue } from '../services/sessionQueueService';
+import { getAvailableChallenges, recommendTodayChallenge } from '../services/skillChallengeService';
 import { loadProgramsMeta } from '../data/programsLoader';
 import { loadProgramDetails } from '../data/programsLoader';
 import { logger } from '../utils/debugHelper';
@@ -54,6 +57,9 @@ const HomeScreen = ({ navigation, route }) => {
   const [activePrograms, setActivePrograms] = useState([]);
   const [sessionQueue, setSessionQueue] = useState([]);
   const [loadingQueue, setLoadingQueue] = useState(false);
+  const [availableChallenges, setAvailableChallenges] = useState([]);
+  const [todayChallengeRecommended, setTodayChallengeRecommended] = useState(null);
+  const [loadingChallenges, setLoadingChallenges] = useState(false);
   
   const { user, isGuest } = useAuth();
   const { todayChallenge, loadingChallenge, loadTodayChallenge } = useChallenge();
@@ -160,6 +166,7 @@ const HomeScreen = ({ navigation, route }) => {
       if (user?.uid) {
         console.log('🔄 Screen focused - refreshing data');
         loadActiveProgramsAndQueue();
+        loadSkillChallenges(); // Recharger les challenges aussi
         
         // Recharger le challenge du jour pour avoir le statut à jour
         if (loadTodayChallenge) {
@@ -185,7 +192,7 @@ const HomeScreen = ({ navigation, route }) => {
     try {
       setLoading(true);
       
-      // 🚀 OPTIMISATION: Charger user stats et programmes en parallèle
+      // 🚀 STEP 1: Charger user stats ET programmes en parallèle
       const [userStatsData] = await Promise.all([
         loadUserStats(),
         loadActiveProgramsAndQueue(), // Parallélisé !
@@ -208,6 +215,9 @@ const HomeScreen = ({ navigation, route }) => {
           avatarId: 0
         });
       }
+      
+      // 🚀 STEP 2: Charger les challenges APRÈS avoir les userStats
+      await loadSkillChallenges(userStatsData); // Passer userStatsData directement
       
       const loadTime = Date.now() - startTime;
       console.log(`✅ loadAllData COMPLETE en ${loadTime}ms`);
@@ -417,10 +427,51 @@ const HomeScreen = ({ navigation, route }) => {
     }
   };
 
+  const loadSkillChallenges = async (currentUserStats = null) => {
+    console.log('🔍 [loadSkillChallenges] START - user?.uid:', user?.uid);
+    
+    if (!user?.uid) {
+      console.log('⏭️ Skip loadSkillChallenges (no user)');
+      return;
+    }
+
+    try {
+      setLoadingChallenges(true);
+      console.log('🎯 Chargement des challenges disponibles...');
+      
+      const challenges = await getAvailableChallenges(user.uid);
+      console.log('🔍 [loadSkillChallenges] Challenges reçus:', challenges.length, challenges);
+      setAvailableChallenges(challenges);
+      
+      // Recommander un challenge du jour - utiliser currentUserStats si fourni, sinon userStats du state
+      const statsToUse = currentUserStats || userStats;
+      if (challenges.length > 0 && statsToUse) {
+        const recommended = recommendTodayChallenge(challenges, statsToUse);
+        setTodayChallengeRecommended(recommended);
+        console.log('✅ Challenge du jour:', recommended?.title || 'Aucun');
+      } else {
+        console.log('⚠️ Pas de challenges ou userStats manquant');
+      }
+      
+      console.log(`✅ ${challenges.length} challenges chargés`);
+    } catch (error) {
+      console.error('❌ Erreur chargement challenges:', error);
+      console.error('❌ Stack:', error.stack);
+      setAvailableChallenges([]);
+      setTodayChallengeRecommended(null);
+    } finally {
+      setLoadingChallenges(false);
+      console.log('🔍 [loadSkillChallenges] END');
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadAllData();
-    await refetchPrograms();
+    // Charger data, programmes et challenges en parallèle
+    await Promise.all([
+      loadAllData(),
+      refetchPrograms()
+    ]);
     setRefreshing(false);
   };
 
@@ -449,22 +500,36 @@ const HomeScreen = ({ navigation, route }) => {
         return;
       }
       
-      navigation.navigate('Workout', {
-        program: {
-          id: skillDetails.id,
-          name: skillDetails.name || session.skillName,
-          category: category.id, // ← ID pour Firestore (ex: 'street')
-          categoryName: category.name, // ← Nom pour affichage
-          icon: session.programIcon || skillDetails.icon,
-        },
-        level: {
-          id: level.id,
-          name: level.name,
-          subtitle: level.subtitle,
-          exercises: level.exercises || [],
-          xpReward: level.xpReward,
-        }
-      });
+      const programData = {
+        id: skillDetails.id,
+        name: skillDetails.name || session.skillName,
+        category: category.id, // ← ID pour Firestore (ex: 'street')
+        categoryName: category.name, // ← Nom pour affichage
+        icon: session.programIcon || skillDetails.icon,
+      };
+
+      const levelData = {
+        id: level.id,
+        name: level.name,
+        subtitle: level.subtitle,
+        exercises: level.exercises || [],
+        xpReward: level.xpReward,
+        challenge: level.challenge, // ← Inclure le challenge si défini
+      };
+
+      // Si le niveau a un challenge, aller vers SkillChallenge
+      // Sinon, aller directement vers Workout (ancien système)
+      if (level.challenge) {
+        navigation.navigate('SkillChallenge', {
+          program: programData,
+          level: levelData,
+        });
+      } else {
+        navigation.navigate('Workout', {
+          program: programData,
+          level: levelData,
+        });
+      }
     } catch (error) {
       console.error('Erreur start session:', error);
       Alert.alert('Erreur', 'Impossible de démarrer la séance');
@@ -510,6 +575,48 @@ const HomeScreen = ({ navigation, route }) => {
 
   const handleViewActiveProgram = (programId) => {
     navigation.navigate('SkillTree', { programId });
+  };
+
+  const handleChallengePress = async (challenge) => {
+    try {
+      // Charger les détails du programme pour obtenir toutes les informations
+      const skillDetails = await loadProgramDetails(challenge.categoryId, challenge.programId);
+      
+      if (!skillDetails) {
+        Alert.alert('Erreur', 'Programme non trouvé');
+        return;
+      }
+
+      const level = skillDetails.levels?.find(l => l.id === challenge.levelId);
+      if (!level) {
+        Alert.alert('Erreur', 'Niveau non trouvé');
+        return;
+      }
+
+      const programData = {
+        id: skillDetails.id,
+        name: skillDetails.name || challenge.programName,
+        category: challenge.categoryId,
+        icon: challenge.programIcon,
+      };
+
+      const levelData = {
+        id: level.id,
+        name: level.name,
+        subtitle: level.subtitle,
+        exercises: level.exercises || [],
+        xpReward: level.xpReward,
+        challenge: level.challenge,
+      };
+
+      navigation.navigate('SkillChallenge', {
+        program: programData,
+        level: levelData,
+      });
+    } catch (error) {
+      console.error('Erreur navigation challenge:', error);
+      Alert.alert('Erreur', 'Impossible d\'ouvrir le challenge');
+    }
   };
 
   // Components
@@ -601,80 +708,62 @@ const HomeScreen = ({ navigation, route }) => {
 
           <StreakCard streak={userStats?.streakDays || 0} />
 
-          {/* SECTION QUÊTES - EN PREMIER */}
-          {loadingQueue ? (
+          {/* ═══ SECTION CHALLENGES - NOUVEAU ═══ */}
+          {loadingChallenges ? (
             <Card style={styles.sectionCard}>
               <Card.Content>
                 <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.loadingText}>Chargement des challenges...</Text>
               </Card.Content>
             </Card>
-          ) : sessionQueue.length > 0 && (
+          ) : availableChallenges.length > 0 && (
             <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>⚔️ Quêtes disponibles</Text>
-              </View>
-              {sessionQueue.slice(0, 5).map(session => (
-                <WorkoutCard
-                  key={session.id}
-                  session={session}
-                  programColor={getProgramColor(session.programId)}
-                  onPreview={() => handlePreviewSession(session)}
-                  onStart={() => handleStartSession(session)}
-                  disabled={session.status === 'completed'}
+              {/* Challenge du Jour - Mise en avant */}
+              {todayChallengeRecommended && (
+                <QuestePrincipale
+                  challenge={todayChallengeRecommended}
+                  onPress={() => handleChallengePress(todayChallengeRecommended)}
                 />
-              ))}
+              )}
+
+              {/* Liste des Entraînements Disponibles */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>🎯 Entraînements disponibles</Text>
+              </View>
+              
+              {availableChallenges
+                .filter(c => c.status === 'available' || c.status === 'pending' || c.status === 'rejected')
+                .slice(0, 5)
+                .map((challenge, index) => (
+                  <ChallengeCard
+                    key={`${challenge.programId}_${challenge.levelId}`}
+                    challenge={challenge}
+                    onPress={() => handleChallengePress(challenge)}
+                  />
+                ))}
+              
+              {availableChallenges.length > 5 && (
+                <TouchableOpacity
+                  style={styles.viewAllButton}
+                  onPress={() => {
+                    // TODO: Créer un écran dédié pour voir tous les challenges
+                    Alert.alert('Tous les challenges', `Vous avez ${availableChallenges.length} challenges disponibles !`);
+                  }}
+                >
+                  <Text style={styles.viewAllButtonText}>
+                    Voir tous les challenges ({availableChallenges.length})
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
-          {/* SECTION PROGRAMMES - EN DEUXIÈME */}
-          {loadingQueue ? (
-            <Card style={styles.sectionCard}>
-              <Card.Content>
-                <ActivityIndicator size="small" color={colors.primary} />
-              </Card.Content>
-            </Card>
-          ) : activePrograms.length > 0 ? (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Programme(s)</Text>
-                <TouchableOpacity
-                  style={styles.manageButton}
-                  onPress={() => navigation.navigate('ProgramSelection')}
-                >
-                  <Text style={styles.manageButtonIcon}>⚙️</Text>
-                  <Text style={styles.manageButtonText}>Gérer</Text>
-                </TouchableOpacity>
-              </View>
-              {activePrograms.map(program => (
-                <View key={program.id} style={styles.programCardWrapper}>
-                  <ProgramCard
-                    program={program}
-                    onViewTree={() => handleViewActiveProgram(program.id)}
-                  />
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Card style={[styles.sectionCard, styles.emptyStateCard]}>
-              <Card.Content style={styles.emptyStateContent}>
-                <View style={styles.emptyStateIconContainer}>
-                  <Text style={styles.emptyStateIcon}>📋</Text>
-                </View>
-                <Text style={styles.emptyStateTitle}>Aucun programme actif</Text>
-                <Text style={styles.emptyStateSubtext}>
-                  Active un programme pour commencer ton aventure
-                </Text>
-                <Button
-                  mode="contained"
-                  onPress={() => navigation.navigate('ProgramSelection')}
-                  style={styles.emptyStateButton}
-                  buttonColor={colors.primary}
-                >
-                  Choisir un programme
-                </Button>
-              </Card.Content>
-            </Card>
-          )}
+          {/* ═══════════════════════════════════════════════════════════
+              SECTIONS DÉPLACÉES VERS PROGRAMSCREEN (nouvel onglet)
+              - Quêtes disponibles
+              - Programme(s)
+              Ces sections sont maintenant dans l'onglet "Programme"
+          ═══════════════════════════════════════════════════════════ */}
 
           <View style={styles.bottomSpacer} />
         </Animated.View>
@@ -785,6 +874,23 @@ const styles = StyleSheet.create({
   streakTitle: { fontSize: 16, fontWeight: '600', color: colors.text },
   streakDays: { fontSize: 14, color: colors.textSecondary },
   streakChip: { backgroundColor: colors.warning + '20' },
+  viewAllButton: {
+    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 99, 255, 0.3)',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 12,
+    marginHorizontal: 16,
+  },
+  viewAllButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#6C63FF',
+    letterSpacing: 0.3,
+  },
   bottomSpacer: { height: 20 },
   devButton: {
     position: 'absolute',

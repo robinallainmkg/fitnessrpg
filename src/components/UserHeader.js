@@ -25,13 +25,17 @@ const UserHeader = ({
   avatarId = 0,
   streak = 0,
   userId = null,
-  onUsernameUpdate = null
+  onUsernameUpdate = null,
+  onPress = null, // Nouveau: callback quand on clique sur le header
+  enableUsernameEdit = false // Nouveau: activer/désactiver l'édition du nom
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newUsername, setNewUsername] = useState(username);
   const [saving, setSaving] = useState(false);
 
   const handleSaveUsername = async () => {
+    if (!enableUsernameEdit) return; // Bloquer si édition désactivée
+    
     if (!newUsername.trim()) {
       Alert.alert('Erreur', 'Le nom ne peut pas être vide');
       return;
@@ -86,7 +90,12 @@ const UserHeader = ({
   const selectedAvatar = AVATARS[avatarId % Object.keys(AVATARS).length] || AVATARS[0];
   
   return (
-    <View style={styles.wrapper}>
+    <TouchableOpacity 
+      style={styles.wrapper}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.8 : 1}
+      disabled={!onPress}
+    >
       <View style={styles.container}>
         {/* Avatar avec bordure néon et glow */}
         <View style={styles.avatarContainer}>
@@ -99,15 +108,19 @@ const UserHeader = ({
         
         {/* Info utilisateur (centre) */}
         <View style={styles.userInfo}>
-          <TouchableOpacity 
-            onPress={() => {
-              setNewUsername(username);
-              setModalVisible(true);
-            }}
-            activeOpacity={0.7}
-          >
+          {enableUsernameEdit ? (
+            <TouchableOpacity 
+              onPress={() => {
+                setNewUsername(username);
+                setModalVisible(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.username} numberOfLines={1}>{username}</Text>
+            </TouchableOpacity>
+          ) : (
             <Text style={styles.username} numberOfLines={1}>{username}</Text>
-          </TouchableOpacity>
+          )}
           
           {/* Badge de titre */}
           <View style={styles.badgeContainer}>
@@ -188,7 +201,7 @@ const UserHeader = ({
           </View>
         </View>
       </Modal>
-    </View>
+    </TouchableOpacity>
   );
 };
 

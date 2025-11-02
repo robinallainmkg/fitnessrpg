@@ -79,7 +79,7 @@ export const useUserPrograms = () => {
       }
 
       // Récupérer les données utilisateur
-      const fs = firestore();
+      const fs = firestore;
       const userDoc = await fs.collection('users').doc(user.uid).get();
       const userData = userDoc.exists ? userDoc.data() : {};
       const userProgramsData = userData.programs || {};
@@ -322,7 +322,7 @@ export const useUserCategories = () => {
       }
 
       // Récupérer les données utilisateur
-      const fs = firestore();
+      const fs = firestore;
       const userDoc = await fs.collection('users').doc(user.uid).get();
       const userData = userDoc.exists ? userDoc.data() : {};
       const userProgramsData = userData.programs || {};

@@ -22,7 +22,7 @@ let detailsPromises = {}; // Promesses par catégorie
  * React Native ne supporte pas les dynamic imports avec templates
  */
 const CATEGORY_DETAILS_MAP = {
-  street: () => require('./programDetails/streetworkout-details.json'),
+  street: () => require('./streetworkout.json'), // UTILISER le fichier COMPLET avec challenges
   run: () => require('./programDetails/run10k-details.json'),
   running: () => require('./programDetails/run10k-details.json'), // Alias pour running
 };

@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import authModule from '@react-native-firebase/auth';
 
 // ✅ IMPORT UNIFIÉ - Un seul point d'entrée Firebase
 import { getAuth, getFirestore, FieldValue } from '../config/firebase.simple';
 
 const auth = getAuth();
 const firestore = getFirestore();
+
+// PhoneAuthProvider depuis le module Firebase Auth
+const PhoneAuthProvider = authModule.PhoneAuthProvider;
 
 export const AuthContext = createContext();
 
@@ -17,6 +21,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
+  const [isLinking, setIsLinking] = useState(false); // Flag pour empêcher auto-guest pendant linking
 
   // ═══════════════════════════════════════════════════════════
   // INITIALISATION: Écoute Firebase Auth
@@ -60,7 +65,7 @@ export const AuthProvider = ({ children }) => {
                 totalChallengesSubmitted: 0,
                 totalChallengesApproved: 0,
                 lastSubmissionDate: null,
-                createdAt: firestore.FieldValue.serverTimestamp(),
+                createdAt: FieldValue.serverTimestamp(),
               });
           }
         } catch (error) {
@@ -107,7 +112,7 @@ export const AuthProvider = ({ children }) => {
           totalChallengesSubmitted: 0,
           totalChallengesApproved: 0,
           lastSubmissionDate: null,
-          createdAt: firestore.FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
         });
       
       // Marquer l'onboarding comme complété
@@ -136,7 +141,25 @@ export const AuthProvider = ({ children }) => {
     try {
       log('📱 Envoi code SMS à:', phoneNumber);
       
-      if (!phoneNumber || phoneNumber.length < 8) {
+      // Normaliser le numéro de téléphone français
+      let normalizedPhone = phoneNumber.replace(/\s/g, ''); // Retirer espaces
+      
+      // Si commence par 0 (format français), remplacer par +33
+      if (normalizedPhone.startsWith('0')) {
+        normalizedPhone = '+33' + normalizedPhone.substring(1);
+      }
+      // Si commence par 6 ou 7 (sans 0), ajouter +33
+      else if (/^[67]/.test(normalizedPhone)) {
+        normalizedPhone = '+33' + normalizedPhone;
+      }
+      // Si ne commence pas par +, ajouter +33
+      else if (!normalizedPhone.startsWith('+')) {
+        normalizedPhone = '+33' + normalizedPhone;
+      }
+      
+      log('📱 Numéro normalisé:', normalizedPhone);
+      
+      if (normalizedPhone.length < 11) {
         return {
           success: false,
           error: 'Numéro de téléphone invalide',
@@ -144,13 +167,14 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
-      const confirmation = await auth.signInWithPhoneNumber(phoneNumber);
+      const confirmation = await auth.signInWithPhoneNumber(normalizedPhone);
       
       log('✅ Code SMS envoyé');
       
       return {
         success: true,
-        confirmation: confirmation
+        confirmation: confirmation,
+        phoneNumber: normalizedPhone
       };
     } catch (error) {
       logError('❌ Erreur envoi code:', error);
@@ -195,31 +219,87 @@ export const AuthProvider = ({ children }) => {
       if (currentUser && currentUser.isAnonymous) {
         log('🔗 Linking phone credential to anonymous account...');
         
-        // Créer le credential phone
-        const credential = auth.PhoneAuthProvider.credential(
-          confirmation.verificationId,
-          code
-        );
-        
-        // LIER au compte anonymous existant
-        const linkedUser = await currentUser.linkWithCredential(credential);
-        
-        log('✅ Phone linked! UID reste le même:', linkedUser.user.uid);
-        
-        // Mettre à jour le document Firestore (MERGE pour garder les données)
-        await firestore
-          .collection('users')
-          .doc(linkedUser.user.uid)
-          .set({
-            phoneNumber: linkedUser.user.phoneNumber,
-            isGuest: false, // Plus un invité maintenant
-          }, { merge: true }); // ← CRITIQUE: merge préserve userProgress, activePrograms, etc.
-        
-        setIsGuest(false);
-        
-        log('✅ LINKING COMPLETE - Données préservées automatiquement');
-        
-        return { success: true, user: linkedUser.user };
+        try {
+          // Créer le credential phone avec PhoneAuthProvider
+          const credential = PhoneAuthProvider.credential(
+            confirmation.verificationId,
+            code
+          );
+          
+          // LIER au compte anonymous existant
+          const linkedUser = await currentUser.linkWithCredential(credential);
+          
+          log('✅ Phone linked! UID reste le même:', linkedUser.user.uid);
+          
+          // Mettre à jour le document Firestore (MERGE pour garder les données)
+          await firestore
+            .collection('users')
+            .doc(linkedUser.user.uid)
+            .set({
+              phoneNumber: linkedUser.user.phoneNumber,
+              isGuest: false, // Plus un invité maintenant
+            }, { merge: true }); // ← CRITIQUE: merge préserve userProgress, activePrograms, etc.
+          
+          setIsGuest(false);
+          
+          log('✅ LINKING COMPLETE - Données préservées automatiquement');
+          
+          return { success: true, user: linkedUser.user };
+          
+        } catch (linkError) {
+          console.log('🔍 linkError:', linkError);
+          console.log('🔍 linkError.code:', linkError?.code);
+          
+          // Si le numéro est déjà utilisé → ABANDON du guest, connexion au compte existant
+          if (linkError?.code === 'auth/credential-already-in-use') {
+            log('⚠️ Numéro déjà utilisé - Abandon du compte guest et connexion au compte principal...');
+            
+            const guestUid = currentUser.uid;
+            log('🗑️ UID guest à abandonner:', guestUid);
+            
+            try {
+              // ACTIVER le flag de linking pour bloquer App.js
+              setIsLinking(true);
+              
+              // Se déconnecter du compte anonymous
+              await auth.signOut();
+              log('👋 Déconnexion du compte guest');
+              
+              // Se connecter avec le numéro existant
+              const userCredential = await confirmation.confirm(code);
+              const existingUser = userCredential.user;
+              
+              log('✅ Connecté au compte principal existant:', existingUser.uid);
+              log('⚠️ Données du guest abandonnées (compte sera nettoyé automatiquement)');
+              
+              setIsGuest(false);
+              setIsLinking(false); // Désactiver le flag
+              
+              return { 
+                success: true, 
+                user: existingUser,
+                message: '✅ Connecté au compte principal!'
+              };
+            } catch (signInError) {
+              logError('❌ Erreur lors de la connexion au compte principal:', signInError);
+              setIsLinking(false); // Désactiver le flag en cas d'erreur
+              
+              return {
+                success: false,
+                error: 'Impossible de se connecter au compte principal',
+                code: signInError?.code
+              };
+            }
+          } else {
+            // Autre erreur de linking (pas credential-already-in-use)
+            log('❌ Erreur linking non gérée:', linkError?.code || linkError);
+            return {
+              success: false,
+              error: linkError?.message || 'Erreur lors de la liaison du compte',
+              code: linkError?.code
+            };
+          }
+        }
       }
       
       // ─────────────────────────────────────────────────────────
@@ -227,11 +307,13 @@ export const AuthProvider = ({ children }) => {
       // ─────────────────────────────────────────────────────────
       else {
         log('📱 Connexion phone classique (pas de linking)');
+        log('🔍 Current user before confirm:', currentUser?.uid || 'null');
         
         const userCredential = await confirmation.confirm(code);
         const loggedUser = userCredential.user;
         
         log('✅ Code validé, utilisateur connecté:', loggedUser.uid);
+        log('🔍 Phone number:', loggedUser.phoneNumber);
         
         // Créer le document si n'existe pas
         const userDoc = await firestore
@@ -258,8 +340,10 @@ export const AuthProvider = ({ children }) => {
               totalChallengesSubmitted: 0,
               totalChallengesApproved: 0,
               lastSubmissionDate: null,
-              createdAt: firestore.FieldValue.serverTimestamp(),
+              createdAt: FieldValue.serverTimestamp(),
             });
+        } else {
+          log('✅ Document utilisateur existe déjà');
         }
         
         setIsGuest(false);
@@ -273,18 +357,18 @@ export const AuthProvider = ({ children }) => {
       logError('❌ Erreur vérification code:', error);
       
       let errorMessage = 'Code incorrect';
-      if (error.code === 'auth/invalid-verification-code') {
+      if (error?.code === 'auth/invalid-verification-code') {
         errorMessage = 'Code invalide ou expiré';
-      } else if (error.code === 'auth/code-expired') {
+      } else if (error?.code === 'auth/code-expired') {
         errorMessage = 'Code expiré. Demandez-en un nouveau.';
-      } else if (error.code === 'auth/credential-already-in-use') {
+      } else if (error?.code === 'auth/credential-already-in-use') {
         errorMessage = 'Ce numéro est déjà utilisé par un autre compte';
       }
       
       return {
         success: false,
         error: errorMessage,
-        code: error.code
+        code: error?.code
       };
     }
   };
@@ -351,11 +435,11 @@ export const AuthProvider = ({ children }) => {
         totalChallengesSubmitted: 0,
         totalChallengesApproved: 0,
         lastSubmissionDate: null,
-        createdAt: currentData.createdAt || firestore.FieldValue.serverTimestamp(),
-      });
+        createdAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
 
-      log('✅ Données réinitialisées (isAdmin préservé)');
-      
+      log('✅ Données réinitialisées');
+
       return { success: true };
     } catch (error) {
       logError('❌ Erreur resetUserData:', error);
@@ -368,21 +452,22 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ═══════════════════════════════════════════════════════════
-  // CONTEXT PROVIDER
+  // CONTEXT VALUE
   // ═══════════════════════════════════════════════════════════
+  const value = {
+    user,
+    loading,
+    isGuest,
+    isLinking, // Exposer le flag pour App.js
+    startGuestMode,
+    sendVerificationCode,
+    verifyCode,
+    logout,
+    resetUserData,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isGuest,
-        loading,
-        startGuestMode,      // NEW: Démarre anonymous auth
-        sendVerificationCode,
-        verifyCode,          // MODIFIED: Linking au lieu de créer nouveau compte
-        logout,              // MODIFIED: Redémarre anonymous après signOut
-        resetUserData,       // Préserve isAdmin
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Text, StyleSheet, ActivityIndicator } from 'react-native';
-// ? NOUVELLE API FIRESTORE
-import firestore from '@react-native-firebase/firestore';
-import { 
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  doc,
-  getDoc
-} from '@react-native-firebase/firestore';
+import { getFirestore } from '../config/firebase.simple';
 import { useAuth } from '../contexts/AuthContext';
 import { getWithRetry } from '../utils/firestoreRetry';
 import { rpgTheme } from '../theme/rpgTheme';
 import { Flame, Zap, Wind, Activity, Dumbbell } from 'lucide-react-native';
+
+const firestore = getFirestore();
 
 const ProgressScreen = () => {
   const [loading, setLoading] = useState(true);
@@ -38,84 +29,40 @@ const ProgressScreen = () => {
       
       console.log('📊 ProgressScreen: Loading data for user', user.uid, isGuest ? '(guest)' : '(authenticated)');
       
-      // ✅ Utiliser firestore() comme instance DB pour la modular API
-      const db = firestore();
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
+      // Charger user data et sessions en parallèle
+      const [userDoc, sessionsSnapshot] = await Promise.all([
+        firestore.collection('users').doc(user.uid).get(),
+        firestore
+          .collection('workoutSessions')
+          .where('userId', '==', user.uid)
+          .orderBy('createdAt', 'desc')
+          .limit(10)
+          .get()
+      ]);
       
-      if (userDoc.exists()) {
+      if (userDoc.exists) {
         const data = userDoc.data();
         setUserData(data);
         if (data.stats) setStats(data.stats);
       }
       
-      // ✅ Charger les sessions depuis la collection racine
-      try {
-        console.log('🔥 Début chargement sessions pour userId:', user.uid);
-        
-        const sessionsRef = collection(db, 'workoutSessions');
-        const q = query(
-          sessionsRef,
-          where('userId', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(10)
-        );
-        
-        console.log('🔥 Requête Firestore construite');
-        
-        const sessionsSnapshot = await getDocs(q);
-        
-        console.log('🔥 Snapshot reçu, nombre de docs:', sessionsSnapshot.size);
-        
-        const sessions = sessionsSnapshot.docs.map(doc => {
-          const data = doc.data();
-          console.log('🔥 Session trouvée:', doc.id, 'Score:', data.score, 'UserId:', data.userId);
-          return {
-            id: doc.id,
-            ...data
-          };
-        });
-        
-        console.log('🔥 Total sessions chargées:', sessions.length);
-        setSessionHistory(sessions);
-      } catch (e) {
-        console.error('? Erreur chargement sessions:', e);
-        console.error('? Message:', e.message);
-        console.error('? Code:', e.code);
-        
-        // Si erreur d'index manquant, afficher le lien pour le créer
-        if (e.message?.includes('index') || e.code === 'failed-precondition') {
-          console.warn('🔥 INDEX FIRESTORE MANQUANT !');
-          console.warn('🔥 Créez l\'index dans la console Firebase:');
-          console.warn('   Collection: workoutSessions');
-          console.warn('   Champ 1: userId (Ascending)');
-          console.warn('   Champ 2: createdAt (Descending)');
-          
-          // Essayer sans orderBy en fallback
-          console.log('🔥 Tentative sans orderBy...');
-          try {
-            const simpleQuery = query(
-              collection(db, 'workoutSessions'),
-              where('userId', '==', user.uid),
-              limit(10)
-            );
-            const simpleSnapshot = await getDocs(simpleQuery);
-            const sessions = simpleSnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            console.log('❌ Sessions chargées sans orderBy:', sessions.length);
-            setSessionHistory(sessions);
-          } catch (e2) {
-            console.error('❌ Même sans orderBy, échec:', e2);
-            setSessionHistory([]);
-          }
-        } else {
-          setSessionHistory([]);
-        }
-      }
+      console.log('🔥 Sessions chargées:', sessionsSnapshot.size);
+      
+      const sessions = sessionsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setSessionHistory(sessions);
     } catch (error) {
       console.error('❌ Erreur chargement données:', error);
+      
+      // Si erreur d'index manquant
+      if (error.message?.includes('index') || error.code === 'failed-precondition') {
+        console.warn('🔥 INDEX FIRESTORE MANQUANT - Vérifiez firestore.indexes.json');
+      }
+      
+      setSessionHistory([]);
     } finally {
       setLoading(false);
     }

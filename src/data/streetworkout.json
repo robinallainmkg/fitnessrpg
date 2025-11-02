@@ -38,6 +38,24 @@
               "name": "Initiation",
               "subtitle": "Premiers pas en force",
               "xpReward": 100,
+              "challenge": {
+                "title": "Défi Initiation - 5 Tractions Assistées",
+                "description": "Montre que tu maîtrises les tractions assistées avec une forme parfaite",
+                "requirements": {
+                  "exercise": "Tractions assistées (élastique)",
+                  "reps": 5,
+                  "validationCriteria": [
+                    "✅ Élastique épais autorisé",
+                    "✅ Menton au-dessus de la barre",
+                    "✅ Descente contrôlée complète",
+                    "✅ Pas de balancement excessif"
+                  ],
+                  "tips": "💡 Filme-toi de profil pour qu'on voit bien le mouvement complet. L'élastique doit être visible."
+                },
+                "videoMinDuration": 15,
+                "videoMaxDuration": 60,
+                "maxAttemptsPerDay": 3
+              },
               "exercises": [
                 {
                   "name": "Tractions assistées (élastique)",
@@ -86,6 +104,25 @@
               "name": "Renforcement",
               "subtitle": "Augmenter le volume",
               "xpReward": 150,
+              "challenge": {
+                "title": "Défi Renforcement - 8 Tractions Assistées",
+                "description": "Prouve ta progression avec plus de volume et une meilleure technique",
+                "requirements": {
+                  "exercise": "Tractions assistées (élastique)",
+                  "reps": 8,
+                  "validationCriteria": [
+                    "✅ Élastique épais autorisé",
+                    "✅ Menton clairement au-dessus de la barre à chaque rep",
+                    "✅ Bras complètement tendus en bas",
+                    "✅ Tempo contrôlé (2 sec montée, 2 sec descente)",
+                    "✅ Toutes les reps doivent être propres"
+                  ],
+                  "tips": "💡 Filme en continu, sans pause entre les reps. Une seule série de 8 répétitions."
+                },
+                "videoMinDuration": 20,
+                "videoMaxDuration": 90,
+                "maxAttemptsPerDay": 3
+              },
               "exercises": [
                 {
                   "name": "Tractions assistées (élastique)",
@@ -134,6 +171,25 @@
               "name": "Consolidation",
               "subtitle": "Solidifier les bases",
               "xpReward": 150,
+              "challenge": {
+                "title": "Défi Consolidation - 10 Tractions Assistées",
+                "description": "Démontre ta maîtrise avec un volume soutenu et une technique impeccable",
+                "requirements": {
+                  "exercise": "Tractions assistées (élastique fin)",
+                  "reps": 10,
+                  "validationCriteria": [
+                    "✅ Élastique fin (moins d'assistance qu'avant)",
+                    "✅ Menton clairement au-dessus de la barre",
+                    "✅ Full ROM (Range Of Motion) - bras tendus en bas",
+                    "✅ Pas de kipping ou balancement",
+                    "✅ Tempo constant sur les 10 reps"
+                  ],
+                  "tips": "💡 Une seule série de 10 reps en continu. Utilise un élastique plus fin que lors des entraînements."
+                },
+                "videoMinDuration": 25,
+                "videoMaxDuration": 90,
+                "maxAttemptsPerDay": 3
+              },
               "exercises": [
                 {
                   "name": "Tractions assistées (élastique)",
@@ -182,6 +238,25 @@
               "name": "Test Final",
               "subtitle": "Valider le module",
               "xpReward": 200,
+              "challenge": {
+                "title": "Défi Test Final - 3 Tractions Strictes",
+                "description": "Le moment de vérité : premières tractions SANS assistance !",
+                "requirements": {
+                  "exercise": "Tractions strictes (SANS élastique)",
+                  "reps": 3,
+                  "validationCriteria": [
+                    "✅ AUCUNE assistance (pas d'élastique, pas de kipping)",
+                    "✅ Menton au-dessus de la barre",
+                    "✅ Bras complètement tendus en bas",
+                    "✅ Corps stable, pas de balancement",
+                    "✅ Pause 1 seconde en haut de chaque rep"
+                  ],
+                  "tips": "💡 C'est le test ultime ! Filme de profil. Si tu n'y arrives pas, retourne t'entraîner avec un élastique très fin."
+                },
+                "videoMinDuration": 15,
+                "videoMaxDuration": 60,
+                "maxAttemptsPerDay": 3
+              },
               "exercises": [
                 {
                   "name": "Tractions assistées (élastique léger)",

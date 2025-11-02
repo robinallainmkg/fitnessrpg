@@ -28,10 +28,15 @@ import ProgramSelectionScreen from './src/screens/ProgramSelectionScreen';
 import ProgramsScreen from './src/screens/ProgramsScreen';
 import SkillTreeScreen from './src/screens/SkillTreeScreen';
 import SkillDetailScreen from './src/screens/SkillDetailScreen';
+import SkillChallengeScreen from './src/screens/SkillChallengeScreen';
 import WorkoutScreen from './src/screens/WorkoutScreen';
 import WorkoutPreviewScreen from './src/screens/WorkoutPreviewScreen';
+import ReviewWorkoutScreen from './src/screens/ReviewWorkoutScreen';
 import WorkoutSummaryScreen from './src/screens/WorkoutSummaryScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
+import BattleScreen from './src/screens/BattleScreen';
+import EntrainementScreen from './src/screens/EntrainementScreen';
+import ProgramScreen from './src/screens/ProgramScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import DebugOnboardingScreen from './src/screens/DebugOnboardingScreen';
 import DebugScreen from './src/screens/DebugScreen';
@@ -120,27 +125,27 @@ const TabNavigator = () => {
       }}
     >
       <Tab.Screen 
-        name="Home" 
-        component={HomeScreen}
+        name="Battle" 
+        component={BattleScreen}
         options={{ 
           headerShown: false,
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="ACCUEIL" />,
+          tabBarButton: (props) => <CustomTabBarButton {...props} label="BATTLE" />,
         }}
       />
       <Tab.Screen 
-        name="Progress" 
-        component={ProgressScreen}
+        name="Entrainement" 
+        component={EntrainementScreen}
         options={{ 
-          title: 'Progression',
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="PROGRESSION" />,
+          headerShown: false,
+          tabBarButton: (props) => <CustomTabBarButton {...props} label="ENTRAINEMENT" />,
         }}
       />
       <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
+        name="Programme" 
+        component={ProgramScreen}
         options={{ 
-          title: 'Profil',
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="PROFIL" />,
+          headerShown: false,
+          tabBarButton: (props) => <CustomTabBarButton {...props} label="PROGRAMME" />,
         }}
       />
     </Tab.Navigator>
@@ -148,7 +153,7 @@ const TabNavigator = () => {
 };
 
 const AppNavigator = () => {
-  const { user, isGuest, loading, startGuestMode } = useAuth();
+  const { user, isGuest, loading, isLinking, startGuestMode } = useAuth();
   const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(null);
   const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
   const [isInitializingGuest, setIsInitializingGuest] = useState(false);
@@ -178,6 +183,12 @@ const AppNavigator = () => {
   // ═══ HOOK 2: Auto-démarrer mode invité si pas d'utilisateur ═══
   useEffect(() => {
     const initGuestMode = async () => {
+      // NE PAS démarrer guest mode si on est en train de lier un compte phone !
+      if (isLinking) {
+        console.log('⏸️ Liaison de compte en cours - pas de création guest');
+        return;
+      }
+      
       // Si onboarding complété mais pas d'utilisateur Firebase → Démarrer anonymous auth
       if (isOnboardingCompleted && !user && !loading && !isCheckingOnboarding && !isInitializingGuest) {
         console.log('🎮 Démarrage automatique du mode invité (Anonymous Auth)');
@@ -193,7 +204,7 @@ const AppNavigator = () => {
     };
 
     initGuestMode();
-  }, [isOnboardingCompleted, user, loading, isCheckingOnboarding, isInitializingGuest]);
+  }, [isOnboardingCompleted, user, loading, isCheckingOnboarding, isInitializingGuest, isLinking]);
 
   // ═══ HOOK 3: Réinitialiser isInitializingGuest quand user est défini ═══
   useEffect(() => {
@@ -333,6 +344,49 @@ const AppNavigator = () => {
           }}
         />
         <Stack.Screen
+          name="SkillChallenge"
+          component={SkillChallengeScreen}
+          options={{ 
+            title: '🎯 Challenge',
+            headerStyle: {
+              backgroundColor: '#7B61FF',
+              elevation: 8,
+              shadowColor: '#7B61FF',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="ReviewWorkout"
+          component={ReviewWorkoutScreen}
+          options={{ 
+            title: '🔍 Révision',
+            gestureEnabled: false,
+            headerStyle: {
+              backgroundColor: '#7B61FF',
+              elevation: 8,
+              shadowColor: '#7B61FF',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.4,
+              shadowRadius: 8,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+          }}
+        />
+        <Stack.Screen
           name="WorkoutSummary"
           component={WorkoutSummaryScreen}
           options={{ 
@@ -363,6 +417,27 @@ const AppNavigator = () => {
               backgroundColor: '#F59E0B',
               elevation: 6,
               shadowColor: '#F59E0B',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 6,
+            },
+            headerTintColor: '#FFFFFF',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ 
+            title: '👤 Profil',
+            headerStyle: {
+              backgroundColor: '#4D9EFF',
+              elevation: 6,
+              shadowColor: '#4D9EFF',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.3,
               shadowRadius: 6,

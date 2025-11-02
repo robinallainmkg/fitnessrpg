@@ -14,11 +14,14 @@ import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWorkout } from '../contexts/WorkoutContext';
 import Timer from '../components/Timer';
+import Stopwatch from '../components/Stopwatch';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const WorkoutScreen = ({ route, navigation }) => {
-  const { program, level } = route.params;
+  const { program, level, mode } = route.params; // mode = 'training' or undefined
+  const isTrainingMode = mode === 'training';
+  
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [showAbandonDialog, setShowAbandonDialog] = useState(false);
   
@@ -38,10 +41,16 @@ const WorkoutScreen = ({ route, navigation }) => {
   } = useWorkout();
 
   const [reps, setReps] = useState(0);
+  const [stopwatchTime, setStopwatchTime] = useState(0);
 
   // Fonctions pour le compteur
   const increment = () => setReps(prev => prev + 1);
   const decrement = () => setReps(prev => Math.max(0, prev - 1));
+
+  // Callback pour le chronomètre
+  const handleTimeRecorded = (time) => {
+    setStopwatchTime(time);
+  };
 
   useEffect(() => {
     startWorkout(program, level);
@@ -67,13 +76,16 @@ const WorkoutScreen = ({ route, navigation }) => {
   };
 
   const handleValidateSet = () => {
-    if (reps === 0) {
+    const valueToRecord = currentExercise?.type === 'time' ? stopwatchTime : reps;
+    
+    if (valueToRecord === 0) {
       Alert.alert('Attention', 'Veuillez entrer une valeur supérieure à 0');
       return;
     }
 
-    recordSet(reps);
+    recordSet(valueToRecord);
     setReps(0);
+    setStopwatchTime(0);
   };
 
   const handleSkipRest = () => {
@@ -98,16 +110,35 @@ const WorkoutScreen = ({ route, navigation }) => {
     setShowAbandonDialog(false);
   };
 
-  // Redirection vers le résumé quand la séance est terminée
+  // Redirection vers l'écran de révision quand la séance est terminée
   useEffect(() => {
     if (workoutData && currentExerciseIndex >= workoutData.exercises.length) {
-      navigation.replace('WorkoutSummary', { 
-        program, 
-        level, 
-        workoutData 
-      });
+      if (isTrainingMode) {
+        // Mode entraînement: juste notifier et proposer le challenge
+        Alert.alert(
+          '✅ Entraînement terminé !',
+          'Tu peux maintenant tenter le challenge vidéo pour valider ce niveau et gagner de l\'XP.',
+          [
+            {
+              text: 'Retour',
+              onPress: () => navigation.navigate('SkillTree', { program }),
+              style: 'cancel'
+            },
+            {
+              text: '🎯 Faire le challenge',
+              onPress: () => navigation.replace('SkillChallenge', { program, level })
+            }
+          ]
+        );
+      } else {
+        // Mode normal: aller vers ReviewWorkout
+        navigation.replace('ReviewWorkout', { 
+          program, 
+          level
+        });
+      }
     }
-  }, [currentExerciseIndex, workoutData]);
+  }, [currentExerciseIndex, workoutData, isTrainingMode]);
 
   if (!workoutData) {
     return (
@@ -254,6 +285,19 @@ const WorkoutScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        {/* Banner Mode Entraînement */}
+        {isTrainingMode && (
+          <View style={styles.trainingModeBanner}>
+            <Text style={styles.trainingModeIcon}>🏋️</Text>
+            <View style={styles.trainingModeTextContainer}>
+              <Text style={styles.trainingModeTitle}>MODE ENTRAÎNEMENT</Text>
+              <Text style={styles.trainingModeSubtitle}>
+                Pas d'XP • Termine pour tenter le challenge vidéo
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Rectangle résumé de la séance */}
         <View style={styles.sessionSummaryCard}>
           {/* En-tête avec Programme et Bouton Annuler */}
@@ -354,28 +398,43 @@ const WorkoutScreen = ({ route, navigation }) => {
             }
           </Text>
           
-          <View style={styles.counterContainer}>
-            <TouchableOpacity onPress={decrement} style={styles.counterButton}>
-              <Text style={styles.counterButtonText}>−</Text>
-            </TouchableOpacity>
-            
-            <Text style={styles.counterValue}>{reps}</Text>
-            
-            <TouchableOpacity onPress={increment} style={styles.counterButton}>
-              <Text style={styles.counterButtonText}>+</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Afficher le chronomètre pour les exercices de type "time" */}
+          {currentExercise.type === 'time' ? (
+            <Stopwatch onTimeRecorded={handleTimeRecorded} />
+          ) : (
+            // Compteur manuel pour les exercices de type "reps"
+            <View style={styles.counterContainer}>
+              <TouchableOpacity onPress={decrement} style={styles.counterButton}>
+                <Text style={styles.counterButtonText}>−</Text>
+              </TouchableOpacity>
+              
+              <Text style={styles.counterValue}>{reps}</Text>
+              
+              <TouchableOpacity onPress={increment} style={styles.counterButton}>
+                <Text style={styles.counterButtonText}>+</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           
           <LinearGradient
-            colors={reps > 0 ? ['#7B61FF', '#7B61FF'] : ['#334155', '#1E293B']}
+            colors={
+              (currentExercise.type === 'time' ? stopwatchTime : reps) > 0 
+                ? ['#7B61FF', '#7B61FF'] 
+                : ['#334155', '#1E293B']
+            }
             style={styles.validateButton}
           >
             <TouchableOpacity 
               onPress={handleValidateSet}
-              disabled={reps === 0}
+              disabled={(currentExercise.type === 'time' ? stopwatchTime : reps) === 0}
               style={styles.validateButtonTouch}
             >
-              <Text style={[styles.validateText, { opacity: reps > 0 ? 1 : 0.5 }]}>✓ Valider la série</Text>
+              <Text style={[
+                styles.validateText, 
+                { opacity: (currentExercise.type === 'time' ? stopwatchTime : reps) > 0 ? 1 : 0.5 }
+              ]}>
+                ✓ Valider la série
+              </Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>
@@ -516,6 +575,38 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
+  },
+
+  // Training Mode Banner
+  trainingModeBanner: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.5)',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  trainingModeIcon: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  trainingModeTextContainer: {
+    flex: 1,
+  },
+  trainingModeTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#3B82F6',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  trainingModeSubtitle: {
+    fontSize: 13,
+    color: '#94A3B8',
   },
   
   // Rectangle résumé de la séance

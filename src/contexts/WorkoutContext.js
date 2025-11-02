@@ -1,18 +1,11 @@
 import React, { createContext, useContext, useState } from 'react';
 
-import firestore from '@react-native-firebase/firestore';
-import { 
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  serverTimestamp,
-  Timestamp
-} from '@react-native-firebase/firestore';
+import { getFirestore, FieldValue, Timestamp } from '../config/firebase.simple';
 
 import { useAuth } from './AuthContext';
 import { calculateWorkoutScore, calculateXPBonus } from '../utils/scoring';
+
+const firestore = getFirestore();
 // Note: Programme unlocking nécessite d'être adapté à la nouvelle architecture
 
 const WorkoutContext = createContext({});
@@ -77,9 +70,9 @@ export const WorkoutProvider = ({ children }) => {
     const isLastExercise = currentExerciseIndex === workoutData.exercises.length - 1;
 
     if (isLastSet && isLastExercise) {
-      // Séance terminée - passer à un index supérieur pour déclencher la navigation
+      // Séance terminée - passer à un index supérieur pour déclencher la navigation vers ReviewWorkoutScreen
       setCurrentExerciseIndex(currentExerciseIndex + 1);
-      completeWorkout(newSetsData);
+      // Ne PAS appeler completeWorkout ici - sera fait depuis ReviewWorkoutScreen
     } else if (isLastSet) {
       // Passer à l'exercice suivant
       setCurrentExerciseIndex(currentExerciseIndex + 1);
@@ -89,6 +82,17 @@ export const WorkoutProvider = ({ children }) => {
       setCurrentSetIndex(currentSetIndex + 1);
       startRest(currentExercise.rest);
     }
+  };
+
+  /**
+   * Met à jour la valeur d'une série spécifique (pour l'écran de révision)
+   */
+  const updateSetValue = (exerciseIndex, setIndex, newValue) => {
+    if (!workoutData) return;
+
+    const newSetsData = [...setsData];
+    newSetsData[exerciseIndex][setIndex] = parseInt(newValue) || 0;
+    setSetsData(newSetsData);
   };
 
   /**
@@ -168,6 +172,11 @@ export const WorkoutProvider = ({ children }) => {
 
       // Créer la session de workout
       const now = new Date();
+      console.log('🔍 Debug - FieldValue:', FieldValue);
+      console.log('🔍 Debug - FieldValue.serverTimestamp:', FieldValue?.serverTimestamp);
+      console.log('🔍 Debug - Timestamp:', Timestamp);
+      console.log('🔍 Debug - Timestamp.fromDate:', Timestamp?.fromDate);
+      
       const workoutSession = {
         userId: user.uid,
         programId: workoutData.program?.id || 'unknown', // ✅ Protection
@@ -178,13 +187,13 @@ export const WorkoutProvider = ({ children }) => {
         xpEarned,
         startTime: Timestamp.fromDate(workoutStartTime || now), // ✅ Conversion en Timestamp Firestore
         endTime: Timestamp.fromDate(now), // ✅ Conversion en Timestamp Firestore
-        createdAt: serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       };
 
       console.log('💾 WorkoutSession à sauvegarder:', JSON.stringify(workoutSession, null, 2));
 
       // Sauvegarder la session
-      const fs = firestore();
+      const fs = firestore;
       const sessionsRef = fs.collection('workoutSessions');
       const newSessionRef = sessionsRef.doc();
       await newSessionRef.set(workoutSession);
@@ -256,7 +265,7 @@ export const WorkoutProvider = ({ children }) => {
     console.log('📈 Updating progress for user:', user.uid, isGuest ? '(guest)' : '(authenticated)');
 
     try {
-      const fs = firestore();
+      const fs = firestore;
       const progressRef = fs.collection('userProgress').doc(`${user.uid}_${programId}`);
       
       // Charger la progression actuelle
@@ -284,7 +293,7 @@ export const WorkoutProvider = ({ children }) => {
         unlockedLevels: newUnlockedLevels,
         completedLevels: newCompletedLevels,
         totalSessions: (currentProgress?.totalSessions || 0) + 1,
-        lastSessionAt: serverTimestamp()
+        lastSessionAt: FieldValue.serverTimestamp()
       });
 
     } catch (error) {
@@ -304,14 +313,14 @@ export const WorkoutProvider = ({ children }) => {
     console.log('⭐ Adding XP for user:', user.uid, isGuest ? '(guest)' : '(authenticated)', `+${xpToAdd}XP`);
 
     try {
-      const fs = firestore();
+      const fs = firestore;
       const userRef = fs.collection('users').doc(user.uid);
       const userDoc = await userRef.get();
       const currentXP = userDoc.data()?.totalXP || 0;
 
       await userRef.update({
         totalXP: currentXP + xpToAdd,
-        lastXPUpdate: firestore.FieldValue.serverTimestamp()
+        lastXPUpdate: FieldValue.serverTimestamp()
       });
     } catch (error) {
       console.error('❌ Erreur mise à jour XP:', error);
@@ -385,6 +394,85 @@ export const WorkoutProvider = ({ children }) => {
     return total > 0 ? (completed / total) * 100 : 0;
   };
 
+  /**
+   * Soumet un challenge vidéo pour validation admin
+   */
+  const submitSkillChallenge = async (videoUri, programId, levelId) => {
+    if (isGuest) {
+      throw new Error('Les utilisateurs invités ne peuvent pas soumettre de challenges');
+    }
+
+    try {
+      console.log('📹 Soumission challenge:', { programId, levelId, videoUri });
+
+      // Créer le document de challenge dans Firestore
+      const challengeData = {
+        userId: user.uid,
+        programId,
+        levelId,
+        videoUrl: videoUri,
+        status: 'pending', // 'pending' | 'approved' | 'rejected'
+        submittedAt: FieldValue.serverTimestamp(),
+        attempts: FieldValue.arrayUnion({
+          date: Timestamp.fromDate(new Date()),
+          videoUrl: videoUri,
+        }),
+      };
+
+      // Utiliser un ID composite pour faciliter les requêtes
+      const challengeId = `${user.uid}_${programId}_${levelId}`;
+      
+      await firestore
+        .collection('skillChallenges')
+        .doc(challengeId)
+        .set(challengeData, { merge: true });
+
+      console.log('✅ Challenge soumis avec succès');
+      return { success: true, challengeId };
+    } catch (error) {
+      console.error('❌ Erreur soumission challenge:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Passe un niveau sans faire le challenge (unlock sans XP)
+   */
+  const skipChallenge = async (programId, levelId) => {
+    if (isGuest) {
+      throw new Error('Les utilisateurs invités ne peuvent pas skip de challenges');
+    }
+
+    try {
+      console.log('⏭️ Skip challenge:', { programId, levelId });
+
+      // Marquer le niveau comme skipped dans userProgress
+      await firestore
+        .collection('userProgress')
+        .doc(user.uid)
+        .set({
+          programs: {
+            [programId]: {
+              levels: {
+                [levelId]: {
+                  status: 'skipped',
+                  challengeCompleted: false,
+                  skippedAt: FieldValue.serverTimestamp(),
+                  xpEarned: 0,
+                }
+              }
+            }
+          }
+        }, { merge: true });
+
+      console.log('✅ Niveau skipped - suivant débloqué sans XP');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erreur skip challenge:', error);
+      throw error;
+    }
+  };
+
   const value = {
     // États
     workoutData,
@@ -398,10 +486,13 @@ export const WorkoutProvider = ({ children }) => {
     // Fonctions
     startWorkout,
     recordSet,
+    updateSetValue,
     startRest,
     skipRest,
     completeWorkout,
     resetWorkout,
+    submitSkillChallenge,
+    skipChallenge,
 
     // Helpers
     getCurrentExercise,

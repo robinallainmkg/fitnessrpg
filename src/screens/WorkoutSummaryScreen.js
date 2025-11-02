@@ -19,7 +19,9 @@ import { useWorkout } from '../contexts/WorkoutContext';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../theme/colors';
 import { calculateWorkoutScore, isLevelCompleted } from '../utils/scoring';
-import firestore from '@react-native-firebase/firestore';
+import { getFirestore, FieldValue } from '../config/firebase.simple';
+
+const firestore = getFirestore();
 
 const WorkoutSummaryScreen = ({ route, navigation }) => {
   const { program, level } = route.params;
@@ -49,7 +51,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
 
     try {
       // Récupérer les données utilisateur actuelles
-      const userDocRef = firestore().doc(`users/${user.uid}`);
+      const userDocRef = firestore.doc(`users/${user.uid}`);
       const userDoc = await userDocRef.get();
       const userData = userDoc.exists ? userDoc.data() : {};
       const currentStats = userData.stats || {};
@@ -121,7 +123,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
       // ═══ SAUVEGARDE DES XP ═══
       if (result.xpEarned && user?.uid) {
         console.log('⭐ Updating user XP: +', result.xpEarned);
-        const userDocRef = firestore().doc(`users/${user.uid}`);
+        const userDocRef = firestore.doc(`users/${user.uid}`);
         const userDoc = await userDocRef.get();
         const currentXP = userDoc.data()?.totalXP || 0;
         const newXP = currentXP + result.xpEarned;
@@ -146,7 +148,7 @@ const WorkoutSummaryScreen = ({ route, navigation }) => {
         
         // Mettre à jour la progression du programme dans userProgress
         const categoryId = program.category || program.id;
-        const progressRef = firestore().doc(`userProgress/${user.uid}_${categoryId}`);
+        const progressRef = firestore.doc(`userProgress/${user.uid}_${categoryId}`);
         const progressDoc = await progressRef.get();
         const currentProgress = progressDoc.exists ? progressDoc.data() : {};
         

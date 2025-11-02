@@ -26,6 +26,7 @@ const initAuth = () => {
   
   console.log('🔐 Initialisation Firebase Auth...');
   authInstance = authModule();
+  
   console.log('✅ Firebase Auth ready');
   
   return authInstance;
@@ -65,7 +66,11 @@ const initFirestore = () => {
 export const getAuth = () => initAuth();
 export const getFirestore = () => initFirestore();
 
-// Pour les FieldValue et autres statiques
+// Pour les FieldValue, Timestamp et autres classes statiques Firebase
 export const FieldValue = firestoreModule.FieldValue;
+export const Timestamp = firestoreModule.Timestamp;
+
+// PhoneAuthProvider depuis le module auth (pas l'instance)
+export const PhoneAuthProvider = authModule.PhoneAuthProvider;
 
 console.log('📦 Firebase simple config loaded');

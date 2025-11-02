@@ -50,6 +50,7 @@
     "@types/react": "~19.1.10",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~54.0.0",
+    "firebase-admin": "^13.5.0",
     "typescript": "~5.9.2"
   },
   "private": true
