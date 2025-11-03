@@ -26,10 +26,11 @@ export const WorkoutProvider = ({ children }) => {
   /**
    * Démarre une nouvelle séance d'entraînement
    */
-  const startWorkout = (program, level) => {
+  const startWorkout = (program, level, mode = 'challenge') => {
     const workout = {
       program,
       level,
+      mode, // 'training' ou 'challenge'
       exercises: level.exercises
     };
 
@@ -166,9 +167,12 @@ export const WorkoutProvider = ({ children }) => {
 
       const { score, percentage } = calculateWorkoutScore(exercisesCompleted);
       const xpReward = workoutData.level?.xpReward || 100; // ✅ Protection contre undefined
-      const xpEarned = calculateXPBonus(score, xpReward);
+      
+      // ✅ IMPORTANT: L'XP n'est donnée QUE pour les challenges, PAS pour les entraînements
+      const isTraining = workoutData.mode === 'training';
+      const xpEarned = isTraining ? 0 : calculateXPBonus(score, xpReward);
 
-      console.log('📈 Score calculé:', score, 'Percentage:', percentage, 'XP:', xpEarned);
+      console.log('📈 Score calculé:', score, 'Percentage:', percentage, 'Mode:', workoutData.mode, 'XP:', xpEarned);
 
       // Créer la session de workout
       const now = new Date();
@@ -181,6 +185,7 @@ export const WorkoutProvider = ({ children }) => {
         userId: user.uid,
         programId: workoutData.program?.id || 'unknown', // ✅ Protection
         levelId: workoutData.level?.id || 1, // ✅ Protection
+        type: workoutData.mode === 'training' ? 'training' : 'challenge', // ✅ Différencier training/challenge
         exercises: exercisesCompleted,
         score,
         percentage,

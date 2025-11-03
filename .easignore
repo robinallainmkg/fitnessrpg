@@ -1,8 +1,35 @@
-# Fichiers à ignorer lors du build EAS
+# Reduce upload size for EAS Build
 *.md
+!README.md
 docs/
 .vscode/
 .idea/
 *.log
+
+# Platform tools and iOS
 platform-tools/
 FitnessGameApp/
+ios/
+
+# Old APK/AAB files
+*.aab
+*.apk
+HybridRPG-*.aab
+HybridRPG-*.apk
+
+# Build artifacts
+android/app/build/
+android/build/
+android/.gradle/
+
+# Backup files
+*.backup
+*.old.js
+*.new.js
+*_old.*
+*_new.*
+*_backup.*
+
+# Git
+.git/
+.github/

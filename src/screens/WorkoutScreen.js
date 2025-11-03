@@ -53,7 +53,7 @@ const WorkoutScreen = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    startWorkout(program, level);
+    startWorkout(program, level, mode); // Passer le mode (training ou challenge)
 
     let backHandler;
     if (Platform.OS === 'android') {

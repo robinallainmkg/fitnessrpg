@@ -132,9 +132,41 @@ const EntrainementScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const handlePreviewSession = (session) => {
-    // Preview simple - pourrait ouvrir un modal avec détails
-    console.log('Preview session:', session.skillName);
+  const handlePreviewSession = async (session) => {
+    try {
+      // Charger les détails du programme et du niveau
+      const meta = await loadProgramsMeta();
+      const category = meta.categories.find(cat => cat.id === session.programId);
+      
+      if (!category) {
+        console.error('Programme non trouvé');
+        return;
+      }
+      
+      const skillDetails = await loadProgramDetails(session.programId, session.skillId);
+      if (!skillDetails) {
+        console.error('Compétence non trouvée');
+        return;
+      }
+
+      // Naviguer vers l'écran de preview/détails du workout
+      navigation.navigate('ReviewWorkout', {
+        program: {
+          id: session.programId,
+          name: category.name,
+          icon: category.icon,
+        },
+        level: {
+          id: session.skillId,
+          number: session.levelNumber || 1,
+          name: skillDetails.name,
+          exercises: session.exercises || [],
+        },
+        mode: 'preview', // Mode preview pour juste voir sans démarrer
+      });
+    } catch (error) {
+      console.error('❌ Error previewing session:', error);
+    }
   };
 
   const handleStartSession = async (session) => {

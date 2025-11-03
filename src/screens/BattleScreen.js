@@ -41,6 +41,14 @@ const BattleScreen = ({ navigation }) => {
   const { user } = useAuth();
   const { todayChallenge, loadingChallenge, loadTodayChallenge } = useChallenge();
 
+  // Chargement initial au montage du composant
+  useEffect(() => {
+    if (user?.uid) {
+      console.log('🎬 BattleScreen initial load');
+      loadAllBattleData();
+    }
+  }, [user?.uid]);
+
   // Recharger toutes les données quand l'écran devient actif
   useFocusEffect(
     React.useCallback(() => {
@@ -211,11 +219,30 @@ const BattleScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const handleChallengePress = (challenge) => {
-    navigation.navigate('SkillChallenge', {
-      programId: challenge.programId,
-      levelId: challenge.levelId,
-    });
+  const handleChallengePress = async (challenge) => {
+    try {
+      // Charger le programme et le niveau complets depuis Firestore
+      const programDoc = await firestore.collection('programs').doc(challenge.programId).get();
+      if (!programDoc.exists) {
+        console.error('❌ Programme introuvable:', challenge.programId);
+        return;
+      }
+      
+      const programData = { id: programDoc.id, ...programDoc.data() };
+      const level = programData.levels?.find(l => l.id === challenge.levelId);
+      
+      if (!level) {
+        console.error('❌ Niveau introuvable:', challenge.levelId);
+        return;
+      }
+
+      navigation.navigate('SkillChallenge', {
+        program: programData,
+        level: level,
+      });
+    } catch (error) {
+      console.error('❌ Error loading challenge details:', error);
+    }
   };
 
   const formatDate = (t) => {
@@ -265,9 +292,9 @@ const BattleScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('Challenge')}
           />
 
-          {/* QUÊTE DU JOUR - SKILL CHALLENGE */}
+          {/* QUÊTE PRINCIPALE - SKILL CHALLENGE */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🎯 Quête du Jour</Text>
+            <Text style={styles.sectionTitle}>Quête Principale</Text>
             {loading ? (
               <Card style={styles.loadingCard}>
                 <Card.Content>
@@ -308,10 +335,10 @@ const BattleScreen = ({ navigation }) => {
             )}
           </View>
 
-          {/* AUTRES QUÊTES PRINCIPALES */}
+          {/* QUÊTES SECONDAIRES */}
           {skillChallenges.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>⚔️ Quêtes Principales</Text>
+              <Text style={styles.sectionTitle}>Quêtes Secondaires</Text>
               {skillChallenges
                 .filter(c => c.status === 'available' || c.status === 'pending' || c.status === 'rejected')
                 .slice(0, 5)

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
 import { rpgTheme, getRankColor } from '../theme/rpgTheme';
 import firestore from '@react-native-firebase/firestore';
+import { getUserGlobalRank } from '../services/leaderboardService';
 
 // Import des avatars disponibles
 const AVATARS = {
@@ -27,11 +28,31 @@ const UserHeader = ({
   userId = null,
   onUsernameUpdate = null,
   onPress = null, // Nouveau: callback quand on clique sur le header
-  enableUsernameEdit = false // Nouveau: activer/désactiver l'édition du nom
+  enableUsernameEdit = false, // Nouveau: activer/désactiver l'édition du nom
+  showRank = true // Nouveau: afficher le classement global
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [newUsername, setNewUsername] = useState(username);
   const [saving, setSaving] = useState(false);
+  const [globalRank, setGlobalRank] = useState(null);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // Charger le rang global de l'utilisateur
+  useEffect(() => {
+    if (showRank && userId) {
+      loadGlobalRank();
+    }
+  }, [showRank, userId, globalXP]); // Recharger quand l'XP change
+
+  const loadGlobalRank = async () => {
+    try {
+      const { rank, totalUsers } = await getUserGlobalRank(userId);
+      setGlobalRank(rank);
+      setTotalUsers(totalUsers);
+    } catch (error) {
+      console.error('❌ Error loading global rank:', error);
+    }
+  };
 
   const handleSaveUsername = async () => {
     if (!enableUsernameEdit) return; // Bloquer si édition désactivée
@@ -130,9 +151,18 @@ const UserHeader = ({
           </View>
         </View>
         
-        {/* Icône épée à droite */}
-        <View style={styles.swordContainer}>
-          <Text style={styles.swordIcon}>⚔️</Text>
+        {/* Classement global à droite */}
+        <View style={styles.rankContainer}>
+          {showRank && globalRank !== null ? (
+            <>
+              <Text style={styles.rankLabel}>Classement</Text>
+              <View style={styles.rankBadge}>
+                <Text style={styles.rankNumber}>#{globalRank}</Text>
+              </View>
+            </>
+          ) : showRank ? (
+            <Text style={styles.rankLoading}>...</Text>
+          ) : null}
         </View>
       </View>
       
@@ -296,8 +326,52 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   
+  // Styles du classement global
+  rankContainer: {
+    marginLeft: rpgTheme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 60,
+  },
   
+  rankLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.6)',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
   
+  rankBadge: {
+    backgroundColor: 'rgba(255, 215, 0, 0.15)',
+    borderWidth: 2,
+    borderColor: rpgTheme.colors.ranks.legend,
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    shadowColor: rpgTheme.colors.ranks.legend,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  
+  rankNumber: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: rpgTheme.colors.ranks.legend,
+    textAlign: 'center',
+  },
+  
+  rankLoading: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.4)',
+  },
+  
+  xpBarContainer: {
+    marginTop: rpgTheme.spacing.xs,
+  },
   xpBarBackground: {
     height: 18,
     backgroundColor: 'rgba(26, 34, 68, 0.9)',
