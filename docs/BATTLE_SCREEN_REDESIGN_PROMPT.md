@@ -487,34 +487,132 @@ assets/
 
 ## 🚀 Implementation Phases
 
-### **Phase 1: Foundation (Week 1-2)**
-- New navigation bar with icons
-- Enhanced header with animated avatar
-- Basic card redesigns (no animations yet)
+### **Phase 1: Hero Landing + Navigation (Week 1-2)** ✅ IMPLEMENTED
+**Status**: Code ready, needs integration
 
-### **Phase 2: Visual Polish (Week 3-4)**
-- AI-generated boss cards
-- Character evolution system (3 levels minimum)
-- Particle effects for key actions
+**Components créés**:
+1. **NavigationBarV2** (`src/components/navigation/NavigationBarV2.js`)
+   - Icônes Material: `sword-cross` (Programme), `flash` (Battle), `dumbbell` (Entrainement)
+   - États actifs avec glow effect
+   - Animations scale au tap
+   - Dot indicator sous l'onglet actif
+   - Notification badge support
 
-### **Phase 3: Storytelling (Week 5-6)**
-- NPC integration
-- Quest narrative text
-- Dialogue system for quest acceptance
+2. **BattleScreenHeroLanding** (`src/screens/BattleScreenHeroLanding.js`)
+   - Avatar animé avec bounce effect
+   - Bouton "COMMENCER L'AVENTURE" style League of Legends
+   - Background avec gradient overlay
+   - Quick stats footer (streak, XP, rank)
+   - Glow animations pulsantes
 
-### **Phase 4: Advanced Animations (Week 7-8)**
-- Full Lottie character animations
-- Complex page transitions
-- Victory sequences and celebrations
+3. **QuestSelectionModal** (`src/components/modals/QuestSelectionModal.js`)
+   - Modal style ranked selection (LOL/Valorant)
+   - 3 game modes avec cards:
+     - 📅 **Défi du Jour** (Daily video challenge, +150 XP)
+     - ⚔️ **Quête Principale** (Main quest, +500 XP)
+     - 🗺️ **Quêtes Secondaires** (Side quests, variable XP)
+   - Animations slide-in depuis le bas
+   - Blur background avec expo-blur
+   - Gradient cards avec stats badges
+
+**Next steps**:
+- Intégrer NavigationBarV2 dans App.js (remplacer CustomTabBarButton)
+- Connecter QuestSelectionModal aux vraies données Firestore
+- Implémenter navigation vers WorkoutSession
+
+---
+
+### **Phase 2: Avatar Evolution System (Week 3-4)**
+- Créer 3-4 avatars évolutifs (Lv1-5, Lv6-10, Lv11-20, Lv21+)
+- Implémenter idle walk animation (sprite sheet ou Lottie)
+- Variations basées sur streak (confiant vs fatigué)
+- Level-up transformation animation
+
+**Options techniques**:
+- **Option A (Budget)**: Sprite sheets PNG (8 frames walking loop)
+- **Option B (Premium)**: Lottie animations avec rigging
+- **Option C (AI)**: Générer avec Midjourney + animator
+
+---
+
+### **Phase 3: Parallax Background + Particles (Week 5)**
+- Background multi-layers avec React Native Reanimated
+- Particules flottantes (React Native Skia)
+- Gradient shift basé sur heure de la journée
+- Energy waves pendant streak
+
+---
+
+### **Phase 4: Quest Details Screens (Week 6)**
+- Écran détaillé pour chaque type de quête
+- Preview des exercices avec animations
+- Confirmation modal avant de démarrer
+- Victory screen avec XP animation
+
+---
+
+### **Phase 5: Polish + A/B Testing (Week 7-8)**
+- Optimisation performances (<16ms par frame)
+- Haptic feedback sur iOS
+- Sound effects (optionnel)
+- A/B test: Hero Landing vs Classic Battle Screen
+
+---
+
+## 💡 **CREATIVE VISION IMPLEMENTED**
+
+### **Concept**: League of Legends meets Genshin Impact
+
+Au lieu d'un écran avec plein de cards scrollables, on a maintenant:
+
+1. **Hero Landing** - Écran d'accueil épique
+   - Avatar du joueur qui "respire" (idle animation)
+   - Feeling de "champion prêt à combattre"
+   - Un seul bouton massif: "COMMENCER L'AVENTURE"
+   - Stats rapides en footer (streak, XP, rank)
+
+2. **Game Mode Selection** - Choix du type de partie
+   - Modal qui slide depuis le bas (comme ranked LOL)
+   - 3 modes de jeu clairs avec preview
+   - Stats visibles: XP reward, durée, difficulté
+   - Tap pour démarrer immédiatement
+
+3. **Navigation Premium** - Barre de navigation RPG
+   - Icônes vectorielles Material (pas d'emojis)
+   - Glow effects sur onglet actif
+   - Animations micro-interactions
+   - Notifications badges
+
+### **User Flow Simplifié**
+```
+Battle Tab
+    ↓
+Hero Landing (avatar + bouton central)
+    ↓
+Tap "COMMENCER L'AVENTURE"
+    ↓
+Modal Game Mode Selection
+    ↓
+Tap mode choisi → Démarrer la quête
+```
+
+**Avantages**:
+- ✅ Moins de cognitive load (un seul bouton principal)
+- ✅ Plus immersif (feeling de "lancement de partie")
+- ✅ Design moderne (LOL, Valorant, Genshin)
+- ✅ Animations premium sans surcharge
+- ✅ Facile à A/B tester
 
 ---
 
 **Budget Recommendations:**
-- **AI Image Generation**: $200-500 (Midjourney + refinements)
-- **Character Artist**: $2,000-5,000 (evolution set + animations)
-- **UI/UX Designer**: $3,000-7,000 (full redesign + asset kit)
-- **Motion Designer**: $1,500-3,000 (Lottie animations)
+- **Phase 1 (Navigation + Hero Landing)**: 0€ (code done, DIY integration)
+- **Phase 2 (Avatar sprites)**: $200-500 (Fiverr animator ou Midjourney)
+- **Phase 3 (Particles)**: 0€ (React Native Skia open-source)
+- **Phase 4-5 (Polish)**: $0-1000 (optionnel: sound designer)
 
-**Total Estimated**: $6,700 - $15,500 for complete redesign
+**Total Estimated**: $200 - $1,500 (vs $6,700 - $15,500 original)
+
+**ROI**: 10x meilleur avec approche itérative + utilisation d'assets existants.
 
 This creates a world-class RPG fitness experience that rivals top mobile games while maintaining workout functionality.
