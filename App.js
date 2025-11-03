@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, ActivityIndicator, TouchableOpacity, StyleSheet, LogBox } from 'react-native';
+import { View, Text, ActivityIndicator, TouchableOpacity, LogBox } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Supprimer les warnings de dépréciation Firebase (temporaire jusqu'à migration v9)
@@ -35,6 +35,7 @@ import ReviewWorkoutScreen from './src/screens/ReviewWorkoutScreen';
 import WorkoutSummaryScreen from './src/screens/WorkoutSummaryScreen';
 import ProgressScreen from './src/screens/ProgressScreen';
 import BattleScreen from './src/screens/BattleScreen';
+import BattleScreenHeroLanding from './src/screens/BattleScreenHeroLanding';
 import EntrainementScreen from './src/screens/EntrainementScreen';
 import ProgramScreen from './src/screens/ProgramScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
@@ -50,6 +51,7 @@ import { AdminReviewScreen } from './src/screens/AdminReviewScreen';
 import FirebaseDebug from './src/components/FirebaseDebug';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import FirebaseDiagnostic from './src/components/FirebaseDiagnostic';
+import NavigationBarV2 from './src/components/navigation/NavigationBarV2';
 
 // Theme
 import { colors } from './src/theme/colors';
@@ -69,85 +71,39 @@ const theme = {
   },
 };
 
-// Composant personnalisé pour les boutons de navigation
-const CustomTabBarButton = ({ children, onPress, accessibilityState, label }) => {
-  const focused = accessibilityState.selected;
-  
+// Composant custom tab bar avec NavigationBarV2
+const CustomTabBar = ({ state, navigation }) => {
+  const activeTab = state.routes[state.index].name;
+
+  const handleTabChange = (tabName) => {
+    navigation.navigate(tabName);
+  };
+
+  // TODO: Calculer dynamiquement les notifications (nouveau daily challenge, etc.)
+  const notifications = {
+    Battle: false, // Mettre à true si nouveau daily challenge disponible
+  };
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={styles.tabButton}
-      activeOpacity={0.7}
-    >
-      <View style={styles.tabContent}>
-        {/* Indicateur lumineux en haut quand actif */}
-        {focused && (
-          <View style={styles.activeIndicator} />
-        )}
-        
-        {/* Label du texte */}
-        <Text style={[
-          styles.tabLabel,
-          focused && styles.tabLabelActive
-        ]}>
-          {label}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    <NavigationBarV2
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      notifications={notifications}
+    />
   );
 };
 
 const TabNavigator = () => {
   return (
     <Tab.Navigator
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarShowLabel: false, // On gère le label nous-mêmes
-        tabBarStyle: {
-          backgroundColor: '#0F172A', // Bleu marine très foncé
-          borderTopWidth: 2,
-          borderTopColor: 'rgba(77, 158, 255, 0.2)', // Bordure néon subtile
-          height: 70,
-          paddingBottom: 12,
-          paddingTop: 8,
-          shadowColor: '#4D9EFF',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          elevation: 20,
-        },
-        headerStyle: {
-          backgroundColor: colors.surface,
-        },
-        headerTintColor: colors.text,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerShown: false,
       }}
     >
-      <Tab.Screen 
-        name="Battle" 
-        component={BattleScreen}
-        options={{ 
-          headerShown: false,
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="BATTLE" />,
-        }}
-      />
-      <Tab.Screen 
-        name="Entrainement" 
-        component={EntrainementScreen}
-        options={{ 
-          headerShown: false,
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="ENTRAINEMENT" />,
-        }}
-      />
-      <Tab.Screen 
-        name="Programme" 
-        component={ProgramScreen}
-        options={{ 
-          headerShown: false,
-          tabBarButton: (props) => <CustomTabBarButton {...props} label="PROGRAMME" />,
-        }}
-      />
+      <Tab.Screen name="Programme" component={ProgramScreen} />
+      <Tab.Screen name="Battle" component={BattleScreenHeroLanding} />
+      <Tab.Screen name="Entrainement" component={EntrainementScreen} />
     </Tab.Navigator>
   );
 };
@@ -615,44 +571,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-
-// Styles pour la navigation personnalisée
-const styles = StyleSheet.create({
-  tabButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    top: 0,
-    width: '70%',
-    height: 3,
-    backgroundColor: '#4D9EFF',
-    borderRadius: 2,
-    shadowColor: '#4D9EFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  tabLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    color: 'rgba(148, 163, 184, 0.6)', // Inactif : gris bleuté transparent
-    marginTop: 8,
-  },
-  tabLabelActive: {
-    color: '#4D9EFF', // Actif : bleu néon
-    textShadowColor: 'rgba(77, 158, 255, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
-});

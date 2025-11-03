@@ -11,11 +11,17 @@ import {
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { doc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChallenge } from '../../contexts/ChallengeContext';
 import { colors } from '../../theme/colors';
 import { rpgTheme } from '../../theme/rpgTheme';
-import UserHeader from '../UserHeader';
+import UserHeader from '../components/UserHeader';
+import QuestSelectionModal from '../components/modals/QuestSelectionModal';
+import { getAvailableChallenges, recommendTodayChallenge } from '../../services/skillChallengeService';
+import { getFirestore } from '../../config/firebase.simple';
+
+const firestore = getFirestore();
 
 const { width, height } = Dimensions.get('window');
 const BACKGROUND_IMAGE = require('../../../assets/programmes/street-bg.jpg');
@@ -41,6 +47,8 @@ const BattleScreenHeroLanding = ({ navigation }) => {
 
   const [showQuestModal, setShowQuestModal] = useState(false);
   const [userStats, setUserStats] = useState(null);
+  const [todaySkillChallenge, setTodaySkillChallenge] = useState(null);
+  const [skillChallenges, setSkillChallenges] = useState([]);
 
   useEffect(() => {
     // Animation d'entrée
@@ -83,20 +91,68 @@ const BattleScreenHeroLanding = ({ navigation }) => {
     // Charger les stats utilisateur
     if (user?.uid) {
       loadUserStats();
+      loadChallenges();
     }
   }, [user?.uid]);
 
   const loadUserStats = async () => {
-    // TODO: Charger depuis Firestore
-    // Pour l'instant, données mock
-    setUserStats({
-      displayName: user?.displayName || 'Guerrier',
-      globalLevel: 15,
-      globalXP: 14500,
-      title: 'Champion',
-      streakDays: 7,
-      avatarId: 0,
-    });
+    if (!user?.uid) return;
+    
+    try {
+      const userRef = doc(firestore, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setUserStats({
+          displayName: data.displayName || user.displayName || 'Guerrier',
+          globalLevel: data.globalLevel || 1,
+          globalXP: data.globalXP || 0,
+          title: data.title || 'Débutant',
+          streakDays: data.streakDays || 0,
+          avatarId: data.avatarId || 0,
+        });
+      } else {
+        // Fallback si pas de document
+        setUserStats({
+          displayName: user.displayName || 'Guerrier',
+          globalLevel: 1,
+          globalXP: 0,
+          title: 'Débutant',
+          streakDays: 0,
+          avatarId: 0,
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erreur chargement stats:', error);
+      // Fallback en cas d'erreur
+      setUserStats({
+        displayName: user.displayName || 'Guerrier',
+        globalLevel: 1,
+        globalXP: 0,
+        title: 'Débutant',
+        streakDays: 0,
+        avatarId: 0,
+      });
+    }
+  };
+
+  const loadChallenges = async () => {
+    if (!user?.uid) return;
+    
+    try {
+      const challenges = await getAvailableChallenges(user.uid);
+      setSkillChallenges(challenges || []);
+      
+      if (challenges && challenges.length > 0 && userStats) {
+        const recommended = recommendTodayChallenge(challenges, userStats);
+        setTodaySkillChallenge(recommended || null);
+      }
+    } catch (error) {
+      console.error('❌ Erreur chargement challenges:', error);
+      setSkillChallenges([]);
+      setTodaySkillChallenge(null);
+    }
   };
 
   const handleStartAdventure = () => {
@@ -210,14 +266,15 @@ const BattleScreenHeroLanding = ({ navigation }) => {
         </Animated.View>
       </ImageBackground>
 
-      {/* Quest Selection Modal (TODO: créer composant séparé) */}
-      {showQuestModal && (
-        <QuestSelectionModal
-          visible={showQuestModal}
-          onClose={() => setShowQuestModal(false)}
-          navigation={navigation}
-        />
-      )}
+      {/* Quest Selection Modal */}
+      <QuestSelectionModal
+        visible={showQuestModal}
+        onClose={() => setShowQuestModal(false)}
+        navigation={navigation}
+        todayChallenge={todayChallenge}
+        mainQuest={todaySkillChallenge}
+        sideQuests={skillChallenges}
+      />
     </View>
   );
 };
@@ -227,17 +284,6 @@ const StatItem = ({ icon, value, label, color }) => (
     <Icon name={icon} size={24} color={color} />
     <Text style={styles.statValue}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);
-
-// Placeholder pour le modal (à créer dans un fichier séparé)
-const QuestSelectionModal = ({ visible, onClose, navigation }) => (
-  <View style={styles.modalPlaceholder}>
-    <Text style={{ color: '#FFF', fontSize: 18 }}>Quest Selection Modal</Text>
-    <Text style={{ color: '#AAA', marginTop: 10 }}>À implémenter...</Text>
-    <TouchableOpacity onPress={onClose} style={{ marginTop: 20, padding: 10, backgroundColor: '#3B82F6' }}>
-      <Text style={{ color: '#FFF' }}>Fermer</Text>
-    </TouchableOpacity>
   </View>
 );
 
@@ -378,16 +424,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#94A3B8',
     marginTop: 2,
-  },
-  modalPlaceholder: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
 
