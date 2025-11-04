@@ -6,13 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="85828c1b-998c-423b-884c-76b033f439e4" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.expo/devices.json" beforeDir="false" afterPath="$PROJECT_DIR$/.expo/devices.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/contexts/AuthContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/contexts/AuthContext.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/ChallengeScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/ChallengeScreen.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/ChallengeService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/ChallengeService.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/types/Challenge.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/types/Challenge.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/BattleScreenHeroLanding.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/BattleScreenHeroLanding.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

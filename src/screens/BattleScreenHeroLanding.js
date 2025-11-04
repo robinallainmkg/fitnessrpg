@@ -23,7 +23,7 @@ import { getFirestore } from '../config/firebase.simple';
 const firestore = getFirestore();
 
 const { width, height } = Dimensions.get('window');
-const BACKGROUND_IMAGE = require('../../../assets/programmes/street-bg.jpg');
+const BACKGROUND_IMAGE = require('../../assets/programmes/street-bg.jpg');
 
 /**
  * BattleScreenHeroLanding - Écran d'accueil épique style League of Legends
