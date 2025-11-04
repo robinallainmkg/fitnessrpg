@@ -11,15 +11,14 @@ import {
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { doc, getDoc } from 'firebase/firestore';
-import { useAuth } from '../../contexts/AuthContext';
-import { useChallenge } from '../../contexts/ChallengeContext';
-import { colors } from '../../theme/colors';
-import { rpgTheme } from '../../theme/rpgTheme';
+import { useAuth } from '../contexts/AuthContext';
+import { useChallenge } from '../contexts/ChallengeContext';
+import { colors } from '../theme/colors';
+import { rpgTheme } from '../theme/rpgTheme';
 import UserHeader from '../components/UserHeader';
 import QuestSelectionModal from '../components/modals/QuestSelectionModal';
-import { getAvailableChallenges, recommendTodayChallenge } from '../../services/skillChallengeService';
-import { getFirestore } from '../../config/firebase.simple';
+import { getAvailableChallenges, recommendTodayChallenge } from '../services/skillChallengeService';
+import { getFirestore } from '../config/firebase.simple';
 
 const firestore = getFirestore();
 
@@ -99,11 +98,10 @@ const BattleScreenHeroLanding = ({ navigation }) => {
     if (!user?.uid) return;
     
     try {
-      const userRef = doc(firestore, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
+      const userDoc = await firestore.collection('users').doc(user.uid).get();
       
-      if (userSnap.exists()) {
-        const data = userSnap.data();
+      if (userDoc.exists) {
+        const data = userDoc.data();
         setUserStats({
           displayName: data.displayName || user.displayName || 'Guerrier',
           globalLevel: data.globalLevel || 1,
