@@ -149,12 +149,20 @@ const AppNavigator = () => {
       if (isOnboardingCompleted && !user && !loading && !isCheckingOnboarding && !isInitializingGuest) {
         console.log('🎮 Démarrage automatique du mode invité (Anonymous Auth)');
         setIsInitializingGuest(true);
-        const result = await startGuestMode();
         
-        // Si erreur, arrêter le loading pour éviter boucle infinie
-        if (!result.success) {
-          console.error('❌ Impossible de démarrer le mode invité:', result.error);
-          setIsInitializingGuest(false);
+        try {
+          const result = await startGuestMode();
+          
+          if (result.success) {
+            console.log('✅ Mode invité démarré avec succès, uid:', result.user?.uid);
+            // L'état user sera mis à jour par onAuthStateChanged dans AuthContext
+          } else {
+            console.error('❌ Impossible de démarrer le mode invité:', result.error);
+            setIsInitializingGuest(false); // Arrêter le loading en cas d'erreur
+          }
+        } catch (error) {
+          console.error('❌ Exception lors du démarrage du mode invité:', error);
+          setIsInitializingGuest(false); // Arrêter le loading en cas d'erreur
         }
       }
     };
@@ -165,7 +173,7 @@ const AppNavigator = () => {
   // ═══ HOOK 3: Réinitialiser isInitializingGuest quand user est défini ═══
   useEffect(() => {
     if (user && isInitializingGuest) {
-      console.log('✅ Mode invité initialisé - user défini');
+      console.log('✅ Mode invité initialisé - user défini:', user.uid, 'isAnonymous:', user.isAnonymous);
       setIsInitializingGuest(false);
     }
   }, [user, isInitializingGuest]);

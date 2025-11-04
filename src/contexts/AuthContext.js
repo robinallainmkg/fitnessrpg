@@ -96,6 +96,7 @@ export const AuthProvider = ({ children }) => {
       log('✅ Anonymous Auth créé:', anonymousUser.uid);
       
       // Créer le document Firestore
+      log('📝 Création du document Firestore pour', anonymousUser.uid);
       await firestore
         .collection('users')
         .doc(anonymousUser.uid)
@@ -115,17 +116,19 @@ export const AuthProvider = ({ children }) => {
           createdAt: FieldValue.serverTimestamp(),
         });
       
+      log('✅ Document Firestore créé');
+      
       // Marquer l'onboarding comme complété
       await AsyncStorage.setItem('@fitnessrpg:onboarding_completed', 'true');
       
-      setUser(anonymousUser);
-      setIsGuest(true);
-      
+      // NOTE: Ne pas appeler setUser() ici - onAuthStateChanged va le faire automatiquement
       log('✅ Mode invité activé - uid permanent:', anonymousUser.uid);
       
       return { success: true, user: anonymousUser };
     } catch (error) {
       logError('❌ Erreur startGuestMode:', error);
+      logError('❌ Error code:', error.code);
+      logError('❌ Error message:', error.message);
       return {
         success: false,
         error: 'Impossible de démarrer le mode invité',
