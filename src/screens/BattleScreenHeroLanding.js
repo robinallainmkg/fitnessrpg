@@ -7,6 +7,7 @@ import {
   Animated,
   Dimensions,
   Platform,
+  Image,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,12 +19,24 @@ import { rpgTheme } from '../theme/rpgTheme';
 import UserHeader from '../components/UserHeader';
 import QuestSelectionModal from '../components/modals/QuestSelectionModal';
 import { getAvailableChallenges, recommendTodayChallenge } from '../services/skillChallengeService';
+import { getUserGlobalRank } from '../services/leaderboardService';
 import { getFirestore } from '../config/firebase.simple';
 
 const firestore = getFirestore();
 
 const { width, height } = Dimensions.get('window');
 const BACKGROUND_IMAGE = require('../../assets/programmes/street-bg.jpg');
+
+// Avatar images mapping
+const AVATAR_IMAGES = {
+  0: require('../../assets/avatars/avatar (1).jpg'),
+  1: require('../../assets/avatars/avatar (1).jpg'),
+  2: require('../../assets/avatars/avatar (2).jpg'),
+  3: require('../../assets/avatars/avatar (3).jpg'),
+  4: require('../../assets/avatars/avatar (4).jpg'),
+  5: require('../../assets/avatars/avatar (5).jpg'),
+  6: require('../../assets/avatars/avatar (6).jpg'),
+};
 
 /**
  * BattleScreenHeroLanding - Écran d'accueil épique style League of Legends
@@ -46,6 +59,7 @@ const BattleScreenHeroLanding = ({ navigation }) => {
 
   const [showQuestModal, setShowQuestModal] = useState(false);
   const [userStats, setUserStats] = useState(null);
+  const [userRank, setUserRank] = useState(null);
   const [todaySkillChallenge, setTodaySkillChallenge] = useState(null);
   const [skillChallenges, setSkillChallenges] = useState([]);
 
@@ -90,6 +104,7 @@ const BattleScreenHeroLanding = ({ navigation }) => {
     // Charger les stats utilisateur
     if (user?.uid) {
       loadUserStats();
+      loadUserRank();
       loadChallenges();
     }
   }, [user?.uid]);
@@ -132,6 +147,18 @@ const BattleScreenHeroLanding = ({ navigation }) => {
         streakDays: 0,
         avatarId: 0,
       });
+    }
+  };
+
+  const loadUserRank = async () => {
+    if (!user?.uid) return;
+    
+    try {
+      const { rank, totalUsers } = await getUserGlobalRank(user.uid);
+      setUserRank(rank);
+    } catch (error) {
+      console.error('❌ Erreur chargement rang:', error);
+      setUserRank(null);
     }
   };
 
@@ -201,10 +228,25 @@ const BattleScreenHeroLanding = ({ navigation }) => {
               ]}
             />
 
-            {/* Avatar placeholder (remplacer par image réelle) */}
+            {/* Avatar - vraie image utilisateur */}
             <View style={styles.avatarCircle}>
-              <Icon name="account" size={120} color="#06B6D4" />
+              {userStats?.avatarId !== undefined && AVATAR_IMAGES[userStats.avatarId] ? (
+                <Image 
+                  source={AVATAR_IMAGES[userStats.avatarId]} 
+                  style={styles.avatarImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Icon name="account" size={120} color="#06B6D4" />
+              )}
             </View>
+
+            {/* Nom du personnage */}
+            {userStats?.displayName && (
+              <Text style={styles.heroName}>
+                {userStats.displayName}
+              </Text>
+            )}
 
             {/* Titre du personnage */}
             <Text style={styles.heroTitle}>
@@ -260,7 +302,12 @@ const BattleScreenHeroLanding = ({ navigation }) => {
         >
           <StatItem icon="fire" value={userStats?.streakDays || 0} label="Jours" color="#F59E0B" />
           <StatItem icon="star" value={userStats?.globalXP || 0} label="XP" color="#FFD700" />
-          <StatItem icon="trophy" value="12" label="Rang" color="#10B981" />
+          <StatItem 
+            icon="trophy" 
+            value={userRank ? `#${userRank}` : '-'} 
+            label="Rang" 
+            color="#10B981" 
+          />
         </Animated.View>
       </ImageBackground>
 
@@ -334,9 +381,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+  },
+  heroName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#FFD700',
     textShadowColor: 'rgba(255, 215, 0, 0.5)',
