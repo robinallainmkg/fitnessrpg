@@ -74,15 +74,10 @@ const TabButton = ({ tab, isActive, onPress, index, hasNotification }) => {
           { transform: [{ scale: scaleAnim }] },
         ]}
       >
-        {/* Glow effect pour l'onglet actif */}
-        {isActive && (
-          <View style={[styles.glowEffect, { backgroundColor: tab.activeColor }]} />
-        )}
-
-        {/* Icon */}
+        {/* Icon avec taille plus grande pour l'actif */}
         <Icon
           name={tab.icon}
-          size={isActive ? 28 : 24}
+          size={isActive ? 30 : 24}
           color={iconColor}
           style={styles.icon}
         />
@@ -98,17 +93,17 @@ const TabButton = ({ tab, isActive, onPress, index, hasNotification }) => {
             styles.label,
             {
               color: labelColor,
-              fontSize: isActive ? 11 : 10,
-              fontWeight: isActive ? '700' : '600',
+              fontSize: isActive ? 12 : 10,
+              fontWeight: isActive ? '700' : '500',
             },
           ]}
         >
           {tab.name.toUpperCase()}
         </Text>
 
-        {/* Active indicator (dot sous l'onglet) */}
+        {/* Active indicator (ligne sous l'onglet au lieu d'un dot) */}
         {isActive && (
-          <View style={[styles.activeDot, { backgroundColor: tab.activeColor }]} />
+          <View style={[styles.activeIndicator, { backgroundColor: tab.activeColor }]} />
         )}
       </Animated.View>
     </TouchableOpacity>
@@ -175,14 +170,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
-  glowEffect: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    opacity: 0.15,
-    top: -5,
-  },
   icon: {
     marginBottom: 4,
   },
@@ -190,11 +177,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textAlign: 'center',
   },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginTop: 4,
+  activeIndicator: {
+    width: 32,
+    height: 3,
+    borderRadius: 2,
+    marginTop: 6,
   },
   notificationDot: {
     position: 'absolute',
